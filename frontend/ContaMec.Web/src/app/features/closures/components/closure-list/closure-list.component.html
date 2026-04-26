@@ -20,7 +20,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let row of sortedClosures" [ngClass]="{ 'closure-list__row--open': !row.isClosed }">
+      <tr *ngFor="let row of pagedClosures" [ngClass]="{ 'closure-list__row--open': !row.isClosed }">
         <td>{{ row.id }}</td>
         <td>{{ formatDate(row.openDate) }}</td>
         <td class="closure-list__amount">{{ formatResult(row.previousBalance) }}</td>
@@ -79,4 +79,10 @@
       </tr>
     </tfoot>
   </table>
+
+  <div class="closure-list__pagination" *ngIf="!loading && closures.length > pageSize">
+    <button mat-stroked-button type="button" (click)="goToPreviousPage()" [disabled]="!canGoPrevious">Anterior</button>
+    <span class="closure-list__pagination-label">{{ pageLabel }}</span>
+    <button mat-stroked-button type="button" (click)="goToNextPage()" [disabled]="!canGoNext">Siguiente</button>
+  </div>
 </div>

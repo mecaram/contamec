@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Closure } from '../../models/closure.model';
 
 type SortableColumn = 'id' | 'openDate' | 'previousBalance' | 'incomes' | 'expenses' | 'result';
@@ -8,9 +8,11 @@ type SortableColumn = 'id' | 'openDate' | 'previousBalance' | 'incomes' | 'expen
   templateUrl: './closure-list.component.html',
   styleUrls: ['./closure-list.component.scss']
 })
-export class ClosureListComponent {
+export class ClosureListComponent implements OnChanges {
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
+  currentPage = 1;
+  readonly pageSize = 10;
 
   @Input() closures: Closure[] = [];
   @Input() loading = false;
@@ -19,6 +21,12 @@ export class ClosureListComponent {
   @Output() viewExpenses = new EventEmitter<Closure>();
   @Output() viewBalanceValues = new EventEmitter<Closure>();
   @Output() closeClosure = new EventEmitter<Closure>();
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.closures && !changes.closures.firstChange) {
+      this.ensureValidPage();
+    }
+  }
 
   get sortedClosures(): Closure[] {
     const data = [...this.closures];
@@ -34,6 +42,27 @@ export class ClosureListComponent {
 
   get totalRecords(): number {
     return this.closures.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.sortedClosures.length / this.pageSize));
+  }
+
+  get pagedClosures(): Closure[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.sortedClosures.slice(start, start + this.pageSize);
+  }
+
+  get pageLabel(): string {
+    return `Página ${this.currentPage} de ${this.totalPages}`;
+  }
+
+  get canGoPrevious(): boolean {
+    return this.currentPage > 1;
+  }
+
+  get canGoNext(): boolean {
+    return this.currentPage < this.totalPages;
   }
 
   get totalPreviousBalance(): number {
@@ -99,15 +128,27 @@ export class ClosureListComponent {
   setSort(column: SortableColumn): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      this.currentPage = 1;
       return;
     }
     this.sortColumn = column;
     this.sortDirection = 'asc';
+    this.currentPage = 1;
   }
 
   sortIndicator(column: SortableColumn): string {
     if (this.sortColumn !== column) return '';
     return this.sortDirection === 'asc' ? '▲' : '▼';
+  }
+
+  goToPreviousPage(): void {
+    if (!this.canGoPrevious) return;
+    this.currentPage -= 1;
+  }
+
+  goToNextPage(): void {
+    if (!this.canGoNext) return;
+    this.currentPage += 1;
   }
 
   private getSortValue(row: Closure, column: SortableColumn): number {
@@ -155,5 +196,14 @@ export class ClosureListComponent {
   onCloseClosure(row: Closure): void {
     if (!this.canClose(row)) return;
     this.closeClosure.emit(row);
+  }
+
+  private ensureValidPage(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
+    }
   }
 }

@@ -11,6 +11,8 @@ type SortableColumn = 'id' | 'name' | 'userRoleName' | 'isActive';
 export class UserListComponent implements OnChanges {
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
+  currentPage = 1;
+  readonly pageSize = 10;
 
   @Input() users: User[] = [];
   @Input() sortResetToken = 0;
@@ -22,11 +24,36 @@ export class UserListComponent implements OnChanges {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
       this.sortColumn = 'id';
       this.sortDirection = 'desc';
+      this.currentPage = 1;
+    }
+    if (changes.users && !changes.users.firstChange) {
+      this.ensureValidPage();
     }
   }
 
   get totalRecords(): number {
     return this.sortedUsers.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalRecords / this.pageSize));
+  }
+
+  get pagedUsers(): User[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.sortedUsers.slice(start, start + this.pageSize);
+  }
+
+  get pageLabel(): string {
+    return `Página ${this.currentPage} de ${this.totalPages}`;
+  }
+
+  get canGoPrevious(): boolean {
+    return this.currentPage > 1;
+  }
+
+  get canGoNext(): boolean {
+    return this.currentPage < this.totalPages;
   }
 
   get sortedUsers(): User[] {
@@ -52,15 +79,27 @@ export class UserListComponent implements OnChanges {
   setSort(column: SortableColumn): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      this.currentPage = 1;
       return;
     }
     this.sortColumn = column;
     this.sortDirection = 'asc';
+    this.currentPage = 1;
   }
 
   sortIndicator(column: SortableColumn): string {
     if (this.sortColumn !== column) return '';
     return this.sortDirection === 'asc' ? '▲' : '▼';
+  }
+
+  goToPreviousPage(): void {
+    if (!this.canGoPrevious) return;
+    this.currentPage -= 1;
+  }
+
+  goToNextPage(): void {
+    if (!this.canGoNext) return;
+    this.currentPage += 1;
   }
 
   private getSortValue(user: User, column: SortableColumn): number | string {
@@ -75,6 +114,15 @@ export class UserListComponent implements OnChanges {
         return user.isActive ? 1 : 0;
       default:
         return 0;
+    }
+  }
+
+  private ensureValidPage(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
     }
   }
 }

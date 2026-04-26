@@ -13,7 +13,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let row of sortedAccounts">
+      <tr *ngFor="let row of pagedAccounts">
         <td>{{ row.id }}</td>
         <td>{{ row.name || '-' }}</td>
         <td>{{ row.type || '-' }}</td>
@@ -33,4 +33,10 @@
       </tr>
     </tfoot>
   </table>
+
+  <div class="account-list__pagination" *ngIf="!loading && accounts.length > pageSize">
+    <button mat-stroked-button type="button" (click)="goToPreviousPage()" [disabled]="!canGoPrevious">Anterior</button>
+    <span class="account-list__pagination-label">{{ pageLabel }}</span>
+    <button mat-stroked-button type="button" (click)="goToNextPage()" [disabled]="!canGoNext">Siguiente</button>
+  </div>
 </div>

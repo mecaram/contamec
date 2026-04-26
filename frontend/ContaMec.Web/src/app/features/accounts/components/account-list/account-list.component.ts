@@ -11,6 +11,8 @@ type SortableColumn = 'id' | 'name' | 'type';
 export class AccountListComponent implements OnChanges {
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
+  currentPage = 1;
+  readonly pageSize = 10;
 
   @Input() accounts: Account[] = [];
   @Input() sortResetToken = 0;
@@ -22,11 +24,36 @@ export class AccountListComponent implements OnChanges {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
       this.sortColumn = 'id';
       this.sortDirection = 'desc';
+      this.currentPage = 1;
+    }
+    if (changes.accounts && !changes.accounts.firstChange) {
+      this.ensureValidPage();
     }
   }
 
   get totalRecords(): number {
     return this.sortedAccounts.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalRecords / this.pageSize));
+  }
+
+  get pagedAccounts(): Account[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.sortedAccounts.slice(start, start + this.pageSize);
+  }
+
+  get pageLabel(): string {
+    return `Página ${this.currentPage} de ${this.totalPages}`;
+  }
+
+  get canGoPrevious(): boolean {
+    return this.currentPage > 1;
+  }
+
+  get canGoNext(): boolean {
+    return this.currentPage < this.totalPages;
   }
 
   get sortedAccounts(): Account[] {
@@ -52,15 +79,27 @@ export class AccountListComponent implements OnChanges {
   setSort(column: SortableColumn): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      this.currentPage = 1;
       return;
     }
     this.sortColumn = column;
     this.sortDirection = 'asc';
+    this.currentPage = 1;
   }
 
   sortIndicator(column: SortableColumn): string {
     if (this.sortColumn !== column) return '';
     return this.sortDirection === 'asc' ? '▲' : '▼';
+  }
+
+  goToPreviousPage(): void {
+    if (!this.canGoPrevious) return;
+    this.currentPage -= 1;
+  }
+
+  goToNextPage(): void {
+    if (!this.canGoNext) return;
+    this.currentPage += 1;
   }
 
   private getSortValue(account: Account, column: SortableColumn): number | string {
@@ -73,6 +112,15 @@ export class AccountListComponent implements OnChanges {
         return (account.type ?? '').toLocaleLowerCase();
       default:
         return 0;
+    }
+  }
+
+  private ensureValidPage(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
+    if (this.currentPage < 1) {
+      this.currentPage = 1;
     }
   }
 }

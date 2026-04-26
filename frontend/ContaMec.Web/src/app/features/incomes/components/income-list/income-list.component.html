@@ -17,7 +17,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let row of sortedIncomes">
+      <tr *ngFor="let row of pagedIncomes">
         <td>{{ row.id }}</td>
         <td>{{ row.emissionDate ? (row.emissionDate | date: 'dd/MM/yyyy') : '-' }}</td>
         <td>{{ row.accountName || (row.accountId !== null && row.accountId !== undefined ? ('#' + row.accountId) : '-') }}</td>
@@ -44,4 +44,10 @@
       </tr>
     </tfoot>
   </table>
+
+  <div class="income-list__pagination" *ngIf="!loading && incomes.length > pageSize">
+    <button mat-stroked-button type="button" (click)="goToPreviousPage()" [disabled]="!canGoPrevious">Anterior</button>
+    <span class="income-list__pagination-label">{{ pageLabel }}</span>
+    <button mat-stroked-button type="button" (click)="goToNextPage()" [disabled]="!canGoNext">Siguiente</button>
+  </div>
 </div>

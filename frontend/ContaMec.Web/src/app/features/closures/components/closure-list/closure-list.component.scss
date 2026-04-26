@@ -66,3 +66,18 @@ th {
 .closure-list__amount {
   text-align: right;
 }
+
+.closure-list__pagination {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.closure-list__pagination-label {
+  min-width: 7.5rem;
+  text-align: center;
+  color: #334155;
+  font-weight: 600;
+}
