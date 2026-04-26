@@ -1,0 +1,47 @@
+<div class="income-list">
+  <div class="income-list__loading" *ngIf="loading">Cargando ingresos...</div>
+
+  <div class="income-list__empty" *ngIf="!loading && incomes.length === 0">
+    No hay ingresos para los filtros seleccionados.
+  </div>
+
+  <table class="income-list__table mat-elevation-z1" *ngIf="!loading && incomes.length > 0">
+    <thead>
+      <tr>
+        <th class="income-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
+        <th class="income-list__sortable" (click)="setSort('emissionDate')">Fecha <span>{{ sortIndicator('emissionDate') }}</span></th>
+        <th class="income-list__sortable" (click)="setSort('accountName')">Cuenta <span>{{ sortIndicator('accountName') }}</span></th>
+        <th class="income-list__sortable" (click)="setSort('detail')">Detalle <span>{{ sortIndicator('detail') }}</span></th>
+        <th class="income-list__sortable income-list__amount" (click)="setSort('amount')">Monto <span>{{ sortIndicator('amount') }}</span></th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of sortedIncomes">
+        <td>{{ row.id }}</td>
+        <td>{{ row.emissionDate ? (row.emissionDate | date: 'dd/MM/yyyy') : '-' }}</td>
+        <td>{{ row.accountName || (row.accountId !== null && row.accountId !== undefined ? ('#' + row.accountId) : '-') }}</td>
+        <td>{{ row.detail || '-' }}</td>
+        <td class="income-list__amount">{{ row.amount != null ? (row.amount | currency:'USD':'symbol':'1.2-2') : '-' }}</td>
+        <td class="income-list__actions">
+          <ng-container *ngIf="canManage(row); else blockedActions">
+            <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar ingreso">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar ingreso">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </ng-container>
+          <ng-template #blockedActions>-</ng-template>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="income-list__footer">
+        <td colspan="4">Total registros: {{ totalRecords }}</td>
+        <td class="income-list__amount">{{ totalAmount | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>

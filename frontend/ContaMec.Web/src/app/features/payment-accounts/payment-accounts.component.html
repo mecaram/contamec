@@ -1,0 +1,87 @@
+<div class="payment-accounts-page">
+  <header class="payment-accounts-page__header">
+    <div>
+      <h1 class="payment-accounts-page__title">Cuentas de pago</h1>
+      <p class="payment-accounts-page__subtitle">Consulte, cree y administre las cuentas de pago.</p>
+    </div>
+    <div class="payment-accounts-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="payment-accounts-filters mat-elevation-z1">
+    <form [formGroup]="filterForm" class="payment-accounts-filters__form">
+      <div class="payment-accounts-field">
+        <label class="payment-accounts-field__label" for="filter-id">ID</label>
+        <input id="filter-id" class="payment-accounts-field__control" type="number" formControlName="id" (change)="search()" />
+      </div>
+      <div class="payment-accounts-field">
+        <label class="payment-accounts-field__label" for="filter-name">Nombre</label>
+        <input id="filter-name" class="payment-accounts-field__control" formControlName="name" (change)="search()" />
+      </div>
+    </form>
+
+    <div class="payment-accounts-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="payment-accounts-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="payment-accounts-page__new-action">
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nueva cuenta de pago
+    </button>
+  </div>
+
+  <section class="payment-accounts-form-panel mat-elevation-z1" *ngIf="formVisible">
+    <app-payment-account-form
+      [mode]="formMode"
+      [paymentAccount]="editingPaymentAccount"
+      (cancelForm)="cancelForm()"
+      (saveForm)="submitForm($event)"
+    ></app-payment-account-form>
+  </section>
+
+  <app-payment-account-list
+    *ngIf="!formVisible"
+    [paymentAccounts]="paymentAccounts"
+    [sortResetToken]="sortResetToken"
+    [loading]="loading"
+    (edit)="openEdit($event)"
+    (remove)="deletePaymentAccount($event)"
+  ></app-payment-account-list>
+
+  <div class="payment-accounts-toast" *ngIf="notification" [ngClass]="'payment-accounts-toast--' + notification.type">
+    <span>{{ notification.message }}</span>
+    <button
+      type="button"
+      class="payment-accounts-toast__close"
+      (click)="closeNotification()"
+      aria-label="Cerrar mensaje"
+    >
+      ×
+    </button>
+  </div>
+
+  <div class="payment-accounts-dialog-backdrop" *ngIf="deleteTarget">
+    <section class="payment-accounts-dialog" role="dialog" aria-modal="true">
+      <h3 class="payment-accounts-dialog__title">Confirmar eliminación</h3>
+      <p class="payment-accounts-dialog__text">
+        Está a punto de eliminar la cuenta de pago #{{ deleteTarget.id }}. Verifique la información:
+      </p>
+      <div class="payment-accounts-dialog__summary">
+        <div><strong>Nombre:</strong> {{ deleteTarget.name || '-' }}</div>
+      </div>
+      <div class="payment-accounts-dialog__actions">
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </section>
+  </div>
+</div>

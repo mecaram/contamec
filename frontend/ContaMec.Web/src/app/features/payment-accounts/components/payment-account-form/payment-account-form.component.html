@@ -1,0 +1,16 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="payment-account-form__title">{{ title }}</h2>
+  <div class="payment-account-form">
+    <div class="payment-account-form__field">
+      <label class="payment-account-form__label" for="payment-account-name">Nombre</label>
+      <input id="payment-account-name" class="payment-account-form__control" formControlName="name" maxlength="50" />
+      <div class="payment-account-form__hint">{{ form.controls.name.value?.length || 0 }}/50</div>
+    </div>
+    <div class="payment-account-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
+    <div class="payment-account-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 50 caracteres.</div>
+  </div>
+  <div class="payment-account-form__actions">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>

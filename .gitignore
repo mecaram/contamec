@@ -1,0 +1,30 @@
+# Sistema / logs
+.DS_Store
+Thumbs.db
+*.log
+debug-*.log
+
+# Carpetas locales temporales
+_build/
+
+# IDE
+.vscode/
+.idea/
+
+# Backend (.NET)
+backend/ContaMec.Api/bin/
+backend/ContaMec.Api/obj/
+backend/ContaMec.Api/*.user
+backend/ContaMec.Api/*.suo
+backend/ContaMec.Api/secrets.json
+backend/ContaMec.Api/appsettings.Development.json
+
+# Frontend (Angular)
+frontend/ContaMec.Web/node_modules/
+frontend/ContaMec.Web/dist/
+frontend/ContaMec.Web/.angular/
+frontend/ContaMec.Web/*.log
+
+# Carpetas legacy bloqueadas localmente (no versionar)
+/ContaMec.Api/
+/ContaMec.Web/

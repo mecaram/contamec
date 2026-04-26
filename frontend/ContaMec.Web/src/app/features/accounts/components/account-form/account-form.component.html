@@ -1,0 +1,26 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="account-form__title">{{ title }}</h2>
+  <div class="account-form">
+    <div class="account-form__field">
+      <label class="account-form__label" for="account-name">Nombre</label>
+      <input id="account-name" class="account-form__control" formControlName="name" maxlength="50" />
+      <div class="account-form__hint">{{ form.controls.name.value?.length || 0 }}/50</div>
+    </div>
+    <div class="account-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
+    <div class="account-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 50 caracteres.</div>
+
+    <div class="account-form__field">
+      <label class="account-form__label" for="account-type">Tipo</label>
+      <select id="account-type" class="account-form__control" formControlName="type">
+        <option [ngValue]="''" disabled>Seleccione tipo</option>
+        <option value="Ingreso">Ingreso</option>
+        <option value="Egreso">Egreso</option>
+      </select>
+    </div>
+    <div class="account-form__error" *ngIf="form.controls.type.hasError('required')">El tipo es obligatorio.</div>
+  </div>
+  <div class="account-form__actions">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>

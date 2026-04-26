@@ -1,0 +1,461 @@
+<div class="closures-page">
+  <header class="closures-page__header">
+    <div>
+      <h1 class="closures-page__title">Cierres</h1>
+      <p class="closures-page__subtitle">Consulte, cree y administre los cierres.</p>
+    </div>
+    <div class="closures-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="closures-filters mat-elevation-z1">
+    <form [formGroup]="filterForm" class="closures-filters__form">
+      <div class="closures-field">
+        <label class="closures-field__label" for="filter-id">ID</label>
+        <input id="filter-id" class="closures-field__control" type="number" formControlName="id" (change)="search()" />
+      </div>
+      <div class="closures-field">
+        <label class="closures-field__label" for="filter-is-closed">Estado</label>
+        <select id="filter-is-closed" class="closures-field__control" formControlName="isClosed" (change)="search()">
+          <option value="">Todos</option>
+          <option value="false">Abiertos</option>
+          <option value="true">Cerrados</option>
+        </select>
+      </div>
+      <div class="closures-field">
+        <label class="closures-field__label" for="filter-open-date-from">Fecha apertura desde</label>
+        <input
+          id="filter-open-date-from"
+          class="closures-field__control"
+          type="date"
+          formControlName="openDateFrom"
+          (change)="search()"
+        />
+      </div>
+      <div class="closures-field">
+        <label class="closures-field__label" for="filter-open-date-to">Fecha apertura hasta</label>
+        <input id="filter-open-date-to" class="closures-field__control" type="date" formControlName="openDateTo" (change)="search()" />
+      </div>
+    </form>
+
+    <div class="closures-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="closures-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <app-closure-list
+    [closures]="closures"
+    [loading]="loading"
+    (viewDetail)="openDetail($event)"
+    (viewIncomes)="openIncomeDetail($event)"
+    (viewExpenses)="openExpenseDetail($event)"
+    (viewBalanceValues)="openBalanceValues($event)"
+    (closeClosure)="openCloseModal($event)"
+  ></app-closure-list>
+
+  <div class="closures-modal-backdrop" *ngIf="detailTarget">
+    <section class="closures-modal" role="dialog" aria-modal="true">
+      <header class="closures-modal__header">
+        <h3 class="closures-modal__title">Detalle del Cierre</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar detalle" (click)="closeDetail()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="closures-modal__meta closures-modal__meta--split">
+        <div class="closures-modal__meta-col">
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">ID:</span>
+            <span class="closures-modal__meta-value">{{ detailTarget.id }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Fecha apertura:</span>
+            <span class="closures-modal__meta-value">{{ formatDate(detailTarget.openDate) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Fecha cierre:</span>
+            <span class="closures-modal__meta-value">{{ formatDate(detailTarget.closeDate) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Estado:</span>
+            <span class="closures-modal__meta-value">{{ formatStatus(detailTarget.isClosed) }}</span>
+          </div>
+        </div>
+
+        <div class="closures-modal__meta-col">
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Saldo:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.previousBalance) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Ingresos:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.incomes) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Egresos:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.expenses) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Resultado:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.result) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Valores en cuenta:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.inAccount) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Diferencia:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency((detailTarget.inAccount || 0) - (detailTarget.result || 0)) }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="closures-modal-backdrop" *ngIf="closeTarget">
+    <section class="closures-modal" role="dialog" aria-modal="true">
+      <header class="closures-modal__header">
+        <h3 class="closures-modal__title">Cerrar Cierre</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar ventana de cierre" (click)="closeCloseModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="closures-modal__meta closures-modal__meta--split">
+        <div class="closures-modal__meta-col">
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">ID:</span>
+            <span class="closures-modal__meta-value">{{ closeTarget.id }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Fecha apertura:</span>
+            <span class="closures-modal__meta-value">{{ formatDate(closeTarget.openDate) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Fecha cierre:</span>
+            <span class="closures-modal__meta-value">{{ formatDate(closeTarget.closeDate) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Estado:</span>
+            <span class="closures-modal__meta-value">{{ formatStatus(closeTarget.isClosed) }}</span>
+          </div>
+        </div>
+
+        <div class="closures-modal__meta-col">
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Saldo:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.previousBalance) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Ingresos:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.incomes) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Egresos:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.expenses) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Resultado:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.result) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Valores en cuenta:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.inAccount) }}</span>
+          </div>
+          <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+            <span class="closures-modal__meta-label">Diferencia:</span>
+            <span class="closures-modal__meta-value">{{ formatCurrency(closeDifference) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="closures-modal__error" *ngIf="closeError">{{ closeError }}</div>
+      <div class="closures-modal__hint" *ngIf="!canCloseCurrentTarget">
+        Solo se puede cerrar cuando la diferencia es igual a 0.
+      </div>
+
+      <div class="closures-modal__actions closures-modal__actions--footer">
+        <button mat-button type="button" (click)="closeCloseModal()" [disabled]="closeLoading">Cancelar</button>
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          (click)="requestCloseConfirmation()"
+          [disabled]="closeLoading || !canCloseCurrentTarget"
+        >
+          {{ closeLoading ? 'Cerrando...' : 'Cerrar' }}
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="closures-modal-backdrop" *ngIf="closeConfirmTarget">
+    <section class="closures-modal closures-modal--small" role="dialog" aria-modal="true">
+      <header class="closures-modal__header">
+        <h3 class="closures-modal__title">Confirmar cierre</h3>
+      </header>
+
+      <div class="closures-modal__meta">
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Cierre:</span>
+          <span class="closures-modal__meta-value">#{{ closeConfirmTarget.id }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Diferencia:</span>
+          <span class="closures-modal__meta-value">{{ formatCurrency(closeDifference) }}</span>
+        </div>
+      </div>
+
+      <div class="closures-modal__hint">
+        ¿Confirma que desea cerrar este cierre? Esta acción cerrará el actual y abrirá uno nuevo automáticamente.
+      </div>
+
+      <div class="closures-modal__actions closures-modal__actions--footer">
+        <button mat-button type="button" (click)="cancelCloseConfirmation()" [disabled]="closeLoading">Cancelar</button>
+        <button mat-flat-button color="primary" type="button" (click)="confirmCloseClosure()" [disabled]="closeLoading">
+          {{ closeLoading ? 'Cerrando...' : 'Confirmar cierre' }}
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="closures-modal-backdrop" *ngIf="incomeDetailTarget">
+    <section class="closures-modal" role="dialog" aria-modal="true">
+      <header class="closures-modal__header">
+        <h3 class="closures-modal__title">Detalle de Ingresos</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar detalle de ingresos" (click)="closeIncomeDetail()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="closures-modal__meta closures-modal__meta--detail">
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Cierre:</span>
+          <span class="closures-modal__meta-value">#{{ incomeDetailTarget.id }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Fecha apertura:</span>
+          <span class="closures-modal__meta-value">{{ formatDate(incomeDetailTarget.openDate) }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Fecha cierre:</span>
+          <span class="closures-modal__meta-value">{{ formatDate(incomeDetailTarget.closeDate) }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Estado:</span>
+          <span class="closures-modal__meta-value">{{ formatStatus(incomeDetailTarget.isClosed) }}</span>
+        </div>
+      </div>
+
+      <div class="closures-modal__loading" *ngIf="incomeDetailLoading">Cargando detalle de ingresos...</div>
+      <div class="closures-modal__error" *ngIf="!incomeDetailLoading && incomeDetailError">{{ incomeDetailError }}</div>
+
+      <div class="closures-modal__table-wrap" *ngIf="!incomeDetailLoading && !incomeDetailError">
+        <table class="closures-modal__table" *ngIf="incomeDetailItems.length > 0; else incomesEmpty">
+          <thead>
+            <tr>
+              <th>Id.Cuenta</th>
+              <th>Cuenta</th>
+              <th>Importe</th>
+              <th>Porcentaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of incomeDetailItems">
+              <td>{{ formatAccountId(item.accountId) }}</td>
+              <td>{{ item.accountName || '-' }}</td>
+              <td>{{ formatCurrency(item.amount) }}</td>
+              <td>{{ formatPercentage(item.percentage) }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2"><strong>Total ingresos</strong></td>
+              <td><strong>{{ formatCurrency(incomeDetailTotal) }}</strong></td>
+              <td><strong>100.00 %</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <ng-template #incomesEmpty>
+        <div class="closures-modal__empty">No hay ingresos registrados para este cierre.</div>
+      </ng-template>
+    </section>
+  </div>
+
+  <div class="closures-modal-backdrop" *ngIf="expenseDetailTarget">
+    <section class="closures-modal" role="dialog" aria-modal="true">
+      <header class="closures-modal__header">
+        <h3 class="closures-modal__title">Detalle de Egresos</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar detalle de egresos" (click)="closeExpenseDetail()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="closures-modal__meta closures-modal__meta--detail">
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Cierre:</span>
+          <span class="closures-modal__meta-value">#{{ expenseDetailTarget.id }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Fecha apertura:</span>
+          <span class="closures-modal__meta-value">{{ formatDate(expenseDetailTarget.openDate) }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Fecha cierre:</span>
+          <span class="closures-modal__meta-value">{{ formatDate(expenseDetailTarget.closeDate) }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Estado:</span>
+          <span class="closures-modal__meta-value">{{ formatStatus(expenseDetailTarget.isClosed) }}</span>
+        </div>
+      </div>
+
+      <div class="closures-modal__loading" *ngIf="expenseDetailLoading">Cargando detalle de egresos...</div>
+      <div class="closures-modal__error" *ngIf="!expenseDetailLoading && expenseDetailError">{{ expenseDetailError }}</div>
+
+      <div class="closures-modal__table-wrap" *ngIf="!expenseDetailLoading && !expenseDetailError">
+        <table class="closures-modal__table" *ngIf="expenseDetailItems.length > 0; else expensesEmpty">
+          <thead>
+            <tr>
+              <th>Id.Cuenta</th>
+              <th>Cuenta</th>
+              <th>Importe</th>
+              <th>Porcentaje</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of expenseDetailItems">
+              <td>{{ formatAccountId(item.accountId) }}</td>
+              <td>{{ item.accountName || '-' }}</td>
+              <td>{{ formatCurrency(item.amount) }}</td>
+              <td>{{ formatPercentage(item.percentage) }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2"><strong>Total egresos</strong></td>
+              <td><strong>{{ formatCurrency(expenseDetailTotal) }}</strong></td>
+              <td><strong>100.00 %</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <ng-template #expensesEmpty>
+        <div class="closures-modal__empty">No hay egresos registrados para este cierre.</div>
+      </ng-template>
+    </section>
+  </div>
+
+  <div class="closures-modal-backdrop" *ngIf="balanceValuesTarget">
+    <section class="closures-modal closures-modal--small" role="dialog" aria-modal="true">
+      <header class="closures-modal__header">
+        <h3 class="closures-modal__title">Valores en cuenta</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar valores en cuenta" (click)="closeBalanceValues()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="closures-modal__meta">
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Cierre:</span>
+          <span class="closures-modal__meta-value">#{{ balanceValuesTarget.id }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Fecha apertura:</span>
+          <span class="closures-modal__meta-value">{{ formatDate(balanceValuesTarget.openDate) }}</span>
+        </div>
+        <div class="closures-modal__meta-row closures-modal__meta-row--detail">
+          <span class="closures-modal__meta-label">Estado:</span>
+          <span class="closures-modal__meta-value">{{ formatStatus(balanceValuesTarget.isClosed) }}</span>
+        </div>
+      </div>
+
+      <div class="closures-modal__loading" *ngIf="balanceValuesLoading">Cargando valores en cuenta...</div>
+      <div class="closures-modal__error" *ngIf="!balanceValuesLoading && balanceValuesError">{{ balanceValuesError }}</div>
+      <div class="closures-modal__success" *ngIf="!balanceValuesLoading && balanceValuesSuccess">{{ balanceValuesSuccess }}</div>
+
+      <div class="closures-modal__content" *ngIf="!balanceValuesLoading && !balanceValuesError">
+        <div class="closures-modal__bulk">
+          <label class="closures-modal__bulk-label" for="apply-balance-amount">Aplicar mismo monto a todas las cuentas</label>
+          <div class="closures-modal__bulk-controls">
+            <input
+              id="apply-balance-amount"
+              class="closures-field__control"
+              type="text"
+              inputmode="decimal"
+              [value]="applyAmountValue"
+              (input)="applyAmountValue = $any($event.target).value"
+              [disabled]="balanceValuesSaving"
+            />
+            <button mat-stroked-button color="primary" type="button" (click)="applySameAmountToAll()" [disabled]="balanceValuesSaving">
+              Aplicar
+            </button>
+          </div>
+        </div>
+
+        <div class="closures-modal__table-wrap">
+          <table class="closures-modal__table" *ngIf="closureBalances.length > 0; else emptyBalances">
+            <thead>
+              <tr>
+                <th>Cuenta</th>
+                <th>Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of closureBalances; let i = index; trackBy: trackByPaymentAccount">
+                <td>{{ row.paymentAccountName || ('Cuenta #' + row.paymentAccountId) }}</td>
+                <td>
+                  <input
+                    class="closures-field__control closures-modal__amount-input"
+                    type="text"
+                    inputmode="decimal"
+                    [value]="row.amountInput"
+                    (input)="onBalanceAmountInput(i, $any($event.target).value)"
+                    (focus)="onBalanceAmountFocus($event)"
+                    (blur)="onBalanceAmountBlur(i)"
+                    [disabled]="balanceValuesSaving"
+                  />
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td><strong>Total cuentas: {{ totalBalanceAccounts }}</strong></td>
+                <td class="closures-modal__tfoot-amount"><strong>{{ formatCurrency(totalBalanceAmount) }}</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Resultado</strong></td>
+                <td class="closures-modal__tfoot-amount"><strong>{{ formatCurrency(balanceValuesResult) }}</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Diferencia</strong></td>
+                <td class="closures-modal__tfoot-amount"><strong>{{ formatCurrency(balanceValuesDifference) }}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <ng-template #emptyBalances>
+          <div class="closures-modal__empty">No hay cuentas de pago disponibles.</div>
+        </ng-template>
+
+        <div class="closures-modal__actions">
+          <button mat-button type="button" (click)="closeBalanceValues()" [disabled]="balanceValuesSaving">Cancelar</button>
+          <button mat-flat-button color="primary" type="button" (click)="saveBalanceValues()" [disabled]="balanceValuesSaving">
+            {{ balanceValuesSaving ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

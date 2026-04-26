@@ -1,0 +1,87 @@
+<div class="accounts-page">
+  <header class="accounts-page__header">
+    <div>
+      <h1 class="accounts-page__title">Cuentas</h1>
+      <p class="accounts-page__subtitle">Consulte, cree y administre las cuentas.</p>
+    </div>
+    <div class="accounts-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="accounts-filters mat-elevation-z1">
+    <form [formGroup]="filterForm" class="accounts-filters__form">
+      <div class="accounts-field">
+        <label class="accounts-field__label" for="filter-id">ID</label>
+        <input id="filter-id" class="accounts-field__control" type="number" formControlName="id" (change)="search()" />
+      </div>
+      <div class="accounts-field">
+        <label class="accounts-field__label" for="filter-name">Nombre</label>
+        <input id="filter-name" class="accounts-field__control" formControlName="name" (change)="search()" />
+      </div>
+      <div class="accounts-field">
+        <label class="accounts-field__label" for="filter-type">Tipo</label>
+        <select id="filter-type" class="accounts-field__control" formControlName="type" (change)="search()">
+          <option value="">Todos</option>
+          <option value="Ingreso">Ingresos</option>
+          <option value="Egreso">Egresos</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="accounts-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="accounts-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="accounts-page__new-action">
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nueva cuenta
+    </button>
+  </div>
+
+  <section class="accounts-form-panel mat-elevation-z1" *ngIf="formVisible">
+    <app-account-form
+      [mode]="formMode"
+      [account]="editingAccount"
+      (cancelForm)="cancelForm()"
+      (saveForm)="submitForm($event)"
+    ></app-account-form>
+  </section>
+
+  <app-account-list
+    *ngIf="!formVisible"
+    [accounts]="accounts"
+    [sortResetToken]="sortResetToken"
+    [loading]="loading"
+    (edit)="openEdit($event)"
+    (remove)="deleteAccount($event)"
+  ></app-account-list>
+
+  <div class="accounts-toast" *ngIf="notification" [ngClass]="'accounts-toast--' + notification.type">
+    <span>{{ notification.message }}</span>
+    <button type="button" class="accounts-toast__close" (click)="closeNotification()" aria-label="Cerrar mensaje">×</button>
+  </div>
+
+  <div class="accounts-dialog-backdrop" *ngIf="deleteTarget">
+    <section class="accounts-dialog" role="dialog" aria-modal="true">
+      <h3 class="accounts-dialog__title">Confirmar eliminación</h3>
+      <p class="accounts-dialog__text">Está a punto de eliminar la cuenta #{{ deleteTarget.id }}. Verifique la información:</p>
+      <div class="accounts-dialog__summary">
+        <div><strong>Nombre:</strong> {{ deleteTarget.name || '-' }}</div>
+        <div><strong>Tipo:</strong> {{ deleteTarget.type || '-' }}</div>
+      </div>
+      <div class="accounts-dialog__actions">
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+.income-form__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.income-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-top: 0.2rem;
+}
+
+.income-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.income-form__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.income-form__control {
+  width: 100%;
+  min-height: 2.45rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  background: #fff;
+  color: #0f172a;
+}
+
+.income-form__control:focus {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  border-color: #2563eb;
+}
+
+.income-form__hint {
+  text-align: right;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.income-form__error {
+  margin-top: -0.45rem;
+  font-size: 0.75rem;
+  color: #b91c1c;
+}
+
+.income-form__actions {
+  margin-top: 0.9rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

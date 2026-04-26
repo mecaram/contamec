@@ -1,0 +1,36 @@
+<div class="account-list">
+  <div class="account-list__loading" *ngIf="loading">Cargando cuentas...</div>
+
+  <div class="account-list__empty" *ngIf="!loading && accounts.length === 0">No hay cuentas para los filtros seleccionados.</div>
+
+  <table class="account-list__table mat-elevation-z1" *ngIf="!loading && accounts.length > 0">
+    <thead>
+      <tr>
+        <th class="account-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
+        <th class="account-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th class="account-list__sortable" (click)="setSort('type')">Tipo <span>{{ sortIndicator('type') }}</span></th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of sortedAccounts">
+        <td>{{ row.id }}</td>
+        <td>{{ row.name || '-' }}</td>
+        <td>{{ row.type || '-' }}</td>
+        <td class="account-list__actions">
+          <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar cuenta">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar cuenta">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="account-list__footer">
+        <td colspan="4">Total registros: {{ totalRecords }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>

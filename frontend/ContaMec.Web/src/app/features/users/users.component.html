@@ -1,0 +1,96 @@
+<div class="users-page">
+  <header class="users-page__header">
+    <div>
+      <h1 class="users-page__title">Usuarios</h1>
+      <p class="users-page__subtitle">Consulte, cree y administre los usuarios.</p>
+    </div>
+    <div class="users-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="users-filters mat-elevation-z1">
+    <form [formGroup]="filterForm" class="users-filters__form">
+      <div class="users-field">
+        <label class="users-field__label" for="filter-id">ID</label>
+        <input id="filter-id" class="users-field__control" type="number" formControlName="id" (change)="search()" />
+      </div>
+      <div class="users-field">
+        <label class="users-field__label" for="filter-name">Nombre</label>
+        <input id="filter-name" class="users-field__control" formControlName="name" (change)="search()" />
+      </div>
+      <div class="users-field">
+        <label class="users-field__label" for="filter-is-active">Estado</label>
+        <select id="filter-is-active" class="users-field__control" formControlName="isActive" (change)="search()">
+          <option value="">Todos</option>
+          <option value="true">Activos</option>
+          <option value="false">Inactivos</option>
+        </select>
+      </div>
+      <div class="users-field">
+        <label class="users-field__label" for="filter-role">Rol</label>
+        <select id="filter-role" class="users-field__control" formControlName="userRoleId" (change)="search()">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let role of roleOptions" [ngValue]="role.id">{{ role.name || '-' }}</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="users-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="users-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="users-page__new-action">
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nuevo usuario
+    </button>
+  </div>
+
+  <section class="users-form-panel mat-elevation-z1" *ngIf="formVisible">
+    <app-user-form
+      [mode]="formMode"
+      [user]="editingUser"
+      [roleOptions]="roleOptions"
+      (cancelForm)="cancelForm()"
+      (saveForm)="submitForm($event)"
+    ></app-user-form>
+  </section>
+
+  <app-user-list
+    *ngIf="!formVisible"
+    [users]="users"
+    [sortResetToken]="sortResetToken"
+    [loading]="loading"
+    (edit)="openEdit($event)"
+    (remove)="deleteUser($event)"
+  ></app-user-list>
+
+  <div class="users-toast" *ngIf="notification" [ngClass]="'users-toast--' + notification.type">
+    <span>{{ notification.message }}</span>
+    <button type="button" class="users-toast__close" (click)="closeNotification()" aria-label="Cerrar mensaje">×</button>
+  </div>
+
+  <div class="users-dialog-backdrop" *ngIf="deleteTarget">
+    <section class="users-dialog" role="dialog" aria-modal="true">
+      <h3 class="users-dialog__title">Confirmar eliminación</h3>
+      <p class="users-dialog__text">Está a punto de eliminar el usuario #{{ deleteTarget.id }}. Verifique la información:</p>
+      <div class="users-dialog__summary">
+        <div><strong>Nombre:</strong> {{ deleteTarget.name || '-' }}</div>
+        <div><strong>Rol:</strong> {{ deleteTarget.userRoleName || '-' }}</div>
+        <div><strong>Activo:</strong> {{ deleteTarget.isActive ? 'Sí' : 'No' }}</div>
+      </div>
+      <div class="users-dialog__actions">
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </section>
+  </div>
+</div>

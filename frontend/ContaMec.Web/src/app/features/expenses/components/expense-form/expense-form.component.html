@@ -1,0 +1,55 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="expense-form__title">{{ title }}</h2>
+  <div class="expense-form">
+    <div class="expense-form__field">
+      <label class="expense-form__label" for="expense-emission-date">Fecha de emisión</label>
+      <input
+        id="expense-emission-date"
+        class="expense-form__control"
+        type="date"
+        [value]="form.controls.emissionDate.value ? toIsoDate(form.controls.emissionDate.value!) : ''"
+        (change)="form.controls.emissionDate.setValue($any($event.target).value ? toDate($any($event.target).value) : null)"
+      />
+    </div>
+    <div class="expense-form__error" *ngIf="form.controls.emissionDate.hasError('required')">La fecha es obligatoria.</div>
+
+    <div class="expense-form__field">
+      <label class="expense-form__label" for="expense-account-id">Cuenta</label>
+      <select id="expense-account-id" class="expense-form__control" formControlName="accountId">
+        <option [ngValue]="null">Seleccione una cuenta</option>
+        <option *ngFor="let account of accountOptions" [ngValue]="account.id">
+          {{ account.label }}
+        </option>
+      </select>
+    </div>
+    <div class="expense-form__error" *ngIf="form.controls.accountId.hasError('required')">La cuenta es obligatoria.</div>
+    <div class="expense-form__error" *ngIf="form.controls.accountId.hasError('min')">La cuenta debe ser mayor a 0.</div>
+
+    <div class="expense-form__field">
+      <label class="expense-form__label" for="expense-detail">Detalle</label>
+      <input id="expense-detail" class="expense-form__control" formControlName="detail" maxlength="80" />
+      <div class="expense-form__hint">{{ form.controls.detail.value?.length || 0 }}/80</div>
+    </div>
+    <div class="expense-form__error" *ngIf="form.controls.detail.hasError('maxlength')">Máximo 80 caracteres.</div>
+
+    <div class="expense-form__field">
+      <label class="expense-form__label" for="expense-amount">Monto</label>
+      <input
+        id="expense-amount"
+        class="expense-form__control"
+        type="text"
+        inputmode="decimal"
+        [value]="amountDisplay"
+        (input)="onAmountInput($any($event.target).value)"
+        (blur)="onAmountBlur()"
+        placeholder="0,00"
+      />
+    </div>
+    <div class="expense-form__error" *ngIf="form.controls.amount.hasError('required')">El monto es obligatorio.</div>
+    <div class="expense-form__error" *ngIf="form.controls.amount.hasError('min')">El monto debe ser mayor a 0.</div>
+  </div>
+  <div class="expense-form__actions">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>

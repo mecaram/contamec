@@ -1,0 +1,136 @@
+<div class="expenses-page">
+  <header class="expenses-page__header">
+    <div>
+      <h1 class="expenses-page__title">Egresos</h1>
+      <p class="expenses-page__subtitle">Consulte, cree y administre los egresos diarios.</p>
+    </div>
+    <div class="expenses-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="expenses-filters mat-elevation-z1">
+    <form [formGroup]="filterForm" class="expenses-filters__form">
+      <div class="expenses-field">
+        <label class="expenses-field__label" for="filter-closure">Cierre</label>
+        <select id="filter-closure" class="expenses-field__control" formControlName="closureId" (change)="search()">
+          <option [ngValue]="null">Todos</option>
+          <option *ngFor="let closure of closureOptions" [ngValue]="closure.id">Cierre #{{ closure.id }}</option>
+        </select>
+      </div>
+
+      <div class="expenses-field">
+        <label class="expenses-field__label" for="filter-date-from">Fecha desde</label>
+        <input
+          id="filter-date-from"
+          class="expenses-field__control"
+          type="text"
+          inputmode="numeric"
+          placeholder="dd-mm-yyyy"
+          [value]="dateFromInput"
+          (change)="onDateFromChange($any($event.target).value)"
+          (blur)="normalizeDateInputs()"
+          (click)="selectDateSegment($event)"
+          (keyup)="selectDateSegment($event)"
+        />
+      </div>
+
+      <div class="expenses-field">
+        <label class="expenses-field__label" for="filter-date-to">Fecha hasta</label>
+        <input
+          id="filter-date-to"
+          class="expenses-field__control"
+          type="text"
+          inputmode="numeric"
+          placeholder="dd-mm-yyyy"
+          [value]="dateToInput"
+          (change)="onDateToChange($any($event.target).value)"
+          (blur)="normalizeDateInputs()"
+          (click)="selectDateSegment($event)"
+          (keyup)="selectDateSegment($event)"
+        />
+      </div>
+
+      <div class="expenses-field">
+        <label class="expenses-field__label" for="filter-account">Cuenta</label>
+        <select id="filter-account" class="expenses-field__control" formControlName="accountId" (change)="search()">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let account of accountOptions" [ngValue]="account.id">{{ account.label }}</option>
+        </select>
+      </div>
+
+      <div class="expenses-field">
+        <label class="expenses-field__label" for="filter-amount-from">Monto desde</label>
+        <input id="filter-amount-from" class="expenses-field__control" type="number" step="0.01" formControlName="amountFrom" />
+      </div>
+
+      <div class="expenses-field">
+        <label class="expenses-field__label" for="filter-amount-to">Monto hasta</label>
+        <input id="filter-amount-to" class="expenses-field__control" type="number" step="0.01" formControlName="amountTo" />
+      </div>
+
+      <div class="expenses-field expenses-filters__detail">
+        <label class="expenses-field__label" for="filter-detail">Detalle</label>
+        <input id="filter-detail" class="expenses-field__control" formControlName="detail" />
+      </div>
+    </form>
+
+    <div class="expenses-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="expenses-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="expenses-page__new-action">
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nuevo egreso
+    </button>
+  </div>
+
+  <section class="expenses-form-panel mat-elevation-z1" *ngIf="formVisible">
+    <app-expense-form
+      [mode]="formMode"
+      [expense]="editingExpense"
+      [accountOptions]="accountOptions"
+      (cancelForm)="cancelForm()"
+      (saveForm)="submitForm($event)"
+    ></app-expense-form>
+  </section>
+
+  <app-expense-list
+    *ngIf="!formVisible"
+    [expenses]="expenses"
+    [closedClosureIds]="closedClosureIds"
+    [sortResetToken]="sortResetToken"
+    [loading]="loading"
+    (edit)="openEdit($event)"
+    (remove)="deleteExpense($event)"
+  ></app-expense-list>
+
+  <div class="expenses-toast" *ngIf="notification" [ngClass]="'expenses-toast--' + notification.type">
+    <span>{{ notification.message }}</span>
+    <button type="button" class="expenses-toast__close" (click)="closeNotification()" aria-label="Cerrar mensaje">×</button>
+  </div>
+
+  <div class="expenses-dialog-backdrop" *ngIf="deleteTarget">
+    <section class="expenses-dialog" role="dialog" aria-modal="true">
+      <h3 class="expenses-dialog__title">Confirmar eliminación</h3>
+      <p class="expenses-dialog__text">Está a punto de eliminar el egreso #{{ deleteTarget.id }}. Verifique la información:</p>
+      <div class="expenses-dialog__summary">
+        <div><strong>Cuenta:</strong> {{ deleteTarget.accountName || (deleteTarget.accountId != null ? ('#' + deleteTarget.accountId) : '-') }}</div>
+        <div><strong>Detalle:</strong> {{ deleteTarget.detail || '(Sin detalle)' }}</div>
+        <div><strong>Monto:</strong> {{ deleteTarget.amount != null ? (deleteTarget.amount | currency:'USD':'symbol':'1.2-2') : '-' }}</div>
+      </div>
+      <div class="expenses-dialog__actions">
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </section>
+  </div>
+</div>

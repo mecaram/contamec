@@ -1,0 +1,45 @@
+<div class="expense-list">
+  <div class="expense-list__loading" *ngIf="loading">Cargando egresos...</div>
+
+  <div class="expense-list__empty" *ngIf="!loading && expenses.length === 0">No hay egresos para los filtros seleccionados.</div>
+
+  <table class="expense-list__table mat-elevation-z1" *ngIf="!loading && expenses.length > 0">
+    <thead>
+      <tr>
+        <th class="expense-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
+        <th class="expense-list__sortable" (click)="setSort('emissionDate')">Fecha <span>{{ sortIndicator('emissionDate') }}</span></th>
+        <th class="expense-list__sortable" (click)="setSort('accountName')">Cuenta <span>{{ sortIndicator('accountName') }}</span></th>
+        <th class="expense-list__sortable" (click)="setSort('detail')">Detalle <span>{{ sortIndicator('detail') }}</span></th>
+        <th class="expense-list__sortable expense-list__amount" (click)="setSort('amount')">Monto <span>{{ sortIndicator('amount') }}</span></th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of sortedExpenses">
+        <td>{{ row.id }}</td>
+        <td>{{ row.emissionDate ? (row.emissionDate | date: 'dd/MM/yyyy') : '-' }}</td>
+        <td>{{ row.accountName || (row.accountId !== null && row.accountId !== undefined ? ('#' + row.accountId) : '-') }}</td>
+        <td>{{ row.detail || '-' }}</td>
+        <td class="expense-list__amount">{{ row.amount != null ? (row.amount | currency:'USD':'symbol':'1.2-2') : '-' }}</td>
+        <td class="expense-list__actions">
+          <ng-container *ngIf="canManage(row); else blockedActions">
+            <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar egreso">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar egreso">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </ng-container>
+          <ng-template #blockedActions>-</ng-template>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="expense-list__footer">
+        <td colspan="4">Total registros: {{ totalRecords }}</td>
+        <td class="expense-list__amount">{{ totalAmount | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>

@@ -1,0 +1,38 @@
+<div class="user-list">
+  <div class="user-list__loading" *ngIf="loading">Cargando usuarios...</div>
+
+  <div class="user-list__empty" *ngIf="!loading && users.length === 0">No hay usuarios para los filtros seleccionados.</div>
+
+  <table class="user-list__table mat-elevation-z1" *ngIf="!loading && users.length > 0">
+    <thead>
+      <tr>
+        <th class="user-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
+        <th class="user-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th class="user-list__sortable" (click)="setSort('userRoleName')">Rol <span>{{ sortIndicator('userRoleName') }}</span></th>
+        <th class="user-list__sortable" (click)="setSort('isActive')">Activo <span>{{ sortIndicator('isActive') }}</span></th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of sortedUsers">
+        <td>{{ row.id }}</td>
+        <td>{{ row.name || '-' }}</td>
+        <td>{{ row.userRoleName || '-' }}</td>
+        <td>{{ row.isActive ? 'Sí' : 'No' }}</td>
+        <td class="user-list__actions">
+          <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar usuario">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar usuario">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="user-list__footer">
+        <td colspan="5">Total registros: {{ totalRecords }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>

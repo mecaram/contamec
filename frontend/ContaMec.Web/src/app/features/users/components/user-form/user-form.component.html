@@ -1,0 +1,45 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="user-form__title">{{ title }}</h2>
+  <div class="user-form">
+    <div class="user-form__field">
+      <label class="user-form__label" for="user-name">Nombre</label>
+      <input id="user-name" class="user-form__control" formControlName="name" maxlength="80" />
+      <div class="user-form__hint">{{ form.controls.name.value?.length || 0 }}/80</div>
+    </div>
+    <div class="user-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
+    <div class="user-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 80 caracteres.</div>
+
+    <div class="user-form__field">
+      <label class="user-form__label" for="user-password">Contraseña</label>
+      <input
+        id="user-password"
+        class="user-form__control"
+        type="password"
+        formControlName="password"
+        autocomplete="new-password"
+        placeholder="{{ mode === 'edit' ? 'Dejar vacío para no cambiar' : '' }}"
+      />
+    </div>
+    <div class="user-form__error" *ngIf="form.controls.password.hasError('minlength')">
+      La contraseña debe tener al menos 4 caracteres.
+    </div>
+
+    <div class="user-form__field">
+      <label class="user-form__label" for="user-role">Rol</label>
+      <select id="user-role" class="user-form__control" formControlName="userRoleId">
+        <option [ngValue]="null">Sin rol</option>
+        <option *ngFor="let role of roleOptions" [ngValue]="role.id">{{ role.name || '-' }}</option>
+      </select>
+    </div>
+
+    <label class="user-form__checkbox">
+      <input type="checkbox" formControlName="isActive" />
+      Usuario activo
+    </label>
+  </div>
+
+  <div class="user-form__actions">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>

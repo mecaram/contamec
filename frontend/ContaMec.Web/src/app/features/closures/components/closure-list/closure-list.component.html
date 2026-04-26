@@ -1,0 +1,82 @@
+<div class="closure-list">
+  <div class="closure-list__loading" *ngIf="loading">Cargando cierres...</div>
+
+  <div class="closure-list__empty" *ngIf="!loading && closures.length === 0">No hay cierres para los filtros seleccionados.</div>
+
+  <table class="closure-list__table mat-elevation-z1" *ngIf="!loading && closures.length > 0">
+    <thead>
+      <tr>
+        <th class="closure-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
+        <th class="closure-list__sortable" (click)="setSort('openDate')">Apertura <span>{{ sortIndicator('openDate') }}</span></th>
+        <th class="closure-list__sortable" (click)="setSort('previousBalance')">Saldo<span>{{ sortIndicator('previousBalance') }}</span></th>
+        <th class="closure-list__sortable" (click)="setSort('incomes')">Ingresos <span>{{ sortIndicator('incomes') }}</span></th>
+        <th class="closure-list__sortable" (click)="setSort('expenses')">Egresos <span>{{ sortIndicator('expenses') }}</span></th>
+        <th class="closure-list__sortable" (click)="setSort('result')">Resultado <span>{{ sortIndicator('result') }}</span></th>
+        <th>Valores en cuenta</th>
+        <th>Diferencia</th>
+        <th>Cierre</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of sortedClosures" [ngClass]="{ 'closure-list__row--open': !row.isClosed }">
+        <td>{{ row.id }}</td>
+        <td>{{ formatDate(row.openDate) }}</td>
+        <td class="closure-list__amount">{{ formatResult(row.previousBalance) }}</td>
+        <td class="closure-list__amount">{{ formatResult(row.incomes) }}</td>
+        <td class="closure-list__amount">{{ formatResult(row.expenses) }}</td>
+        <td class="closure-list__amount">{{ formatResult(row.result) }}</td>
+        <td class="closure-list__amount">{{ formatResult(row.inAccount) }}</td>
+        <td class="closure-list__amount">{{ formatResult(getDifference(row)) }}</td>
+        <td>{{ formatDate(row.closeDate) }}</td>
+        <td>
+          <span [ngClass]="row.isClosed ? 'closure-list__status--closed' : 'closure-list__status--open'">
+            {{ row.isClosed ? 'Cerrado' : 'Abierto' }}
+          </span>
+        </td>
+        <td class="closure-list__actions">
+          <button mat-icon-button type="button" title="Ver Detalle" aria-label="Ver Detalle" (click)="onViewDetail(row)">
+            <mat-icon>visibility</mat-icon>
+          </button>
+          <button mat-icon-button type="button" title="Ver Ingresos" aria-label="Ver Ingresos" (click)="onViewIncomes(row)">
+            <mat-icon>trending_up</mat-icon>
+          </button>
+          <button mat-icon-button type="button" title="Ver Egresos" aria-label="Ver Egresos" (click)="onViewExpenses(row)">
+            <mat-icon>trending_down</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            title="Valores en cuenta"
+            aria-label="Valores en cuenta"
+            (click)="onViewBalanceValues(row)"
+          >
+            <mat-icon>account_balance_wallet</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            type="button"
+            [title]="closeButtonTitle(row)"
+            aria-label="Cerrar"
+            (click)="onCloseClosure(row)"
+            [disabled]="!canClose(row)"
+          >
+            <mat-icon>lock</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="closure-list__footer">
+        <td>Total: {{ totalRecords }}</td>
+        <td>-</td>
+        <td class="closure-list__amount">{{ formatResult(totalPreviousBalance) }}</td>
+        <td class="closure-list__amount">{{ formatResult(totalIncomes) }}</td>
+        <td class="closure-list__amount">{{ formatResult(totalExpenses) }}</td>
+        <td class="closure-list__amount">{{ formatResult(totalResultCalculated) }}</td>
+        <td colspan="5"></td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
