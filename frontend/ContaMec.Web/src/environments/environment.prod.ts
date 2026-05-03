@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://your-api-url/api'
+  // Misma página (subdominio): la API vive como aplicación IIS en /api/
+  apiBaseUrl: '/api'
 };

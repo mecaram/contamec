@@ -11,9 +11,13 @@ _build/
 .vscode/
 .idea/
 
+# Artefactos de deploy local (ZIP Plesk, etc.)
+artifacts/
+
 # Backend (.NET)
 backend/ContaMec.Api/bin/
 backend/ContaMec.Api/obj/
+backend/ContaMec.Api/publish/
 backend/ContaMec.Api/*.user
 backend/ContaMec.Api/*.suo
 backend/ContaMec.Api/secrets.json
