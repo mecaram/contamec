@@ -81,8 +81,15 @@ Invoke-Step "Compilando frontend Angular (production)" {
     Push-Location $frontendProjectDir
     $savedEap = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
+    # Angular 12 + Webpack: en Node 17+ hace falta openssl legacy; en Node 16 no.
+    $nodeMajor = [int]((node -v).TrimStart('v').Split('.')[0])
+    if ($nodeMajor -ge 17) {
+        $env:NODE_OPTIONS = "--openssl-legacy-provider"
+        Write-Host "Node $nodeMajor detectado: usando NODE_OPTIONS=--openssl-legacy-provider" -ForegroundColor Yellow
+    }
     npm run build -- --configuration production 2>&1 | ForEach-Object { Write-Host $_ }
     $code = $LASTEXITCODE
+    Remove-Item Env:NODE_OPTIONS -ErrorAction SilentlyContinue
     $ErrorActionPreference = $savedEap
     Pop-Location
     if ($code -ne 0) { throw "npm run build fallo (codigo $code)." }
