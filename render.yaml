@@ -1,0 +1,26 @@
+# Blueprint de Render: API ContaMec (.NET 8 en Docker), conectada a Supabase.
+# Render → New → Blueprint → elegir este repo. Pide la cadena de conexión al crearlo.
+services:
+  - type: web
+    name: contamec-api
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./backend/ContaMec.Api/Dockerfile
+    dockerContext: ./backend/ContaMec.Api
+    healthCheckPath: /swagger/v1/swagger.json
+    autoDeployTrigger: commit
+    # Solo redeploy cuando cambia el backend (no por cambios del frontend).
+    buildFilter:
+      paths:
+        - backend/**
+    envVars:
+      - key: PORT
+        value: "8080"
+      # Session pooler de Supabase, p. ej.:
+      # Host=aws-1-ca-central-1.pooler.supabase.com;Port=5432;Database=postgres;Username=postgres.<ref>;Password=<password>;SSL Mode=Require
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      # Clave de firma JWT: Render genera un valor aleatorio de 256 bits (reemplaza la de appsettings.json).
+      - key: Jwt__Key
+        generateValue: true

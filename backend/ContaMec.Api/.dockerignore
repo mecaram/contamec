@@ -1,0 +1,8 @@
+bin/
+obj/
+publish/
+Dockerfile
+.dockerignore
+appsettings.Development.json
+secrets.json
+*.user

@@ -5,12 +5,12 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:vercel": "ng build --configuration vercel",
+    "build:vercel": "NODE_OPTIONS=--openssl-legacy-provider ng build --configuration vercel",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "engines": {
-    "node": "16.x"
+    "node": "22.x"
   },
   "private": true,
   "dependencies": {

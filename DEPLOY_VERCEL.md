@@ -10,14 +10,15 @@ Arquitectura recomendada:
 | Pieza | Dónde |
 |-------|--------|
 | Angular (UI) | Vercel |
-| ContaMec.Api (.NET 8) | GoDaddy/Plesk, Azure, Railway, etc. |
+| ContaMec.Api (.NET 8) | Render (ver `DEPLOY_RENDER.md`) |
+| Base de datos | Supabase |
 
 El front en Vercel llama a la API por HTTPS (ver `environment.vercel.ts`).
 
 ## Requisitos previos
 
 1. Cuenta en [vercel.com](https://vercel.com) (GitHub conectado recomendado).
-2. API publicada con **certificado SSL válido** (sin `ERR_CERT_AUTHORITY_INVALID`).
+2. API publicada en Render (`DEPLOY_RENDER.md`); Render ya da HTTPS válido.
 3. CORS en la API: ya permite orígenes (`AllowAnyOrigin` en ContaMec.Api).
 
 ## Opción A — Desde el dashboard de Vercel (recomendada)
@@ -27,14 +28,14 @@ El front en Vercel llama a la API por HTTPS (ver `environment.vercel.ts`).
 3. Framework Preset: Other
 4. Build Command: `npm run build:vercel`
 5. Output Directory: `dist/contamec-web`
-6. Node.js Version: **16.x**
+6. Node.js Version: **22.x** (lo toma de `engines` en `package.json`; el script `build:vercel` agrega `--openssl-legacy-provider`, que Angular 12 necesita en Node 17+)
 7. Deploy.
 
 ## Opción B — CLI
 
 ```powershell
-nvm use 16.20.2
-cd C:\Desarrollo\ContaMec\frontend\ContaMec.Web
+nvm use 22
+cd C:\Desarrollo\ContaMec\contamec\frontend\ContaMec.Web
 npm i -g vercel
 vercel login
 vercel
@@ -53,16 +54,12 @@ Editá antes de desplegar (o después y redeploy):
 `frontend/ContaMec.Web/src/environments/environment.vercel.ts`
 
 ```ts
-apiBaseUrl: 'https://TU-API-PUBLICA/api'
+apiBaseUrl: 'https://contamec-api.onrender.com/api'
 ```
 
-Ejemplo si la API sigue en GoDaddy:
+Si Render le asignó otra URL al servicio `contamec-api`, cambiala acá, hacé push y Vercel redeploya solo.
 
-```ts
-apiBaseUrl: 'https://contamec.miguelcaram.com/api'
-```
-
-Si el certificado de ese dominio no es de confianza, el login desde Vercel **fallará** aunque el front cargue bien. Primero arreglá SSL en Plesk (Let's Encrypt) o mové la API a un host con HTTPS válido.
+Nota: `npm run build:vercel` usa sintaxis de Linux (como en Vercel). En Windows, para probar local: `$env:NODE_OPTIONS='--openssl-legacy-provider'; npx ng build --configuration vercel`.
 
 ## Plesk vs Vercel
 
