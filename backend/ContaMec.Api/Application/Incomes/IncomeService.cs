@@ -41,7 +41,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         if (!string.IsNullOrWhiteSpace(request.Detail))
         {
             var detail = request.Detail.Trim();
-            query = query.Where(i => i.Detail != null && i.Detail.Contains(detail));
+            query = query.Where(i => i.Detail != null && i.Detail.ToLower().Contains(detail.ToLower()));
         }
 
         return await query
@@ -64,7 +64,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
     public async Task<IncomeResponse> CreateAsync(IncomeCreateRequest request, int createdByUserId)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateIncome(request.Amount, request.Detail);
+        ValidateIncome(request.AccountId, request.Amount, request.Detail);
         var openClosureId = await GetOpenClosureIdAsync();
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
@@ -90,7 +90,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
     public async Task<bool> UpdateAsync(int id, IncomeUpdateRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateIncome(request.Amount, request.Detail);
+        ValidateIncome(request.AccountId, request.Amount, request.Detail);
 
         var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id);
         if (income is null)
@@ -136,8 +136,11 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         };
     }
 
-    private static void ValidateIncome(decimal? amount, string? detail)
+    private static void ValidateIncome(int? accountId, decimal? amount, string? detail)
     {
+        if (!accountId.HasValue)
+            throw new ArgumentException("AccountId es obligatorio.");
+
         if (!amount.HasValue || amount.Value <= 0)
             throw new ArgumentException("Amount debe ser mayor a 0.");
 
@@ -195,7 +198,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = $"SELECT TOP (1) [Id] FROM [{tableName}] WHERE [IsClosed] = 0 ORDER BY [Id] DESC";
+            command.CommandText = $@"SELECT ""Id"" FROM ""{tableName}"" WHERE ""isClosed"" = FALSE ORDER BY ""Id"" DESC LIMIT 1";
             var result = await command.ExecuteScalarAsync();
 
             if (result is null || result == DBNull.Value)
@@ -220,7 +223,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = $"SELECT TOP (1) [IsClosed] FROM [{tableName}] WHERE [Id] = @closureId";
+            command.CommandText = $@"SELECT ""isClosed"" FROM ""{tableName}"" WHERE ""Id"" = @closureId LIMIT 1";
 
             var parameter = command.CreateParameter();
             parameter.ParameterName = "@closureId";
@@ -243,10 +246,11 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
     private async Task<List<string>> ResolveClosureTableNamesAsync()
     {
         const string sql = """
-            SELECT [name]
-            FROM sys.tables
-            WHERE [name] IN ('Closures', 'Cierres')
-            ORDER BY CASE WHEN [name] = 'Closures' THEN 0 ELSE 1 END
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = current_schema()
+              AND table_name IN ('Closures', 'Cierres')
+            ORDER BY CASE WHEN table_name = 'Closures' THEN 0 ELSE 1 END
             """;
 
         var connection = _dbContext.Database.GetDbConnection();

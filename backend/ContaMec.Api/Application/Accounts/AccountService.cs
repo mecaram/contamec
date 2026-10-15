@@ -22,13 +22,17 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
             var name = request.Name.Trim();
-            query = query.Where(a => a.Name != null && a.Name.Contains(name));
+            query = query.Where(a => a.Name != null && a.Name.ToLower().Contains(name.ToLower()));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Type))
         {
             var type = request.Type.Trim();
-            query = query.Where(a => a.Type != null && a.Type.Contains(type));
+            var matchingTypes = Enum.GetValues<AccountType>()
+                .Where(t => t.ToString().Contains(type, StringComparison.OrdinalIgnoreCase))
+                .Cast<AccountType?>()
+                .ToList();
+            query = query.Where(a => matchingTypes.Contains(a.Type));
         }
 
         return await query
@@ -55,7 +59,7 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         var account = new Account
         {
             Name = request.Name?.Trim(),
-            Type = request.Type?.Trim()
+            Type = ParseType(request.Type)
         };
 
         _dbContext.Accounts.Add(account);
@@ -75,7 +79,7 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
             return false;
 
         account.Name = request.Name?.Trim();
-        account.Type = request.Type?.Trim();
+        account.Type = ParseType(request.Type);
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -104,7 +108,9 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         {
             Id = account.Id,
             Name = account.Name,
-            Type = account.Type
+            Type = account.Type == AccountType.Ingresos ? nameof(AccountType.Ingresos)
+                : account.Type == AccountType.Egresos ? nameof(AccountType.Egresos)
+                : null
         };
     }
 
@@ -115,9 +121,21 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         if (name.Trim().Length > 50)
             throw new ArgumentException("Name no puede superar 50 caracteres.");
 
+        ParseType(type);
+    }
+
+    // El frontend envía "Ingreso"/"Egreso"; en la base es el enum AccountTypes (Ingresos, Egresos).
+    private static AccountType ParseType(string? type)
+    {
         if (string.IsNullOrWhiteSpace(type))
             throw new ArgumentException("Type es obligatorio.");
-        if (type.Trim().Length > 50)
-            throw new ArgumentException("Type no puede superar 50 caracteres.");
+
+        var value = type.Trim();
+        if (value.Contains("ingreso", StringComparison.OrdinalIgnoreCase))
+            return AccountType.Ingresos;
+        if (value.Contains("egreso", StringComparison.OrdinalIgnoreCase) || value.Contains("gasto", StringComparison.OrdinalIgnoreCase))
+            return AccountType.Egresos;
+
+        throw new ArgumentException("Type debe ser Ingreso o Egreso.");
     }
 }

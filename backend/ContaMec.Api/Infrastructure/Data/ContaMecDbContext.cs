@@ -1,5 +1,6 @@
 using ContaMec.Api.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.NameTranslation;
 
 namespace ContaMec.Api.Infrastructure.Data;
 
@@ -14,18 +15,27 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
     public DbSet<User> Users => Set<User>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        // En Supabase los Id/FK son bigint; en C# se mantienen como int.
+        configurationBuilder.Properties<int>().HaveConversion<long>();
+        configurationBuilder.Properties<DateTime>().HaveConversion<WallClockDateTimeConverter>();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresEnum<AccountType>("public", "AccountTypes", new NpgsqlNullNameTranslator());
+
         modelBuilder.Entity<Closure>(entity =>
         {
-            entity.ToTable("Cierres");
+            entity.ToTable("Closures");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
-            entity.Property(e => e.OpenDate).HasColumnName("OpenDate").HasColumnType("datetime");
-            entity.Property(e => e.CloseDate).HasColumnName("CloseDate").HasColumnType("datetime");
-            entity.Property(e => e.IsClosed).HasColumnName("IsClosed");
-            entity.Property(e => e.Result).HasColumnName("Result").HasColumnType("money");
+            entity.Property(e => e.OpenDate).HasColumnName("OpenDate").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.CloseDate).HasColumnName("CloseDate").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.IsClosed).HasColumnName("isClosed");
+            entity.Property(e => e.Result).HasColumnName("Result").HasColumnType("numeric");
 
             entity.HasMany(e => e.Balances)
                 .WithOne(b => b.Closure)
@@ -41,7 +51,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.ClosureId).HasColumnName("ClosureId");
             entity.Property(e => e.PaymentAccountId).HasColumnName("PaymentAccountId");
-            entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("money");
+            entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("numeric");
 
             entity.HasOne(e => e.PaymentAccount)
                 .WithMany(t => t.ClosureBalances)
@@ -65,7 +75,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.Name).HasColumnName("Name").HasMaxLength(50).IsUnicode(false);
-            entity.Property(e => e.Type).HasColumnName("Type").HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.Type).HasColumnName("Type");
         });
 
         modelBuilder.Entity<Expense>(entity =>
@@ -75,12 +85,12 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.ClosureId).HasColumnName("ClosureId");
-            entity.Property(e => e.EmissionDate).HasColumnName("EmissionDate").HasColumnType("datetime");
+            entity.Property(e => e.EmissionDate).HasColumnName("EmissionDate").HasColumnType("timestamp with time zone");
             entity.Property(e => e.AccountId).HasColumnName("AccountId");
             entity.Property(e => e.Detail).HasColumnName("Detail").HasMaxLength(80).IsUnicode(false);
-            entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("money");
+            entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("numeric(12,2)");
             entity.Property(e => e.CreatedByUserId).HasColumnName("CreatedByUserId");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt").HasColumnType("timestamp with time zone");
 
             entity.HasOne(e => e.Closure)
                 .WithMany(c => c.Expenses)
@@ -105,12 +115,12 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.ClosureId).HasColumnName("ClosureId");
-            entity.Property(e => e.EmissionDate).HasColumnName("EmissionDate").HasColumnType("datetime");
+            entity.Property(e => e.EmissionDate).HasColumnName("EmissionDate").HasColumnType("timestamp with time zone");
             entity.Property(e => e.AccountId).HasColumnName("AccountId");
             entity.Property(e => e.Detail).HasColumnName("Detail").HasMaxLength(80).IsUnicode(false);
-            entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("money");
+            entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("numeric(12,2)");
             entity.Property(e => e.CreatedByUserId).HasColumnName("CreatedByUserId");
-            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt").HasColumnType("datetime");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt").HasColumnType("timestamp with time zone");
 
             entity.HasOne(e => e.Closure)
                 .WithMany(c => c.Incomes)

@@ -7,12 +7,15 @@ using ContaMec.Api.Application.Expenses;
 using ContaMec.Api.Application.Incomes;
 using ContaMec.Api.Application.PaymentAccounts;
 using ContaMec.Api.Application.Users;
+using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Npgsql;
+using Npgsql.NameTranslation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,8 +72,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
-builder.Services.AddDbContext<ContaMecDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
+dataSourceBuilder.MapEnum<AccountType>("AccountTypes", new NpgsqlNullNameTranslator());
+var dataSource = dataSourceBuilder.Build();
+builder.Services.AddDbContext<ContaMecDbContext>(options => options.UseNpgsql(dataSource));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IClosureService, ClosureService>();
 builder.Services.AddScoped<IClosureBalanceService, ClosureBalanceService>();

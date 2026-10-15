@@ -25,7 +25,7 @@ public class AuthService(
 
         var user = await _dbContext.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Name == request.Username, cancellationToken);
+            .FirstOrDefaultAsync(u => u.Name.ToLower() == request.Username.ToLower(), cancellationToken);
 
         if (user is null || !user.IsActive)
             return null;

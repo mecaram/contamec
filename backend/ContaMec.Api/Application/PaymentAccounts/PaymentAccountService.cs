@@ -22,7 +22,7 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
             var name = request.Name.Trim();
-            query = query.Where(a => a.Name != null && a.Name.Contains(name));
+            query = query.Where(a => a.Name != null && a.Name.ToLower().Contains(name.ToLower()));
         }
 
         return await query

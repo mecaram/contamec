@@ -32,3 +32,6 @@ frontend/ContaMec.Web/*.log
 # Carpetas legacy bloqueadas localmente (no versionar)
 /ContaMec.Api/
 /ContaMec.Web/
+
+# Claude Code (configuración personal)
+.claude/settings.local.json

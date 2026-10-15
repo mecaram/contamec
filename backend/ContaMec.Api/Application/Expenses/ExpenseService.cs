@@ -41,7 +41,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         if (!string.IsNullOrWhiteSpace(request.Detail))
         {
             var detail = request.Detail.Trim();
-            query = query.Where(e => e.Detail != null && e.Detail.Contains(detail));
+            query = query.Where(e => e.Detail != null && e.Detail.ToLower().Contains(detail.ToLower()));
         }
 
         return await query
@@ -64,7 +64,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
     public async Task<ExpenseResponse> CreateAsync(ExpenseCreateRequest request, int createdByUserId)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateExpense(request.Amount, request.Detail);
+        ValidateExpense(request.AccountId, request.Amount, request.Detail);
         var openClosureId = await GetOpenClosureIdAsync();
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
@@ -90,7 +90,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
     public async Task<bool> UpdateAsync(int id, ExpenseUpdateRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateExpense(request.Amount, request.Detail);
+        ValidateExpense(request.AccountId, request.Amount, request.Detail);
 
         var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == id);
         if (expense is null)
@@ -136,8 +136,11 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         };
     }
 
-    private static void ValidateExpense(decimal? amount, string? detail)
+    private static void ValidateExpense(int? accountId, decimal? amount, string? detail)
     {
+        if (!accountId.HasValue)
+            throw new ArgumentException("AccountId es obligatorio.");
+
         if (!amount.HasValue || amount.Value <= 0)
             throw new ArgumentException("Amount debe ser mayor a 0.");
 
@@ -195,7 +198,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = $"SELECT TOP (1) [Id] FROM [{tableName}] WHERE [IsClosed] = 0 ORDER BY [Id] DESC";
+            command.CommandText = $@"SELECT ""Id"" FROM ""{tableName}"" WHERE ""isClosed"" = FALSE ORDER BY ""Id"" DESC LIMIT 1";
             var result = await command.ExecuteScalarAsync();
 
             if (result is null || result == DBNull.Value)
@@ -220,7 +223,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = $"SELECT TOP (1) [IsClosed] FROM [{tableName}] WHERE [Id] = @closureId";
+            command.CommandText = $@"SELECT ""isClosed"" FROM ""{tableName}"" WHERE ""Id"" = @closureId LIMIT 1";
 
             var parameter = command.CreateParameter();
             parameter.ParameterName = "@closureId";
@@ -243,10 +246,11 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
     private async Task<List<string>> ResolveClosureTableNamesAsync()
     {
         const string sql = """
-            SELECT [name]
-            FROM sys.tables
-            WHERE [name] IN ('Closures', 'Cierres')
-            ORDER BY CASE WHEN [name] = 'Closures' THEN 0 ELSE 1 END
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = current_schema()
+              AND table_name IN ('Closures', 'Cierres')
+            ORDER BY CASE WHEN table_name = 'Closures' THEN 0 ELSE 1 END
             """;
 
         var connection = _dbContext.Database.GetDbConnection();

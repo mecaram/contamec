@@ -113,10 +113,10 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
         {
             await using var command = connection.CreateCommand();
             command.CommandText = $@"
-SELECT [Id], [Name]
-FROM [{tableName}]
-WHERE [Type] IS NOT NULL AND [Type] LIKE @typeFilter
-ORDER BY [Name] ASC, [Id] ASC";
+SELECT ""Id"", ""Name""
+FROM ""{tableName}""
+WHERE ""Type"" IS NOT NULL AND ""Type""::text ILIKE @typeFilter
+ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
 
             var parameter = command.CreateParameter();
             parameter.ParameterName = "@typeFilter";
@@ -160,14 +160,14 @@ ORDER BY [Name] ASC, [Id] ASC";
         {
             await using var command = connection.CreateCommand();
             command.CommandText = $@"
-SELECT [Id], [Name]
-FROM [{tableName}]
-WHERE [Type] IS NOT NULL
+SELECT ""Id"", ""Name""
+FROM ""{tableName}""
+WHERE ""Type"" IS NOT NULL
   AND (
-    [Type] COLLATE Latin1_General_CI_AI LIKE @egresoFilter
-    OR [Type] COLLATE Latin1_General_CI_AI LIKE @gastoFilter
+    ""Type""::text ILIKE @egresoFilter
+    OR ""Type""::text ILIKE @gastoFilter
   )
-ORDER BY [Name] ASC, [Id] ASC";
+ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
 
             var egresoParameter = command.CreateParameter();
             egresoParameter.ParameterName = "@egresoFilter";
@@ -210,7 +210,7 @@ ORDER BY [Name] ASC, [Id] ASC";
             foreach (var candidate in new[] { "Accounts", "Cuentas" })
             {
                 await using var command = connection.CreateCommand();
-                command.CommandText = "SELECT TOP 1 1 FROM sys.tables WHERE [name] = @tableName";
+                command.CommandText = "SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = @tableName LIMIT 1";
                 var parameter = command.CreateParameter();
                 parameter.ParameterName = "@tableName";
                 parameter.Value = candidate;

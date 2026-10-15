@@ -128,7 +128,7 @@ public class ClosureBalanceService(ContaMecDbContext dbContext) : IClosureBalanc
         try
         {
             await using var command = connection.CreateCommand();
-            command.CommandText = $"SELECT TOP 1 1 FROM [{closureTableName}] WHERE [Id] = @closureId";
+            command.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
             AddNullableParameter(command, "@closureId", DbType.Int32, closureId);
             var exists = await command.ExecuteScalarAsync();
             if (exists is null)
@@ -153,7 +153,7 @@ public class ClosureBalanceService(ContaMecDbContext dbContext) : IClosureBalanc
             foreach (var candidate in new[] { preferredName, fallbackName })
             {
                 await using var command = connection.CreateCommand();
-                command.CommandText = "SELECT TOP 1 1 FROM sys.tables WHERE [name] = @tableName";
+                command.CommandText = "SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = @tableName LIMIT 1";
                 AddNullableParameter(command, "@tableName", DbType.String, candidate);
                 var exists = await command.ExecuteScalarAsync();
                 if (exists is not null)

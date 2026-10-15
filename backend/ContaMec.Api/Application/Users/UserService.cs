@@ -25,7 +25,7 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
             var name = request.Name.Trim();
-            query = query.Where(u => u.Name != null && u.Name.Contains(name));
+            query = query.Where(u => u.Name != null && u.Name.ToLower().Contains(name.ToLower()));
         }
 
         if (request.IsActive.HasValue)
@@ -134,15 +134,15 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
 
         var normalizedName = name.Trim();
         var exists = await _dbContext.Users
-            .AnyAsync(u => u.Name == normalizedName && (!currentUserId.HasValue || u.Id != currentUserId.Value));
+            .AnyAsync(u => u.Name.ToLower() == normalizedName.ToLower() && (!currentUserId.HasValue || u.Id != currentUserId.Value));
         if (exists)
             throw new ArgumentException("Ya existe un usuario con ese nombre.");
 
-        if (userRoleId.HasValue)
-        {
-            var roleExists = await _dbContext.UserRoles.AnyAsync(r => r.Id == userRoleId.Value);
-            if (!roleExists)
-                throw new ArgumentException("El rol seleccionado no existe.");
-        }
+        if (!userRoleId.HasValue)
+            throw new ArgumentException("UserRoleId es obligatorio.");
+
+        var roleExists = await _dbContext.UserRoles.AnyAsync(r => r.Id == userRoleId.Value);
+        if (!roleExists)
+            throw new ArgumentException("El rol seleccionado no existe.");
     }
 }

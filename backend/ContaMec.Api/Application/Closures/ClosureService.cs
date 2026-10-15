@@ -36,50 +36,51 @@ public class ClosureService(ContaMecDbContext dbContext) : IClosureService
         {
             await using var command = connection.CreateCommand();
             command.CommandText = $@"
-SELECT c.[Id],
-       c.[OpenDate],
-       p.[PreviousBalance],
-       COALESCE(i.[Incomes], 0) AS [Incomes],
-       COALESCE(e.[Expenses], 0) AS [Expenses],
-       COALESCE(b.[InAccount], 0) AS [InAccount],
-       c.[CloseDate],
-       c.[IsClosed],
+SELECT c.""Id"",
+       c.""OpenDate"",
+       p.""PreviousBalance"",
+       COALESCE(i.""Incomes"", 0) AS ""Incomes"",
+       COALESCE(e.""Expenses"", 0) AS ""Expenses"",
+       COALESCE(b.""InAccount"", 0) AS ""InAccount"",
+       c.""CloseDate"",
+       c.""isClosed"",
        CASE
-           WHEN c.[IsClosed] = 1 THEN c.[Result]
-           ELSE COALESCE(p.[PreviousBalance], 0) + COALESCE(i.[Incomes], 0) - COALESCE(e.[Expenses], 0)
-       END AS [Result]
-FROM [{closureTableName}] c
-OUTER APPLY (
-    SELECT TOP 1 prev.[Result] AS [PreviousBalance]
-    FROM [{closureTableName}] prev
-    WHERE prev.[Id] < c.[Id]
-    ORDER BY prev.[Id] DESC
-) p
-OUTER APPLY (
-    SELECT SUM(x.[Amount]) AS [Incomes]
-    FROM [{incomesTableName}] x
-    WHERE x.[ClosureId] = c.[Id]
-) i
-OUTER APPLY (
-    SELECT SUM(x.[Amount]) AS [Expenses]
-    FROM [{expensesTableName}] x
-    WHERE x.[ClosureId] = c.[Id]
-) e
-OUTER APPLY (
-    SELECT SUM(x.[Amount]) AS [InAccount]
-    FROM [{closureBalancesTableName}] x
-    WHERE x.[ClosureId] = c.[Id]
-) b
-WHERE (@id IS NULL OR c.[Id] = @id)
-  AND (@isClosed IS NULL OR c.[IsClosed] = @isClosed)
-  AND (@openDateFrom IS NULL OR c.[OpenDate] >= @openDateFrom)
-  AND (@openDateToExclusive IS NULL OR c.[OpenDate] < @openDateToExclusive)
-ORDER BY c.[Id] DESC";
+           WHEN c.""isClosed"" THEN c.""Result""
+           ELSE COALESCE(p.""PreviousBalance"", 0) + COALESCE(i.""Incomes"", 0) - COALESCE(e.""Expenses"", 0)
+       END AS ""Result""
+FROM ""{closureTableName}"" c
+LEFT JOIN LATERAL (
+    SELECT prev.""Result"" AS ""PreviousBalance""
+    FROM ""{closureTableName}"" prev
+    WHERE prev.""Id"" < c.""Id""
+    ORDER BY prev.""Id"" DESC
+    LIMIT 1
+) p ON TRUE
+LEFT JOIN LATERAL (
+    SELECT SUM(x.""Amount"") AS ""Incomes""
+    FROM ""{incomesTableName}"" x
+    WHERE x.""ClosureId"" = c.""Id""
+) i ON TRUE
+LEFT JOIN LATERAL (
+    SELECT SUM(x.""Amount"") AS ""Expenses""
+    FROM ""{expensesTableName}"" x
+    WHERE x.""ClosureId"" = c.""Id""
+) e ON TRUE
+LEFT JOIN LATERAL (
+    SELECT SUM(x.""Amount"") AS ""InAccount""
+    FROM ""{closureBalancesTableName}"" x
+    WHERE x.""ClosureId"" = c.""Id""
+) b ON TRUE
+WHERE (@id IS NULL OR c.""Id"" = @id)
+  AND (@isClosed IS NULL OR c.""isClosed"" = @isClosed)
+  AND (@openDateFrom IS NULL OR c.""OpenDate"" >= @openDateFrom)
+  AND (@openDateToExclusive IS NULL OR c.""OpenDate"" < @openDateToExclusive)
+ORDER BY c.""Id"" DESC";
 
             AddNullableParameter(command, "@id", DbType.Int32, request.Id);
             AddNullableParameter(command, "@isClosed", DbType.Boolean, request.IsClosed);
-            AddNullableParameter(command, "@openDateFrom", DbType.DateTime, request.OpenDateFrom);
-            AddNullableParameter(command, "@openDateToExclusive", DbType.DateTime, request.OpenDateTo?.Date.AddDays(1));
+            AddNullableParameter(command, "@openDateFrom", DbType.DateTime, DbDateTime.ToDb(request.OpenDateFrom));
+            AddNullableParameter(command, "@openDateToExclusive", DbType.DateTime, DbDateTime.ToDb(request.OpenDateTo?.Date.AddDays(1)));
 
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -87,12 +88,12 @@ ORDER BY c.[Id] DESC";
                 closures.Add(new ClosureResponse
                 {
                     Id = reader.GetInt32(0),
-                    OpenDate = reader.IsDBNull(1) ? null : reader.GetDateTime(1),
+                    OpenDate = reader.IsDBNull(1) ? null : DbDateTime.FromDb(reader.GetDateTime(1)),
                     PreviousBalance = reader.IsDBNull(2) ? null : reader.GetDecimal(2),
                     Incomes = reader.IsDBNull(3) ? 0 : reader.GetDecimal(3),
                     Expenses = reader.IsDBNull(4) ? 0 : reader.GetDecimal(4),
                     InAccount = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
-                    CloseDate = reader.IsDBNull(6) ? null : reader.GetDateTime(6),
+                    CloseDate = reader.IsDBNull(6) ? null : DbDateTime.FromDb(reader.GetDateTime(6)),
                     IsClosed = reader.IsDBNull(7) ? null : reader.GetBoolean(7),
                     Result = reader.IsDBNull(8) ? null : reader.GetDecimal(8)
                 });
@@ -127,7 +128,7 @@ ORDER BY c.[Id] DESC";
         {
             await using (var existsCommand = connection.CreateCommand())
             {
-                existsCommand.CommandText = $"SELECT TOP 1 1 FROM [{closureTableName}] WHERE [Id] = @closureId";
+                existsCommand.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
                 AddNullableParameter(existsCommand, "@closureId", DbType.Int32, closureId);
                 var exists = await existsCommand.ExecuteScalarAsync();
                 if (exists is null)
@@ -140,14 +141,14 @@ ORDER BY c.[Id] DESC";
             await using (var command = connection.CreateCommand())
             {
                 command.CommandText = $@"
-SELECT i.[AccountId],
-       MAX(a.[Name]) AS [AccountName],
-       SUM(i.[Amount]) AS [Amount]
-FROM [{incomesTableName}] i
-LEFT JOIN [{accountsTableName}] a ON a.[Id] = i.[AccountId]
-WHERE i.[ClosureId] = @closureId
-GROUP BY i.[AccountId]
-ORDER BY [Amount] DESC, i.[AccountId] ASC";
+SELECT i.""AccountId"",
+       MAX(a.""Name"") AS ""AccountName"",
+       SUM(i.""Amount"") AS ""Amount""
+FROM ""{incomesTableName}"" i
+LEFT JOIN ""{accountsTableName}"" a ON a.""Id"" = i.""AccountId""
+WHERE i.""ClosureId"" = @closureId
+GROUP BY i.""AccountId""
+ORDER BY 3 DESC NULLS LAST, i.""AccountId"" ASC";
                 AddNullableParameter(command, "@closureId", DbType.Int32, closureId);
 
                 await using var reader = await command.ExecuteReaderAsync();
@@ -207,7 +208,7 @@ ORDER BY [Amount] DESC, i.[AccountId] ASC";
         {
             await using (var existsCommand = connection.CreateCommand())
             {
-                existsCommand.CommandText = $"SELECT TOP 1 1 FROM [{closureTableName}] WHERE [Id] = @closureId";
+                existsCommand.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
                 AddNullableParameter(existsCommand, "@closureId", DbType.Int32, closureId);
                 var exists = await existsCommand.ExecuteScalarAsync();
                 if (exists is null)
@@ -220,14 +221,14 @@ ORDER BY [Amount] DESC, i.[AccountId] ASC";
             await using (var command = connection.CreateCommand())
             {
                 command.CommandText = $@"
-SELECT e.[AccountId],
-       MAX(a.[Name]) AS [AccountName],
-       SUM(e.[Amount]) AS [Amount]
-FROM [{expensesTableName}] e
-LEFT JOIN [{accountsTableName}] a ON a.[Id] = e.[AccountId]
-WHERE e.[ClosureId] = @closureId
-GROUP BY e.[AccountId]
-ORDER BY [Amount] DESC, e.[AccountId] ASC";
+SELECT e.""AccountId"",
+       MAX(a.""Name"") AS ""AccountName"",
+       SUM(e.""Amount"") AS ""Amount""
+FROM ""{expensesTableName}"" e
+LEFT JOIN ""{accountsTableName}"" a ON a.""Id"" = e.""AccountId""
+WHERE e.""ClosureId"" = @closureId
+GROUP BY e.""AccountId""
+ORDER BY 3 DESC NULLS LAST, e.""AccountId"" ASC";
                 AddNullableParameter(command, "@closureId", DbType.Int32, closureId);
 
                 await using var reader = await command.ExecuteReaderAsync();
@@ -292,7 +293,7 @@ ORDER BY [Amount] DESC, e.[AccountId] ASC";
             await using (var existsCommand = connection.CreateCommand())
             {
                 existsCommand.Transaction = transaction;
-                existsCommand.CommandText = $"SELECT TOP 1 COALESCE([IsClosed], 0) FROM [{closureTableName}] WHERE [Id] = @closureId";
+                existsCommand.CommandText = $@"SELECT COALESCE(""isClosed"", FALSE) FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
                 AddNullableParameter(existsCommand, "@closureId", DbType.Int32, closureId);
                 var rawIsClosed = await existsCommand.ExecuteScalarAsync();
                 if (rawIsClosed is null)
@@ -315,14 +316,15 @@ ORDER BY [Amount] DESC, e.[AccountId] ASC";
                 calcCommand.CommandText = $@"
 SELECT
     COALESCE((
-        SELECT TOP 1 prev.[Result]
-        FROM [{closureTableName}] prev
-        WHERE prev.[Id] < @closureId
-        ORDER BY prev.[Id] DESC
-    ), 0) AS [PreviousBalance],
-    COALESCE((SELECT SUM(i.[Amount]) FROM [{incomesTableName}] i WHERE i.[ClosureId] = @closureId), 0) AS [Incomes],
-    COALESCE((SELECT SUM(e.[Amount]) FROM [{expensesTableName}] e WHERE e.[ClosureId] = @closureId), 0) AS [Expenses],
-    COALESCE((SELECT SUM(b.[Amount]) FROM [{closureBalancesTableName}] b WHERE b.[ClosureId] = @closureId), 0) AS [InAccount]";
+        SELECT prev.""Result""
+        FROM ""{closureTableName}"" prev
+        WHERE prev.""Id"" < @closureId
+        ORDER BY prev.""Id"" DESC
+        LIMIT 1
+    ), 0) AS ""PreviousBalance"",
+    COALESCE((SELECT SUM(i.""Amount"") FROM ""{incomesTableName}"" i WHERE i.""ClosureId"" = @closureId), 0) AS ""Incomes"",
+    COALESCE((SELECT SUM(e.""Amount"") FROM ""{expensesTableName}"" e WHERE e.""ClosureId"" = @closureId), 0) AS ""Expenses"",
+    COALESCE((SELECT SUM(b.""Amount"") FROM ""{closureBalancesTableName}"" b WHERE b.""ClosureId"" = @closureId), 0) AS ""InAccount""";
                 AddNullableParameter(calcCommand, "@closureId", DbType.Int32, closureId);
 
                 await using var reader = await calcCommand.ExecuteReaderAsync();
@@ -345,12 +347,12 @@ SELECT
             {
                 updateCommand.Transaction = transaction;
                 updateCommand.CommandText = $@"
-UPDATE [{closureTableName}]
-SET [CloseDate] = @closeDate,
-    [Result] = @result,
-    [IsClosed] = 1
-WHERE [Id] = @closureId";
-                AddNullableParameter(updateCommand, "@closeDate", DbType.DateTime, now);
+UPDATE ""{closureTableName}""
+SET ""CloseDate"" = @closeDate,
+    ""Result"" = @result,
+    ""isClosed"" = TRUE
+WHERE ""Id"" = @closureId";
+                AddNullableParameter(updateCommand, "@closeDate", DbType.DateTime, DbDateTime.ToDb(now));
                 AddNullableParameter(updateCommand, "@result", DbType.Decimal, result);
                 AddNullableParameter(updateCommand, "@closureId", DbType.Int32, closureId);
 
@@ -364,10 +366,10 @@ WHERE [Id] = @closureId";
             {
                 insertCommand.Transaction = transaction;
                 insertCommand.CommandText = $@"
-INSERT INTO [{closureTableName}] ([OpenDate], [CloseDate], [IsClosed], [Result])
-VALUES (@openDate, NULL, 0, NULL);
-SELECT CAST(SCOPE_IDENTITY() AS int);";
-                AddNullableParameter(insertCommand, "@openDate", DbType.DateTime, now);
+INSERT INTO ""{closureTableName}"" (""OpenDate"", ""CloseDate"", ""isClosed"", ""Result"")
+VALUES (@openDate, NULL, FALSE, NULL)
+RETURNING ""Id"";";
+                AddNullableParameter(insertCommand, "@openDate", DbType.DateTime, DbDateTime.ToDb(now));
 
                 var scalar = await insertCommand.ExecuteScalarAsync();
                 if (scalar is null)
@@ -411,7 +413,7 @@ SELECT CAST(SCOPE_IDENTITY() AS int);";
             foreach (var candidate in new[] { preferredName, fallbackName })
             {
                 await using var command = connection.CreateCommand();
-                command.CommandText = "SELECT TOP 1 1 FROM sys.tables WHERE [name] = @tableName";
+                command.CommandText = "SELECT 1 FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = @tableName LIMIT 1";
                 var parameter = command.CreateParameter();
                 parameter.ParameterName = "@tableName";
                 parameter.Value = candidate;
