@@ -1,12 +1,14 @@
 using ContaMec.Api.Application.Users;
 using ContaMec.Api.Application.Users.Dto;
 using ContaMec.Api.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Tags("Usuarios")]
 public class UsersController(IUserService userService, ContaMecDbContext dbContext) : ControllerBase

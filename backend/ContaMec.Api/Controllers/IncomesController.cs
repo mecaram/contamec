@@ -1,11 +1,13 @@
 using ContaMec.Api.Application.Incomes;
 using ContaMec.Api.Application.Incomes.Dto;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Tags("Ingresos")]
 public class IncomesController(IIncomeService incomeService) : ControllerBase

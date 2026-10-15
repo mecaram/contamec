@@ -1,10 +1,12 @@
 using ContaMec.Api.Application.ClosureBalances;
 using ContaMec.Api.Application.ClosureBalances.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Tags("Valores en cuenta")]
 public class ClosureBalancesController(IClosureBalanceService closureBalanceService) : ControllerBase

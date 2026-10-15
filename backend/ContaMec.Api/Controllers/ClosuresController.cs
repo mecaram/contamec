@@ -1,10 +1,12 @@
 using ContaMec.Api.Application.Closures;
 using ContaMec.Api.Application.Closures.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Tags("Cierres")]
 public class ClosuresController(IClosureService closureService) : ControllerBase

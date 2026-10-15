@@ -1,11 +1,13 @@
 using ContaMec.Api.Application.Expenses;
 using ContaMec.Api.Application.Expenses.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Tags("Egresos")]
 public class ExpensesController(IExpenseService expenseService) : ControllerBase

@@ -1,6 +1,7 @@
 using ContaMec.Api.Application.Accounts;
 using ContaMec.Api.Application.Accounts.Dto;
 using ContaMec.Api.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -8,6 +9,7 @@ using System.Data;
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Tags("Cuentas")]
 public class AccountsController(ContaMecDbContext dbContext, IAccountService accountService) : ControllerBase

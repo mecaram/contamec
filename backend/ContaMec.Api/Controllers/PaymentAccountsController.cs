@@ -1,10 +1,12 @@
 using ContaMec.Api.Application.PaymentAccounts;
 using ContaMec.Api.Application.PaymentAccounts.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 [Tags("Cuentas de pago")]
 public class PaymentAccountsController(IPaymentAccountService paymentAccountService) : ControllerBase
