@@ -73,6 +73,10 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
+// Usuario y host nunca llevan espacios; al pegar la cadena (p. ej. en Render) suelen colarse por saltos de línea.
+var csb = dataSourceBuilder.ConnectionStringBuilder;
+csb.Username = RemoveWhitespace(csb.Username);
+csb.Host = RemoveWhitespace(csb.Host);
 dataSourceBuilder.MapEnum<AccountType>("AccountTypes", new NpgsqlNullNameTranslator());
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddDbContext<ContaMecDbContext>(options => options.UseNpgsql(dataSource));
@@ -153,3 +157,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+static string? RemoveWhitespace(string? value) =>
+    value is null ? null : string.Concat(value.Where(c => !char.IsWhiteSpace(c)));
