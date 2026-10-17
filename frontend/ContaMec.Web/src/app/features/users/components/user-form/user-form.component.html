@@ -20,15 +20,25 @@
         placeholder="{{ mode === 'edit' ? 'Dejar vacío para no cambiar' : '' }}"
       />
     </div>
-    <div class="user-form__error" *ngIf="form.controls.password.hasError('minlength')">
-      La contraseña debe tener al menos 4 caracteres.
-    </div>
+    <div class="user-form__error" *ngIf="form.controls.password.hasError('required')">La contraseña es obligatoria.</div>
+    <ul class="user-form__rules" *ngIf="showPasswordRules" aria-live="polite">
+      <li *ngFor="let rule of passwordRules" [class.user-form__rule--ok]="rule.ok">
+        {{ rule.ok ? '✔' : '•' }} {{ rule.label }}
+      </li>
+    </ul>
 
     <div class="user-form__field">
       <label class="user-form__label" for="user-role">Rol</label>
       <select id="user-role" class="user-form__control" formControlName="userRoleId">
         <option [ngValue]="null">Sin rol</option>
         <option *ngFor="let role of roleOptions" [ngValue]="role.id">{{ role.name || '-' }}</option>
+      </select>
+    </div>
+
+    <div class="user-form__field" *ngIf="showApplication">
+      <label class="user-form__label" for="user-application">Empresa</label>
+      <select id="user-application" class="user-form__control" formControlName="applicationId">
+        <option *ngFor="let application of applicationOptions" [ngValue]="application.id">{{ application.name || '-' }}</option>
       </select>
     </div>
 

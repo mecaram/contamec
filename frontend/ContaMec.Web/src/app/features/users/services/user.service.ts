@@ -10,6 +10,11 @@ export interface UserRoleOption {
   name?: string | null;
 }
 
+export interface UserApplicationOption {
+  id: number;
+  name?: string | null;
+}
+
 @Injectable()
 export class UserService {
   private readonly apiBaseUrl = ((environment as any).apiUrl ?? environment.apiBaseUrl) as string;
@@ -31,12 +36,19 @@ export class UserService {
     return this.http.get<UserRoleOption[]>(`${this.usersUrl}/role-options`, { headers: this.getAuthHeaders() });
   }
 
+  /** Empresas activas para elegir al crear un usuario. La API solo responde a un SuperAdministrador. */
+  getApplicationOptions(): Observable<UserApplicationOption[]> {
+    const params = new HttpParams().set('active', 'true');
+    return this.http.get<UserApplicationOption[]>(`${this.apiBaseUrl}/applications`, { params, headers: this.getAuthHeaders() });
+  }
+
   create(user: User): Observable<User> {
     const payload = {
       name: user.name ?? null,
       password: user.password ?? null,
       isActive: user.isActive,
-      userRoleId: user.userRoleId ?? null
+      userRoleId: user.userRoleId ?? null,
+      applicationId: user.applicationId ?? null
     };
     return this.http.post<User>(this.usersUrl, payload, { headers: this.getAuthHeaders() });
   }

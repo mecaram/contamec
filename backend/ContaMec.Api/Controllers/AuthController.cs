@@ -32,4 +32,29 @@ public class AuthController(IAuthService authService) : ControllerBase
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
         }
     }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest? request, CancellationToken cancellationToken)
+    {
+        if (request is null)
+            return BadRequest("Cuerpo JSON requerido.");
+
+        if (!User.TryGetUserId(out var userId))
+            return Forbid();
+
+        try
+        {
+            var changed = await authService.ChangePasswordAsync(userId, request, cancellationToken);
+            return changed ? NoContent() : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

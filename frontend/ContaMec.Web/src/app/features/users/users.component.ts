@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
+import { AuthService } from '../../auth/auth.service';
 import { User } from './models/user.model';
 import { UserSearch } from './models/user-search.model';
-import { UserRoleOption, UserService } from './services/user.service';
+import { UserApplicationOption, UserRoleOption, UserService } from './services/user.service';
 
 @Component({
   selector: 'app-users',
@@ -13,6 +14,8 @@ import { UserRoleOption, UserService } from './services/user.service';
 export class UsersComponent implements OnInit {
   users: User[] = [];
   roleOptions: UserRoleOption[] = [];
+  applicationOptions: UserApplicationOption[] = [];
+  readonly currentApplicationId = this.auth.getApplicationId();
   loading = false;
   errorMessage: string | null = null;
   formVisible = false;
@@ -32,11 +35,15 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private readonly fb: FormBuilder,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly auth: AuthService
   ) {}
 
   ngOnInit(): void {
     this.loadRoleOptions();
+    if (this.auth.isSuperAdministrator()) {
+      this.loadApplicationOptions();
+    }
     this.search();
   }
 
@@ -90,7 +97,7 @@ export class UsersComponent implements OnInit {
     if (this.formMode === 'create') {
       this.userService.create(payload).subscribe({
         next: () => {
-          this.notify('Usuario creado correctamente.');
+          this.notify(this.buildCreatedMessage(payload.applicationId));
           this.formVisible = false;
           this.search();
         },
@@ -157,6 +164,26 @@ export class UsersComponent implements OnInit {
         this.roleOptions = [];
       }
     });
+  }
+
+  private loadApplicationOptions(): void {
+    this.userService.getApplicationOptions().subscribe({
+      next: (options) => {
+        this.applicationOptions = options ?? [];
+      },
+      error: () => {
+        this.applicationOptions = [];
+      }
+    });
+  }
+
+  /** El listado solo muestra la empresa propia, así que se avisa si el usuario se creó en otra. */
+  private buildCreatedMessage(applicationId?: number | null): string {
+    if (!applicationId || applicationId === this.currentApplicationId) {
+      return 'Usuario creado correctamente.';
+    }
+    const applicationName = this.applicationOptions.find((a) => a.id === applicationId)?.name ?? `#${applicationId}`;
+    return `Usuario creado correctamente en la empresa ${applicationName}.`;
   }
 
   private buildFilters(): UserSearch {

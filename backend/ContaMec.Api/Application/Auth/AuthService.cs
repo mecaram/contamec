@@ -58,6 +58,32 @@ public class AuthService(
         };
     }
 
+    public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (string.IsNullOrEmpty(request.CurrentPassword))
+            throw new ArgumentException("La contraseña actual es obligatoria.");
+        if (string.IsNullOrEmpty(request.NewPassword))
+            throw new ArgumentException("La contraseña nueva es obligatoria.");
+        if (request.NewPassword != request.ConfirmPassword)
+            throw new ArgumentException("La contraseña nueva y su repetición no coinciden.");
+
+        PasswordPolicy.Validate(request.NewPassword);
+
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user is null)
+            return false;
+
+        if (!VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            throw new ArgumentException("La contraseña actual es incorrecta.");
+        if (request.NewPassword == request.CurrentPassword)
+            throw new ArgumentException("La contraseña nueva debe ser distinta de la actual.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     private bool VerifyPassword(string password, string storedHash)
     {
         if (string.IsNullOrEmpty(storedHash))

@@ -5,4 +5,5 @@ export interface User {
   userRoleId?: number | null;
   userRoleName?: string | null;
   password?: string | null;
+  applicationId?: number | null;
 }

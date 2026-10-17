@@ -57,20 +57,22 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
     {
         ArgumentNullException.ThrowIfNull(request);
         await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, null, isSuperAdministrator);
+        var targetApplicationId = await ResolveTargetApplicationIdAsync(request.ApplicationId, applicationId, isSuperAdministrator);
 
         var user = new User
         {
             Name = request.Name!.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password!),
             IsActive = request.IsActive,
+            CreatedAt = DateTime.Now,
             UserRoleId = request.UserRoleId!.Value,
-            ApplicationId = applicationId
+            ApplicationId = targetApplicationId
         };
 
         _dbContext.Users.Add(user);
         await SaveChangesCheckingDuplicateNameAsync();
 
-        var created = await GetByIdAsync(user.Id, applicationId);
+        var created = await GetByIdAsync(user.Id, targetApplicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el usuario recién creado.");
     }
 
@@ -142,6 +144,22 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         };
     }
 
+    private async Task<int> ResolveTargetApplicationIdAsync(int? requestedApplicationId, int currentApplicationId, bool isSuperAdministrator)
+    {
+        if (!requestedApplicationId.HasValue || requestedApplicationId.Value == currentApplicationId)
+            return currentApplicationId;
+
+        if (!isSuperAdministrator)
+            throw new ArgumentException("No tiene permisos para crear usuarios en otra empresa.");
+
+        var applicationIsActive = await _dbContext.Applications
+            .AnyAsync(a => a.Id == requestedApplicationId.Value && a.Active);
+        if (!applicationIsActive)
+            throw new ArgumentException("La empresa seleccionada no existe o no está activa.");
+
+        return requestedApplicationId.Value;
+    }
+
     private static void EnsureCanManage(User user, bool isSuperAdministrator)
     {
         if (!isSuperAdministrator && user.UserRole?.Name == UserRoleNames.SuperAdministrator)
@@ -157,8 +175,8 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
 
         if (currentUserId is null && string.IsNullOrWhiteSpace(password))
             throw new ArgumentException("Password es obligatorio.");
-        if (!string.IsNullOrWhiteSpace(password) && password.Trim().Length < 4)
-            throw new ArgumentException("Password debe tener al menos 4 caracteres.");
+        if (!string.IsNullOrWhiteSpace(password))
+            PasswordPolicy.Validate(password.Trim());
 
         var normalizedName = name.Trim();
         var exists = await _dbContext.Users

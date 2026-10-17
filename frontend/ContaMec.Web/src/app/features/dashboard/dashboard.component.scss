@@ -39,9 +39,15 @@
     background: #f8fafc;
     border-color: #607d8b;
   }
+}
+
+.dashboard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 
   // Fuera del flujo para que el título quede centrado respecto de la página.
-  @media (min-width: 36rem) {
+  @media (min-width: 48rem) {
     position: absolute;
     top: 0;
     right: 0;

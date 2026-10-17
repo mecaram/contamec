@@ -41,6 +41,11 @@ const routes: Routes = [
       import('./features/applications/applications.module').then((m) => m.ApplicationsModule)
   },
   {
+    path: 'cambiar-clave',
+    loadChildren: () =>
+      import('./features/change-password/change-password.module').then((m) => m.ChangePasswordModule)
+  },
+  {
     path: 'cierres',
     loadChildren: () =>
       import('./features/closures/closures.module').then((m) => m.ClosuresModule)

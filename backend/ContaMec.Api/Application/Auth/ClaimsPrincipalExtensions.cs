@@ -12,4 +12,9 @@ public static class ClaimsPrincipalExtensions
 
     public static bool TryGetApplicationId(this ClaimsPrincipal principal, out int applicationId) =>
         int.TryParse(principal.FindFirstValue(ApplicationIdClaim), out applicationId);
+
+    public static bool TryGetUserId(this ClaimsPrincipal principal, out int userId) =>
+        int.TryParse(
+            principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? principal.FindFirstValue("sub"),
+            out userId);
 }
