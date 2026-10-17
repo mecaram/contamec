@@ -15,4 +15,7 @@ public class LoginResponse
 
     [JsonPropertyName("applicationName")]
     public string ApplicationName { get; set; } = string.Empty;
+
+    [JsonPropertyName("role")]
+    public string Role { get; set; } = string.Empty;
 }

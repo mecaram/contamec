@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Users.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
@@ -52,10 +53,10 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<UserResponse> CreateAsync(UserCreateRequest request, int applicationId)
+    public async Task<UserResponse> CreateAsync(UserCreateRequest request, int applicationId, bool isSuperAdministrator)
     {
         ArgumentNullException.ThrowIfNull(request);
-        await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, null);
+        await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, null, isSuperAdministrator);
 
         var user = new User
         {
@@ -73,14 +74,18 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         return created ?? throw new InvalidOperationException("No se pudo leer el usuario recién creado.");
     }
 
-    public async Task<bool> UpdateAsync(int id, UserUpdateRequest request, int applicationId)
+    public async Task<bool> UpdateAsync(int id, UserUpdateRequest request, int applicationId, bool isSuperAdministrator)
     {
         ArgumentNullException.ThrowIfNull(request);
-        await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, id);
+        await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, id, isSuperAdministrator);
 
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id && u.ApplicationId == applicationId);
+        var user = await _dbContext.Users
+            .Include(u => u.UserRole)
+            .FirstOrDefaultAsync(u => u.Id == id && u.ApplicationId == applicationId);
         if (user is null)
             return false;
+
+        EnsureCanManage(user, isSuperAdministrator);
 
         user.Name = request.Name!.Trim();
         user.IsActive = request.IsActive;
@@ -93,14 +98,17 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id, int applicationId)
+    public async Task<bool> DeleteAsync(int id, int applicationId, bool isSuperAdministrator)
     {
         var user = await _dbContext.Users
+            .Include(u => u.UserRole)
             .Include(u => u.IncomesCreated)
             .Include(u => u.ExpensesCreated)
             .FirstOrDefaultAsync(u => u.Id == id && u.ApplicationId == applicationId);
         if (user is null)
             return false;
+
+        EnsureCanManage(user, isSuperAdministrator);
 
         if ((user.IncomesCreated?.Count ?? 0) > 0 || (user.ExpensesCreated?.Count ?? 0) > 0)
             throw new ArgumentException("No se puede eliminar el usuario porque tiene movimientos asociados.");
@@ -134,7 +142,13 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         };
     }
 
-    private async Task ValidateUserAsync(string? name, string? password, int? userRoleId, int? currentUserId)
+    private static void EnsureCanManage(User user, bool isSuperAdministrator)
+    {
+        if (!isSuperAdministrator && user.UserRole?.Name == UserRoleNames.SuperAdministrator)
+            throw new ArgumentException("No tiene permisos para modificar o eliminar un usuario SuperAdministrador.");
+    }
+
+    private async Task ValidateUserAsync(string? name, string? password, int? userRoleId, int? currentUserId, bool isSuperAdministrator)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name es obligatorio.");
@@ -155,8 +169,13 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         if (!userRoleId.HasValue)
             throw new ArgumentException("UserRoleId es obligatorio.");
 
-        var roleExists = await _dbContext.UserRoles.AnyAsync(r => r.Id == userRoleId.Value);
-        if (!roleExists)
+        var roleName = await _dbContext.UserRoles
+            .Where(r => r.Id == userRoleId.Value)
+            .Select(r => r.Name)
+            .FirstOrDefaultAsync();
+        if (roleName is null)
             throw new ArgumentException("El rol seleccionado no existe.");
+        if (!isSuperAdministrator && roleName == UserRoleNames.SuperAdministrator)
+            throw new ArgumentException("No tiene permisos para asignar el rol SuperAdministrador.");
     }
 }

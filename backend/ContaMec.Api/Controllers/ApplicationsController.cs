@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = UserRoleNames.SuperAdministrator)]
 [Route("api/[controller]")]
 [Tags("Aplicaciones")]
 public class ApplicationsController(IApplicationService applicationService) : ControllerBase

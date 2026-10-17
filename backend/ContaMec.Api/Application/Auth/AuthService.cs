@@ -26,6 +26,7 @@ public class AuthService(
         var user = await _dbContext.Users
             .AsNoTracking()
             .Include(u => u.Application)
+            .Include(u => u.UserRole)
             .FirstOrDefaultAsync(u => u.Name.ToLower() == request.Username.ToLower(), cancellationToken);
 
         if (user is null || !user.IsActive)
@@ -45,13 +46,15 @@ public class AuthService(
                 "No es posible iniciar sesión porque la aplicación asociada a su empresa no se encuentra activa. Comuníquese con el administrador del sistema.");
 
         var name = user.Name ?? string.Empty;
-        var token = CreateJwt(user.Id, name, application.Id);
+        var roleName = user.UserRole?.Name ?? string.Empty;
+        var token = CreateJwt(user.Id, name, application.Id, roleName);
         return new LoginResponse
         {
             Token = token,
             Username = name,
             ApplicationId = application.Id,
-            ApplicationName = application.Name
+            ApplicationName = application.Name,
+            Role = roleName
         };
     }
 
@@ -86,7 +89,7 @@ public class AuthService(
         && (hash[2] == 'a' || hash[2] == 'b' || hash[2] == 'y')
         && hash[3] == '$';
 
-    private string CreateJwt(int userId, string name, int applicationId)
+    private string CreateJwt(int userId, string name, int applicationId, string roleName)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -96,6 +99,7 @@ public class AuthService(
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, name),
             new Claim(ClaimsPrincipalExtensions.ApplicationIdClaim, applicationId.ToString()),
+            new Claim(ClaimTypes.Role, roleName),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

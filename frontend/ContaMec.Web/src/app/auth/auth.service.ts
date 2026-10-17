@@ -13,6 +13,7 @@ export interface LoginResponse {
   username: string;
   applicationId: number;
   applicationName: string;
+  role: string;
 }
 
 interface FetchLoginError {
@@ -28,6 +29,8 @@ export class AuthService {
   private readonly usernameKey = 'contamec_username';
   private readonly applicationIdKey = 'contamec_application_id';
   private readonly applicationNameKey = 'contamec_application_name';
+  private readonly roleKey = 'contamec_role';
+  private readonly superAdministratorRole = 'SuperAdministrador';
 
   login(body: LoginRequest): Observable<LoginResponse> {
     const url = `${environment.apiBaseUrl}/auth/login`;
@@ -98,6 +101,7 @@ export class AuthService {
     sessionStorage.setItem(this.usernameKey, response.username);
     sessionStorage.setItem(this.applicationIdKey, String(response.applicationId));
     sessionStorage.setItem(this.applicationNameKey, response.applicationName);
+    sessionStorage.setItem(this.roleKey, response.role ?? '');
   }
 
   getToken(): string | null {
@@ -121,10 +125,16 @@ export class AuthService {
     return sessionStorage.getItem(this.applicationNameKey);
   }
 
+  /** Solo para la interfaz: el backend autoriza por el rol del JWT. */
+  isSuperAdministrator(): boolean {
+    return sessionStorage.getItem(this.roleKey) === this.superAdministratorRole;
+  }
+
   logout(): void {
     sessionStorage.removeItem(this.tokenKey);
     sessionStorage.removeItem(this.usernameKey);
     sessionStorage.removeItem(this.applicationIdKey);
     sessionStorage.removeItem(this.applicationNameKey);
+    sessionStorage.removeItem(this.roleKey);
   }
 }

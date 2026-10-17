@@ -65,7 +65,7 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
 
         try
         {
-            var created = await userService.CreateAsync(request, applicationId);
+            var created = await userService.CreateAsync(request, applicationId, User.IsInRole(UserRoleNames.SuperAdministrator));
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -89,7 +89,7 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
 
         try
         {
-            var updated = await userService.UpdateAsync(id, request, applicationId);
+            var updated = await userService.UpdateAsync(id, request, applicationId, User.IsInRole(UserRoleNames.SuperAdministrator));
             return updated ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -110,7 +110,7 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
 
         try
         {
-            var deleted = await userService.DeleteAsync(id, applicationId);
+            var deleted = await userService.DeleteAsync(id, applicationId, User.IsInRole(UserRoleNames.SuperAdministrator));
             return deleted ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -123,8 +123,11 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
     [ProducesResponseType(typeof(List<UserRoleOptionResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRoleOptions()
     {
+        // Solo un SuperAdministrador puede ver (y asignar) su propio rol.
+        var isSuperAdministrator = User.IsInRole(UserRoleNames.SuperAdministrator);
         var roles = await dbContext.UserRoles
             .AsNoTracking()
+            .Where(r => isSuperAdministrator || r.Name != UserRoleNames.SuperAdministrator)
             .OrderBy(r => r.Name)
             .ThenBy(r => r.Id)
             .Select(r => new UserRoleOptionResponse

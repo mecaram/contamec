@@ -21,6 +21,8 @@ export class DashboardComponent {
     void this.router.navigateByUrl('/login');
   }
 
+  private readonly isSuperAdministrator = this.auth.isSuperAdministrator();
+
   readonly categories: DashboardCategory[] = [
     {
       title: 'Archivos',
@@ -28,7 +30,7 @@ export class DashboardComponent {
         { name: 'Cuentas', icon: 'account_balance', route: '/cuentas' },
         { name: 'Cuentas de pago', icon: 'credit_card', route: '/cuentas-pago' },
         { name: 'Usuarios', icon: 'people', route: '/usuarios' },
-        { name: 'Aplicaciones', icon: 'business', route: '/aplicaciones' }
+        { name: 'Aplicaciones', icon: 'business', route: '/aplicaciones', superAdminOnly: true }
       ]
     },
     {
@@ -43,5 +45,8 @@ export class DashboardComponent {
       title: 'Informes',
       items: []
     }
-  ];
+  ].map((category) => ({
+    ...category,
+    items: category.items.filter((item) => !item.superAdminOnly || this.isSuperAdministrator)
+  }));
 }
