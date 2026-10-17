@@ -9,6 +9,8 @@ import { DashboardCategory } from './dashboard.models';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent {
+  readonly applicationName = this.auth.getApplicationName();
+
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router

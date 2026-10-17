@@ -1,10 +1,12 @@
 using ContaMec.Api.Application.Accounts;
 using ContaMec.Api.Application.Accounts.Dto;
+using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Data.Common;
 
 namespace ContaMec.Api.Controllers;
 
@@ -16,11 +18,15 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
 {
     [HttpGet]
     [ProducesResponseType(typeof(List<AccountResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "id")] int? id,
         [FromQuery(Name = "name")] string? name,
         [FromQuery(Name = "type")] string? type)
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         var request = new AccountSearchRequest
         {
             Id = id,
@@ -28,30 +34,38 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
             Type = type
         };
 
-        var result = await accountService.SearchAsync(request);
+        var result = await accountService.SearchAsync(request, applicationId);
         return Ok(result);
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await accountService.GetByIdAsync(id);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await accountService.GetByIdAsync(id, applicationId);
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(AccountResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] AccountCreateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var created = await accountService.CreateAsync(request);
+            var created = await accountService.CreateAsync(request, applicationId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -63,15 +77,19 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, [FromBody] AccountUpdateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var updated = await accountService.UpdateAsync(id, request);
+            var updated = await accountService.UpdateAsync(id, request, applicationId);
             return updated ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -83,12 +101,16 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var deleted = await accountService.DeleteAsync(id);
+            var deleted = await accountService.DeleteAsync(id, applicationId);
             return deleted ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -99,8 +121,12 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
 
     [HttpGet("income-options")]
     [ProducesResponseType(typeof(List<IncomeAccountOptionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetIncomeOptions()
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         var tableName = await ResolveAccountsTableNameAsync();
         if (tableName is null)
             return Ok(new List<IncomeAccountOptionResponse>());
@@ -117,13 +143,16 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
             command.CommandText = $@"
 SELECT ""Id"", ""Name""
 FROM ""{tableName}""
-WHERE ""Type"" IS NOT NULL AND ""Type""::text ILIKE @typeFilter
+WHERE ""ApplicationId"" = @applicationId
+  AND ""Type"" IS NOT NULL AND ""Type""::text ILIKE @typeFilter
 ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
 
             var parameter = command.CreateParameter();
             parameter.ParameterName = "@typeFilter";
             parameter.Value = "%Ingreso%";
             command.Parameters.Add(parameter);
+
+            AddApplicationIdParameter(command, applicationId);
 
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -146,8 +175,12 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
 
     [HttpGet("expense-options")]
     [ProducesResponseType(typeof(List<IncomeAccountOptionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetExpenseOptions()
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         var tableName = await ResolveAccountsTableNameAsync();
         if (tableName is null)
             return Ok(new List<IncomeAccountOptionResponse>());
@@ -164,7 +197,8 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
             command.CommandText = $@"
 SELECT ""Id"", ""Name""
 FROM ""{tableName}""
-WHERE ""Type"" IS NOT NULL
+WHERE ""ApplicationId"" = @applicationId
+  AND ""Type"" IS NOT NULL
   AND (
     ""Type""::text ILIKE @egresoFilter
     OR ""Type""::text ILIKE @gastoFilter
@@ -180,6 +214,8 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
             gastoParameter.ParameterName = "@gastoFilter";
             gastoParameter.Value = "%gasto%";
             command.Parameters.Add(gastoParameter);
+
+            AddApplicationIdParameter(command, applicationId);
 
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -198,6 +234,14 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
         }
 
         return Ok(accounts);
+    }
+
+    private static void AddApplicationIdParameter(DbCommand command, int applicationId)
+    {
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "@applicationId";
+        parameter.Value = applicationId;
+        command.Parameters.Add(parameter);
     }
 
     private async Task<string?> ResolveAccountsTableNameAsync()

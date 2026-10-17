@@ -10,11 +10,13 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
-    public async Task<List<PaymentAccountResponse>> SearchAsync(PaymentAccountSearchRequest request)
+    public async Task<List<PaymentAccountResponse>> SearchAsync(PaymentAccountSearchRequest request, int applicationId)
     {
         request ??= new PaymentAccountSearchRequest();
 
-        var query = _dbContext.PaymentAccounts.AsNoTracking().AsQueryable();
+        var query = _dbContext.PaymentAccounts
+            .AsNoTracking()
+            .Where(a => a.ApplicationId == applicationId);
 
         if (request.Id.HasValue)
             query = query.Where(a => a.Id == request.Id.Value);
@@ -32,38 +34,39 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
             .ToListAsync();
     }
 
-    public async Task<PaymentAccountResponse?> GetByIdAsync(int id)
+    public async Task<PaymentAccountResponse?> GetByIdAsync(int id, int applicationId)
     {
         return await _dbContext.PaymentAccounts
             .AsNoTracking()
-            .Where(a => a.Id == id)
+            .Where(a => a.Id == id && a.ApplicationId == applicationId)
             .Select(MapToResponse())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<PaymentAccountResponse> CreateAsync(PaymentAccountCreateRequest request)
+    public async Task<PaymentAccountResponse> CreateAsync(PaymentAccountCreateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidatePaymentAccount(request.Name);
 
         var account = new PaymentAccount
         {
-            Name = request.Name?.Trim() ?? string.Empty
+            Name = request.Name?.Trim() ?? string.Empty,
+            ApplicationId = applicationId
         };
 
         _dbContext.PaymentAccounts.Add(account);
         await _dbContext.SaveChangesAsync();
 
-        var created = await GetByIdAsync(account.Id);
+        var created = await GetByIdAsync(account.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer la cuenta de pago recién creada.");
     }
 
-    public async Task<bool> UpdateAsync(int id, PaymentAccountUpdateRequest request)
+    public async Task<bool> UpdateAsync(int id, PaymentAccountUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidatePaymentAccount(request.Name);
 
-        var account = await _dbContext.PaymentAccounts.FirstOrDefaultAsync(a => a.Id == id);
+        var account = await _dbContext.PaymentAccounts.FirstOrDefaultAsync(a => a.Id == id && a.ApplicationId == applicationId);
         if (account is null)
             return false;
 
@@ -72,11 +75,11 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int applicationId)
     {
         var account = await _dbContext.PaymentAccounts
             .Include(a => a.ClosureBalances)
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .FirstOrDefaultAsync(a => a.Id == id && a.ApplicationId == applicationId);
         if (account is null)
             return false;
 

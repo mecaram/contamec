@@ -48,6 +48,15 @@
   letter-spacing: -0.02em;
 }
 
+.dashboard__company {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-weight: 500;
+  font-style: italic;
+  color: #0f766e;
+  letter-spacing: 0.01em;
+}
+
 .dashboard__subtitle {
   margin: 0.35rem 0 0;
   font-size: 0.95rem;

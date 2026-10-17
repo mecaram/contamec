@@ -4,9 +4,9 @@ namespace ContaMec.Api.Application.Users;
 
 public interface IUserService
 {
-    Task<List<UserResponse>> SearchAsync(UserSearchRequest request);
-    Task<UserResponse?> GetByIdAsync(int id);
-    Task<UserResponse> CreateAsync(UserCreateRequest request);
-    Task<bool> UpdateAsync(int id, UserUpdateRequest request);
-    Task<bool> DeleteAsync(int id);
+    Task<List<UserResponse>> SearchAsync(UserSearchRequest request, int applicationId);
+    Task<UserResponse?> GetByIdAsync(int id, int applicationId);
+    Task<UserResponse> CreateAsync(UserCreateRequest request, int applicationId);
+    Task<bool> UpdateAsync(int id, UserUpdateRequest request, int applicationId);
+    Task<bool> DeleteAsync(int id, int applicationId);
 }

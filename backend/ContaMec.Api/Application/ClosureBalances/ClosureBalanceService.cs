@@ -10,15 +10,16 @@ public class ClosureBalanceService(ContaMecDbContext dbContext) : IClosureBalanc
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
-    public async Task<List<ClosureBalanceResponse>> GetByClosureIdAsync(int closureId)
+    public async Task<List<ClosureBalanceResponse>> GetByClosureIdAsync(int closureId, int applicationId)
     {
         if (closureId <= 0)
             throw new ArgumentException("ClosureId inválido.");
 
-        await EnsureClosureExistsAsync(closureId);
+        await EnsureClosureExistsAsync(closureId, applicationId);
 
         var paymentAccounts = await _dbContext.PaymentAccounts
             .AsNoTracking()
+            .Where(x => x.ApplicationId == applicationId)
             .OrderBy(x => x.Name)
             .ThenBy(x => x.Id)
             .Select(x => new { x.Id, x.Name })
@@ -49,17 +50,18 @@ public class ClosureBalanceService(ContaMecDbContext dbContext) : IClosureBalanc
             .ToList();
     }
 
-    public async Task<List<ClosureBalanceResponse>> SaveBulkAsync(int closureId, List<ClosureBalanceSaveRequest> items)
+    public async Task<List<ClosureBalanceResponse>> SaveBulkAsync(int closureId, List<ClosureBalanceSaveRequest> items, int applicationId)
     {
         if (closureId <= 0)
             throw new ArgumentException("ClosureId inválido.");
         if (items is null || items.Count == 0)
             throw new ArgumentException("Debe enviar al menos un registro.");
 
-        await EnsureClosureExistsAsync(closureId);
+        await EnsureClosureExistsAsync(closureId, applicationId);
 
         var paymentAccountIds = await _dbContext.PaymentAccounts
             .AsNoTracking()
+            .Where(x => x.ApplicationId == applicationId)
             .OrderBy(x => x.Name)
             .ThenBy(x => x.Id)
             .Select(x => x.Id)
@@ -105,16 +107,17 @@ public class ClosureBalanceService(ContaMecDbContext dbContext) : IClosureBalanc
                 {
                     ClosureId = closureId,
                     PaymentAccountId = item.PaymentAccountId,
-                    Amount = item.Amount ?? 0m
+                    Amount = item.Amount ?? 0m,
+                    ApplicationId = applicationId
                 });
             }
         }
 
         await _dbContext.SaveChangesAsync();
-        return await GetByClosureIdAsync(closureId);
+        return await GetByClosureIdAsync(closureId, applicationId);
     }
 
-    private async Task EnsureClosureExistsAsync(int closureId)
+    private async Task EnsureClosureExistsAsync(int closureId, int applicationId)
     {
         var closureTableName = await ResolveTableNameAsync("Closures", "Cierres");
         if (closureTableName is null)
@@ -128,8 +131,9 @@ public class ClosureBalanceService(ContaMecDbContext dbContext) : IClosureBalanc
         try
         {
             await using var command = connection.CreateCommand();
-            command.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
+            command.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId AND ""ApplicationId"" = @applicationId LIMIT 1";
             AddNullableParameter(command, "@closureId", DbType.Int32, closureId);
+            AddNullableParameter(command, "@applicationId", DbType.Int32, applicationId);
             var exists = await command.ExecuteScalarAsync();
             if (exists is null)
                 throw new ArgumentException("El cierre indicado no existe.");

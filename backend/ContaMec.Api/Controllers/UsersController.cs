@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Users;
 using ContaMec.Api.Application.Users.Dto;
 using ContaMec.Api.Infrastructure.Data;
@@ -15,6 +16,7 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
 {
     [HttpGet]
     [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "id")] int? id,
         [FromQuery(Name = "name")] string? name,
@@ -29,30 +31,41 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
             UserRoleId = userRoleId
         };
 
-        var result = await userService.SearchAsync(request);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await userService.SearchAsync(request, applicationId);
         return Ok(result);
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await userService.GetByIdAsync(id);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await userService.GetByIdAsync(id, applicationId);
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] UserCreateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var created = await userService.CreateAsync(request);
+            var created = await userService.CreateAsync(request, applicationId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -65,14 +78,18 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var updated = await userService.UpdateAsync(id, request);
+            var updated = await userService.UpdateAsync(id, request, applicationId);
             return updated ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -85,11 +102,15 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(int id)
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var deleted = await userService.DeleteAsync(id);
+            var deleted = await userService.DeleteAsync(id, applicationId);
             return deleted ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)

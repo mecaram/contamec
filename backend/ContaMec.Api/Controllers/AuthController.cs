@@ -13,15 +13,23 @@ public class AuthController(IAuthService authService) : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Login([FromBody] LoginRequest? request, CancellationToken cancellationToken)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido: { \"username\", \"password\" }.");
 
-        var result = await authService.LoginAsync(request, cancellationToken);
-        if (result is null)
-            return Unauthorized();
+        try
+        {
+            var result = await authService.LoginAsync(request, cancellationToken);
+            if (result is null)
+                return Unauthorized();
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (LoginRejectedException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
     }
 }

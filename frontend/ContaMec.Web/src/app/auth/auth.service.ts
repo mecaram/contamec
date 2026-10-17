@@ -11,6 +11,8 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   username: string;
+  applicationId: number;
+  applicationName: string;
 }
 
 interface FetchLoginError {
@@ -24,6 +26,8 @@ interface FetchLoginError {
 export class AuthService {
   private readonly tokenKey = 'contamec_token';
   private readonly usernameKey = 'contamec_username';
+  private readonly applicationIdKey = 'contamec_application_id';
+  private readonly applicationNameKey = 'contamec_application_name';
 
   login(body: LoginRequest): Observable<LoginResponse> {
     const url = `${environment.apiBaseUrl}/auth/login`;
@@ -32,6 +36,11 @@ export class AuthService {
         const status = 'status' in err && err.status !== undefined ? err.status : 0;
         if (status === 401) {
           return throwError(new Error('Usuario o contraseña incorrectos.'));
+        }
+        if (status === 403) {
+          return throwError(
+            new Error(('message' in err && err.message) || 'No es posible iniciar sesión. Comuníquese con el administrador del sistema.')
+          );
         }
         if (status === 0) {
           return throwError(
@@ -68,6 +77,12 @@ export class AuthService {
       const err: FetchLoginError = { status: 401, message: res.statusText };
       throw err;
     }
+    if (res.status === 403) {
+      // El backend rechaza el login con { message } (aplicación inactiva o inexistente).
+      const data = (await res.json().catch(() => null)) as { message?: string } | null;
+      const err: FetchLoginError = { status: 403, message: data?.message ?? '' };
+      throw err;
+    }
     if (!res.ok) {
       const err: FetchLoginError = {
         status: res.status,
@@ -81,6 +96,8 @@ export class AuthService {
   saveSession(response: LoginResponse): void {
     sessionStorage.setItem(this.tokenKey, response.token);
     sessionStorage.setItem(this.usernameKey, response.username);
+    sessionStorage.setItem(this.applicationIdKey, String(response.applicationId));
+    sessionStorage.setItem(this.applicationNameKey, response.applicationName);
   }
 
   getToken(): string | null {
@@ -91,8 +108,23 @@ export class AuthService {
     return sessionStorage.getItem(this.usernameKey);
   }
 
+  /**
+   * Aplicación (empresa) del usuario autenticado, informada por el backend al iniciar sesión.
+   * Solo para uso en la interfaz: el backend toma el ApplicationId del JWT, no de este valor.
+   */
+  getApplicationId(): number | null {
+    const value = Number(sessionStorage.getItem(this.applicationIdKey));
+    return Number.isInteger(value) && value > 0 ? value : null;
+  }
+
+  getApplicationName(): string | null {
+    return sessionStorage.getItem(this.applicationNameKey);
+  }
+
   logout(): void {
     sessionStorage.removeItem(this.tokenKey);
     sessionStorage.removeItem(this.usernameKey);
+    sessionStorage.removeItem(this.applicationIdKey);
+    sessionStorage.removeItem(this.applicationNameKey);
   }
 }

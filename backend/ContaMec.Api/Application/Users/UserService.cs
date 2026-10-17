@@ -10,14 +10,14 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
-    public async Task<List<UserResponse>> SearchAsync(UserSearchRequest request)
+    public async Task<List<UserResponse>> SearchAsync(UserSearchRequest request, int applicationId)
     {
         request ??= new UserSearchRequest();
 
         var query = _dbContext.Users
             .AsNoTracking()
             .Include(u => u.UserRole)
-            .AsQueryable();
+            .Where(u => u.ApplicationId == applicationId);
 
         if (request.Id.HasValue)
             query = query.Where(u => u.Id == request.Id.Value);
@@ -41,17 +41,17 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             .ToListAsync();
     }
 
-    public async Task<UserResponse?> GetByIdAsync(int id)
+    public async Task<UserResponse?> GetByIdAsync(int id, int applicationId)
     {
         return await _dbContext.Users
             .AsNoTracking()
             .Include(u => u.UserRole)
-            .Where(u => u.Id == id)
+            .Where(u => u.Id == id && u.ApplicationId == applicationId)
             .Select(MapToResponse())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<UserResponse> CreateAsync(UserCreateRequest request)
+    public async Task<UserResponse> CreateAsync(UserCreateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, null);
@@ -61,28 +61,29 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             Name = request.Name!.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password!),
             IsActive = request.IsActive,
-            UserRoleId = request.UserRoleId
+            UserRoleId = request.UserRoleId!.Value,
+            ApplicationId = applicationId
         };
 
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();
 
-        var created = await GetByIdAsync(user.Id);
+        var created = await GetByIdAsync(user.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el usuario recién creado.");
     }
 
-    public async Task<bool> UpdateAsync(int id, UserUpdateRequest request)
+    public async Task<bool> UpdateAsync(int id, UserUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, id);
 
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id && u.ApplicationId == applicationId);
         if (user is null)
             return false;
 
         user.Name = request.Name!.Trim();
         user.IsActive = request.IsActive;
-        user.UserRoleId = request.UserRoleId;
+        user.UserRoleId = request.UserRoleId!.Value;
 
         if (!string.IsNullOrWhiteSpace(request.Password))
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password.Trim());
@@ -91,12 +92,12 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int applicationId)
     {
         var user = await _dbContext.Users
             .Include(u => u.IncomesCreated)
             .Include(u => u.ExpensesCreated)
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.Id == id && u.ApplicationId == applicationId);
         if (user is null)
             return false;
 

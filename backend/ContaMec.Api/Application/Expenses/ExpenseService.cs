@@ -11,14 +11,14 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
-    public async Task<List<ExpenseResponse>> SearchAsync(ExpenseSearchRequest request)
+    public async Task<List<ExpenseResponse>> SearchAsync(ExpenseSearchRequest request, int applicationId)
     {
         request ??= new ExpenseSearchRequest();
 
         var query = _dbContext.Expenses
             .AsNoTracking()
             .Include(e => e.Account)
-            .AsQueryable();
+            .Where(e => e.ApplicationId == applicationId);
 
         if (request.DateFrom.HasValue)
             query = query.Where(e => e.EmissionDate >= request.DateFrom.Value);
@@ -51,55 +51,58 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             .ToListAsync();
     }
 
-    public async Task<ExpenseResponse?> GetByIdAsync(int id)
+    public async Task<ExpenseResponse?> GetByIdAsync(int id, int applicationId)
     {
         return await _dbContext.Expenses
             .AsNoTracking()
             .Include(e => e.Account)
-            .Where(e => e.Id == id)
+            .Where(e => e.Id == id && e.ApplicationId == applicationId)
             .Select(MapToResponse())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<ExpenseResponse> CreateAsync(ExpenseCreateRequest request, int createdByUserId)
+    public async Task<ExpenseResponse> CreateAsync(ExpenseCreateRequest request, int createdByUserId, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateExpense(request.AccountId, request.Amount, request.Detail);
-        var openClosureId = await GetOpenClosureIdAsync();
+        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
 
         var expense = new Expense
         {
             EmissionDate = request.EmissionDate,
-            AccountId = request.AccountId,
+            AccountId = request.AccountId!.Value,
             Detail = request.Detail?.Trim() ?? string.Empty,
             Amount = request.Amount,
             CreatedAt = DateTime.Now,
             CreatedByUserId = createdByUserId,
-            ClosureId = openClosureId.Value
+            ClosureId = openClosureId.Value,
+            ApplicationId = applicationId
         };
 
         _dbContext.Expenses.Add(expense);
         await _dbContext.SaveChangesAsync();
 
-        var created = await GetByIdAsync(expense.Id);
+        var created = await GetByIdAsync(expense.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el egreso recién creado.");
     }
 
-    public async Task<bool> UpdateAsync(int id, ExpenseUpdateRequest request)
+    public async Task<bool> UpdateAsync(int id, ExpenseUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateExpense(request.AccountId, request.Amount, request.Detail);
+        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
 
-        var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == id);
+        var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.ApplicationId == applicationId);
         if (expense is null)
             return false;
         if (!await CanModifyExpenseAsync(expense.ClosureId))
             throw new ArgumentException("Solo se puede modificar un egreso con cierre abierto (IsClosed = 0).");
 
         expense.EmissionDate = request.EmissionDate;
-        expense.AccountId = request.AccountId;
+        expense.AccountId = request.AccountId!.Value;
         expense.Detail = request.Detail?.Trim() ?? string.Empty;
         expense.Amount = request.Amount;
 
@@ -107,9 +110,9 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int applicationId)
     {
-        var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == id);
+        var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.ApplicationId == applicationId);
         if (expense is null)
             return false;
         if (!await CanModifyExpenseAsync(expense.ClosureId))
@@ -118,6 +121,15 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         _dbContext.Expenses.Remove(expense);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    // Una cuenta de otra aplicación se trata como inexistente.
+    private async Task EnsureAccountBelongsToApplicationAsync(int accountId, int applicationId)
+    {
+        var exists = await _dbContext.Accounts
+            .AnyAsync(a => a.Id == accountId && a.ApplicationId == applicationId);
+        if (!exists)
+            throw new ArgumentException("La cuenta seleccionada no existe.");
     }
 
     private static Expression<Func<Expense, ExpenseResponse>> MapToResponse()
@@ -148,7 +160,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             throw new ArgumentException("Detail no puede superar 80 caracteres.");
     }
 
-    private async Task<int?> GetOpenClosureIdAsync()
+    private async Task<int?> GetOpenClosureIdAsync(int applicationId)
     {
         var tableNames = await ResolveClosureTableNamesAsync();
         if (tableNames.Count == 0)
@@ -156,7 +168,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
 
         foreach (var tableName in tableNames)
         {
-            var closureId = await GetOpenClosureIdFromTableAsync(tableName);
+            var closureId = await GetOpenClosureIdFromTableAsync(tableName, applicationId);
             if (closureId.HasValue)
                 return closureId;
         }
@@ -188,7 +200,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         return foundAny;
     }
 
-    private async Task<int?> GetOpenClosureIdFromTableAsync(string tableName)
+    private async Task<int?> GetOpenClosureIdFromTableAsync(string tableName, int applicationId)
     {
         var connection = _dbContext.Database.GetDbConnection();
         var shouldClose = connection.State != ConnectionState.Open;
@@ -198,7 +210,13 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = $@"SELECT ""Id"" FROM ""{tableName}"" WHERE ""isClosed"" = FALSE ORDER BY ""Id"" DESC LIMIT 1";
+            command.CommandText = $@"SELECT ""Id"" FROM ""{tableName}"" WHERE ""isClosed"" = FALSE AND ""ApplicationId"" = @applicationId ORDER BY ""Id"" DESC LIMIT 1";
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@applicationId";
+            parameter.Value = applicationId;
+            command.Parameters.Add(parameter);
+
             var result = await command.ExecuteScalarAsync();
 
             if (result is null || result == DBNull.Value)

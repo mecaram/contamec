@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Expenses;
 using ContaMec.Api.Application.Expenses.Dto;
 using Microsoft.AspNetCore.Authorization;
@@ -14,6 +15,7 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(List<ExpenseResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "dateFrom")] DateTime? dateFrom,
         [FromQuery(Name = "dateTo")] DateTime? dateTo,
@@ -34,22 +36,30 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
             Detail = detail
         };
 
-        var result = await expenseService.SearchAsync(request);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await expenseService.SearchAsync(request, applicationId);
         return Ok(result);
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ExpenseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await expenseService.GetByIdAsync(id);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await expenseService.GetByIdAsync(id, applicationId);
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(ExpenseResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] ExpenseCreateRequest? request)
     {
         if (request is null)
@@ -58,9 +68,12 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
         if (!TryGetCurrentUserId(out var currentUserId))
             return Unauthorized(new { message = "Usuario no autenticado." });
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var created = await expenseService.CreateAsync(request, currentUserId);
+            var created = await expenseService.CreateAsync(request, currentUserId, applicationId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -73,14 +86,18 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(int id, [FromBody] ExpenseUpdateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var updated = await expenseService.UpdateAsync(id, request);
+            var updated = await expenseService.UpdateAsync(id, request, applicationId);
             return updated ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -93,11 +110,15 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(int id)
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var deleted = await expenseService.DeleteAsync(id);
+            var deleted = await expenseService.DeleteAsync(id, applicationId);
             return deleted ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)

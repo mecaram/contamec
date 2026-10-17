@@ -25,6 +25,7 @@ public class AuthService(
 
         var user = await _dbContext.Users
             .AsNoTracking()
+            .Include(u => u.Application)
             .FirstOrDefaultAsync(u => u.Name.ToLower() == request.Username.ToLower(), cancellationToken);
 
         if (user is null || !user.IsActive)
@@ -33,9 +34,25 @@ public class AuthService(
         if (!VerifyPassword(request.Password, user.PasswordHash))
             return null;
 
+        // La aplicación se valida después de la contraseña para no revelar datos a quien no conoce las credenciales.
+        var application = user.Application;
+        if (application is null)
+            throw new LoginRejectedException(
+                "No es posible iniciar sesión porque el usuario no tiene una aplicación válida asociada. Comuníquese con el administrador del sistema.");
+
+        if (!application.Active)
+            throw new LoginRejectedException(
+                "No es posible iniciar sesión porque la aplicación asociada a su empresa no se encuentra activa. Comuníquese con el administrador del sistema.");
+
         var name = user.Name ?? string.Empty;
-        var token = CreateJwt(user.Id, name);
-        return new LoginResponse { Token = token, Username = name };
+        var token = CreateJwt(user.Id, name, application.Id);
+        return new LoginResponse
+        {
+            Token = token,
+            Username = name,
+            ApplicationId = application.Id,
+            ApplicationName = application.Name
+        };
     }
 
     private bool VerifyPassword(string password, string storedHash)
@@ -69,7 +86,7 @@ public class AuthService(
         && (hash[2] == 'a' || hash[2] == 'b' || hash[2] == 'y')
         && hash[3] == '$';
 
-    private string CreateJwt(int userId, string name)
+    private string CreateJwt(int userId, string name, int applicationId)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -78,10 +95,11 @@ public class AuthService(
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.UniqueName, name),
+            new Claim(ClaimsPrincipalExtensions.ApplicationIdClaim, applicationId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        var expires = DateTime.UtcNow.AddMinutes(_jwt.ExpiresInMinutes <= 0 ? 60 : _jwt.ExpiresInMinutes);
+        var expires = DateTime.UtcNow.AddMinutes(_jwt.ExpiresInMinutes <= 0 ? 30 : _jwt.ExpiresInMinutes);
 
         var token = new JwtSecurityToken(
             issuer: _jwt.Issuer,

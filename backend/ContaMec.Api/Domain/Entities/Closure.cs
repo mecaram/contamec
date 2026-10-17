@@ -10,6 +10,10 @@ public class Closure
     public DateTime? CloseDate { get; set; }
     public bool? IsClosed { get; set; }
     public decimal? Result { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int? ApplicationId { get; set; }
+
+    public Application? Application { get; set; }
 
     public ICollection<Income> Incomes { get; set; } = new List<Income>();
     public ICollection<Expense> Expenses { get; set; } = new List<Expense>();

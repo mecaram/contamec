@@ -11,14 +11,14 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
-    public async Task<List<IncomeResponse>> SearchAsync(IncomeSearchRequest request)
+    public async Task<List<IncomeResponse>> SearchAsync(IncomeSearchRequest request, int applicationId)
     {
         request ??= new IncomeSearchRequest();
 
         var query = _dbContext.Incomes
             .AsNoTracking()
             .Include(i => i.Account)
-            .AsQueryable();
+            .Where(i => i.ApplicationId == applicationId);
 
         if (request.DateFrom.HasValue)
             query = query.Where(i => i.EmissionDate >= request.DateFrom.Value);
@@ -51,55 +51,58 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             .ToListAsync();
     }
 
-    public async Task<IncomeResponse?> GetByIdAsync(int id)
+    public async Task<IncomeResponse?> GetByIdAsync(int id, int applicationId)
     {
         return await _dbContext.Incomes
             .AsNoTracking()
             .Include(i => i.Account)
-            .Where(i => i.Id == id)
+            .Where(i => i.Id == id && i.ApplicationId == applicationId)
             .Select(MapToResponse())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<IncomeResponse> CreateAsync(IncomeCreateRequest request, int createdByUserId)
+    public async Task<IncomeResponse> CreateAsync(IncomeCreateRequest request, int createdByUserId, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateIncome(request.AccountId, request.Amount, request.Detail);
-        var openClosureId = await GetOpenClosureIdAsync();
+        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
 
         var income = new Income
         {
             EmissionDate = request.EmissionDate,
-            AccountId = request.AccountId,
+            AccountId = request.AccountId!.Value,
             Detail = request.Detail?.Trim() ?? string.Empty,
             Amount = request.Amount,
             CreatedAt = DateTime.Now,
             CreatedByUserId = createdByUserId,
-            ClosureId = openClosureId.Value
+            ClosureId = openClosureId.Value,
+            ApplicationId = applicationId
         };
 
         _dbContext.Incomes.Add(income);
         await _dbContext.SaveChangesAsync();
 
-        var created = await GetByIdAsync(income.Id);
+        var created = await GetByIdAsync(income.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el ingreso recién creado.");
     }
 
-    public async Task<bool> UpdateAsync(int id, IncomeUpdateRequest request)
+    public async Task<bool> UpdateAsync(int id, IncomeUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateIncome(request.AccountId, request.Amount, request.Detail);
+        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
 
-        var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id);
+        var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ApplicationId == applicationId);
         if (income is null)
             return false;
         if (!await CanModifyIncomeAsync(income.ClosureId))
             throw new ArgumentException("Solo se puede modificar un ingreso con cierre abierto (IsClosed = 0).");
 
         income.EmissionDate = request.EmissionDate;
-        income.AccountId = request.AccountId;
+        income.AccountId = request.AccountId!.Value;
         income.Detail = request.Detail?.Trim() ?? string.Empty;
         income.Amount = request.Amount;
 
@@ -107,9 +110,9 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int applicationId)
     {
-        var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id);
+        var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ApplicationId == applicationId);
         if (income is null)
             return false;
         if (!await CanModifyIncomeAsync(income.ClosureId))
@@ -118,6 +121,15 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         _dbContext.Incomes.Remove(income);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    // Una cuenta de otra aplicación se trata como inexistente.
+    private async Task EnsureAccountBelongsToApplicationAsync(int accountId, int applicationId)
+    {
+        var exists = await _dbContext.Accounts
+            .AnyAsync(a => a.Id == accountId && a.ApplicationId == applicationId);
+        if (!exists)
+            throw new ArgumentException("La cuenta seleccionada no existe.");
     }
 
     private static Expression<Func<Income, IncomeResponse>> MapToResponse()
@@ -148,7 +160,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             throw new ArgumentException("Detail no puede superar 80 caracteres.");
     }
 
-    private async Task<int?> GetOpenClosureIdAsync()
+    private async Task<int?> GetOpenClosureIdAsync(int applicationId)
     {
         var tableNames = await ResolveClosureTableNamesAsync();
         if (tableNames.Count == 0)
@@ -156,7 +168,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
 
         foreach (var tableName in tableNames)
         {
-            var closureId = await GetOpenClosureIdFromTableAsync(tableName);
+            var closureId = await GetOpenClosureIdFromTableAsync(tableName, applicationId);
             if (closureId.HasValue)
                 return closureId;
         }
@@ -188,7 +200,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         return foundAny;
     }
 
-    private async Task<int?> GetOpenClosureIdFromTableAsync(string tableName)
+    private async Task<int?> GetOpenClosureIdFromTableAsync(string tableName, int applicationId)
     {
         var connection = _dbContext.Database.GetDbConnection();
         var shouldClose = connection.State != ConnectionState.Open;
@@ -198,7 +210,13 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         try
         {
             using var command = connection.CreateCommand();
-            command.CommandText = $@"SELECT ""Id"" FROM ""{tableName}"" WHERE ""isClosed"" = FALSE ORDER BY ""Id"" DESC LIMIT 1";
+            command.CommandText = $@"SELECT ""Id"" FROM ""{tableName}"" WHERE ""isClosed"" = FALSE AND ""ApplicationId"" = @applicationId ORDER BY ""Id"" DESC LIMIT 1";
+
+            var parameter = command.CreateParameter();
+            parameter.ParameterName = "@applicationId";
+            parameter.Value = applicationId;
+            command.Parameters.Add(parameter);
+
             var result = await command.ExecuteScalarAsync();
 
             if (result is null || result == DBNull.Value)

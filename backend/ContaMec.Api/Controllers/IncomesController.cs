@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Incomes;
 using ContaMec.Api.Application.Incomes.Dto;
 using System.Security.Claims;
@@ -14,6 +15,7 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(List<IncomeResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "dateFrom")] DateTime? dateFrom,
         [FromQuery(Name = "dateTo")] DateTime? dateTo,
@@ -34,22 +36,30 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
             Detail = detail
         };
 
-        var result = await incomeService.SearchAsync(request);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await incomeService.SearchAsync(request, applicationId);
         return Ok(result);
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(IncomeResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await incomeService.GetByIdAsync(id);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await incomeService.GetByIdAsync(id, applicationId);
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(IncomeResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] IncomeCreateRequest? request)
     {
         if (request is null)
@@ -58,9 +68,12 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
         if (!TryGetCurrentUserId(out var currentUserId))
             return Unauthorized(new { message = "Usuario no autenticado." });
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var created = await incomeService.CreateAsync(request, currentUserId);
+            var created = await incomeService.CreateAsync(request, currentUserId, applicationId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -73,14 +86,18 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(int id, [FromBody] IncomeUpdateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var updated = await incomeService.UpdateAsync(id, request);
+            var updated = await incomeService.UpdateAsync(id, request, applicationId);
             return updated ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -93,11 +110,15 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(int id)
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var deleted = await incomeService.DeleteAsync(id);
+            var deleted = await incomeService.DeleteAsync(id, applicationId);
             return deleted ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)

@@ -9,4 +9,10 @@ public class LoginResponse
 
     [JsonPropertyName("username")]
     public string Username { get; set; } = string.Empty;
+
+    [JsonPropertyName("applicationId")]
+    public int ApplicationId { get; set; }
+
+    [JsonPropertyName("applicationName")]
+    public string ApplicationName { get; set; } = string.Empty;
 }

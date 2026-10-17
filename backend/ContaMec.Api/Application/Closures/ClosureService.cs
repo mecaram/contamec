@@ -7,7 +7,7 @@ namespace ContaMec.Api.Application.Closures;
 
 public class ClosureService(ContaMecDbContext dbContext) : IClosureService
 {
-    public async Task<List<ClosureResponse>> SearchAsync(ClosureSearchRequest request)
+    public async Task<List<ClosureResponse>> SearchAsync(ClosureSearchRequest request, int applicationId)
     {
         request ??= new ClosureSearchRequest();
         var closureTableName = await ResolveTableNameAsync("Closures", "Cierres");
@@ -53,6 +53,7 @@ LEFT JOIN LATERAL (
     SELECT prev.""Result"" AS ""PreviousBalance""
     FROM ""{closureTableName}"" prev
     WHERE prev.""Id"" < c.""Id""
+      AND prev.""ApplicationId"" = c.""ApplicationId""
     ORDER BY prev.""Id"" DESC
     LIMIT 1
 ) p ON TRUE
@@ -71,13 +72,15 @@ LEFT JOIN LATERAL (
     FROM ""{closureBalancesTableName}"" x
     WHERE x.""ClosureId"" = c.""Id""
 ) b ON TRUE
-WHERE (@id IS NULL OR c.""Id"" = @id)
+WHERE c.""ApplicationId"" = @applicationId
+  AND (@id IS NULL OR c.""Id"" = @id)
   AND (@isClosed IS NULL OR c.""isClosed"" = @isClosed)
   AND (@openDateFrom IS NULL OR c.""OpenDate"" >= @openDateFrom)
   AND (@openDateToExclusive IS NULL OR c.""OpenDate"" < @openDateToExclusive)
 ORDER BY c.""Id"" DESC";
 
             AddNullableParameter(command, "@id", DbType.Int32, request.Id);
+            AddNullableParameter(command, "@applicationId", DbType.Int32, applicationId);
             AddNullableParameter(command, "@isClosed", DbType.Boolean, request.IsClosed);
             AddNullableParameter(command, "@openDateFrom", DbType.DateTime, DbDateTime.ToDb(request.OpenDateFrom));
             AddNullableParameter(command, "@openDateToExclusive", DbType.DateTime, DbDateTime.ToDb(request.OpenDateTo?.Date.AddDays(1)));
@@ -108,7 +111,7 @@ ORDER BY c.""Id"" DESC";
         return closures;
     }
 
-    public async Task<ClosureIncomeDetailResponse?> GetIncomeDetailAsync(int closureId)
+    public async Task<ClosureIncomeDetailResponse?> GetIncomeDetailAsync(int closureId, int applicationId)
     {
         if (closureId <= 0)
             return null;
@@ -128,8 +131,9 @@ ORDER BY c.""Id"" DESC";
         {
             await using (var existsCommand = connection.CreateCommand())
             {
-                existsCommand.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
+                existsCommand.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId AND ""ApplicationId"" = @applicationId LIMIT 1";
                 AddNullableParameter(existsCommand, "@closureId", DbType.Int32, closureId);
+                AddNullableParameter(existsCommand, "@applicationId", DbType.Int32, applicationId);
                 var exists = await existsCommand.ExecuteScalarAsync();
                 if (exists is null)
                     return null;
@@ -188,7 +192,7 @@ ORDER BY 3 DESC NULLS LAST, i.""AccountId"" ASC";
         }
     }
 
-    public async Task<ClosureExpenseDetailResponse?> GetExpenseDetailAsync(int closureId)
+    public async Task<ClosureExpenseDetailResponse?> GetExpenseDetailAsync(int closureId, int applicationId)
     {
         if (closureId <= 0)
             return null;
@@ -208,8 +212,9 @@ ORDER BY 3 DESC NULLS LAST, i.""AccountId"" ASC";
         {
             await using (var existsCommand = connection.CreateCommand())
             {
-                existsCommand.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
+                existsCommand.CommandText = $@"SELECT 1 FROM ""{closureTableName}"" WHERE ""Id"" = @closureId AND ""ApplicationId"" = @applicationId LIMIT 1";
                 AddNullableParameter(existsCommand, "@closureId", DbType.Int32, closureId);
+                AddNullableParameter(existsCommand, "@applicationId", DbType.Int32, applicationId);
                 var exists = await existsCommand.ExecuteScalarAsync();
                 if (exists is null)
                     return null;
@@ -268,7 +273,7 @@ ORDER BY 3 DESC NULLS LAST, e.""AccountId"" ASC";
         }
     }
 
-    public async Task<ClosureCloseResponse> CloseAsync(int closureId)
+    public async Task<ClosureCloseResponse> CloseAsync(int closureId, int applicationId)
     {
         if (closureId <= 0)
             throw new ArgumentException("El Id del cierre es inválido.");
@@ -293,8 +298,9 @@ ORDER BY 3 DESC NULLS LAST, e.""AccountId"" ASC";
             await using (var existsCommand = connection.CreateCommand())
             {
                 existsCommand.Transaction = transaction;
-                existsCommand.CommandText = $@"SELECT COALESCE(""isClosed"", FALSE) FROM ""{closureTableName}"" WHERE ""Id"" = @closureId LIMIT 1";
+                existsCommand.CommandText = $@"SELECT COALESCE(""isClosed"", FALSE) FROM ""{closureTableName}"" WHERE ""Id"" = @closureId AND ""ApplicationId"" = @applicationId LIMIT 1";
                 AddNullableParameter(existsCommand, "@closureId", DbType.Int32, closureId);
+                AddNullableParameter(existsCommand, "@applicationId", DbType.Int32, applicationId);
                 var rawIsClosed = await existsCommand.ExecuteScalarAsync();
                 if (rawIsClosed is null)
                     throw new ArgumentException("El cierre indicado no existe.");
@@ -319,6 +325,7 @@ SELECT
         SELECT prev.""Result""
         FROM ""{closureTableName}"" prev
         WHERE prev.""Id"" < @closureId
+          AND prev.""ApplicationId"" = @applicationId
         ORDER BY prev.""Id"" DESC
         LIMIT 1
     ), 0) AS ""PreviousBalance"",
@@ -326,6 +333,7 @@ SELECT
     COALESCE((SELECT SUM(e.""Amount"") FROM ""{expensesTableName}"" e WHERE e.""ClosureId"" = @closureId), 0) AS ""Expenses"",
     COALESCE((SELECT SUM(b.""Amount"") FROM ""{closureBalancesTableName}"" b WHERE b.""ClosureId"" = @closureId), 0) AS ""InAccount""";
                 AddNullableParameter(calcCommand, "@closureId", DbType.Int32, closureId);
+                AddNullableParameter(calcCommand, "@applicationId", DbType.Int32, applicationId);
 
                 await using var reader = await calcCommand.ExecuteReaderAsync();
                 if (!await reader.ReadAsync())
@@ -366,10 +374,11 @@ WHERE ""Id"" = @closureId";
             {
                 insertCommand.Transaction = transaction;
                 insertCommand.CommandText = $@"
-INSERT INTO ""{closureTableName}"" (""OpenDate"", ""CloseDate"", ""isClosed"", ""Result"")
-VALUES (@openDate, NULL, FALSE, NULL)
+INSERT INTO ""{closureTableName}"" (""OpenDate"", ""CloseDate"", ""isClosed"", ""Result"", ""ApplicationId"")
+VALUES (@openDate, NULL, FALSE, NULL, @applicationId)
 RETURNING ""Id"";";
                 AddNullableParameter(insertCommand, "@openDate", DbType.DateTime, DbDateTime.ToDb(now));
+                AddNullableParameter(insertCommand, "@applicationId", DbType.Int32, applicationId);
 
                 var scalar = await insertCommand.ExecuteScalarAsync();
                 if (scalar is null)

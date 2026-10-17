@@ -10,11 +10,13 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
-    public async Task<List<AccountResponse>> SearchAsync(AccountSearchRequest request)
+    public async Task<List<AccountResponse>> SearchAsync(AccountSearchRequest request, int applicationId)
     {
         request ??= new AccountSearchRequest();
 
-        var query = _dbContext.Accounts.AsNoTracking().AsQueryable();
+        var query = _dbContext.Accounts
+            .AsNoTracking()
+            .Where(a => a.ApplicationId == applicationId);
 
         if (request.Id.HasValue)
             query = query.Where(a => a.Id == request.Id.Value);
@@ -42,16 +44,17 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
             .ToListAsync();
     }
 
-    public async Task<AccountResponse?> GetByIdAsync(int id)
+    public async Task<AccountResponse?> GetByIdAsync(int id, int applicationId)
     {
+        // Una cuenta de otra aplicación se trata como inexistente.
         return await _dbContext.Accounts
             .AsNoTracking()
-            .Where(a => a.Id == id)
+            .Where(a => a.Id == id && a.ApplicationId == applicationId)
             .Select(MapToResponse())
             .FirstOrDefaultAsync();
     }
 
-    public async Task<AccountResponse> CreateAsync(AccountCreateRequest request)
+    public async Task<AccountResponse> CreateAsync(AccountCreateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateAccount(request.Name, request.Type);
@@ -59,22 +62,23 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         var account = new Account
         {
             Name = request.Name?.Trim(),
-            Type = ParseType(request.Type)
+            Type = ParseType(request.Type),
+            ApplicationId = applicationId
         };
 
         _dbContext.Accounts.Add(account);
         await _dbContext.SaveChangesAsync();
 
-        var created = await GetByIdAsync(account.Id);
+        var created = await GetByIdAsync(account.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer la cuenta recién creada.");
     }
 
-    public async Task<bool> UpdateAsync(int id, AccountUpdateRequest request)
+    public async Task<bool> UpdateAsync(int id, AccountUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateAccount(request.Name, request.Type);
 
-        var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == id);
+        var account = await _dbContext.Accounts.FirstOrDefaultAsync(a => a.Id == id && a.ApplicationId == applicationId);
         if (account is null)
             return false;
 
@@ -85,12 +89,12 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int applicationId)
     {
         var account = await _dbContext.Accounts
             .Include(a => a.Incomes)
             .Include(a => a.Expenses)
-            .FirstOrDefaultAsync(a => a.Id == id);
+            .FirstOrDefaultAsync(a => a.Id == id && a.ApplicationId == applicationId);
         if (account is null)
             return false;
 

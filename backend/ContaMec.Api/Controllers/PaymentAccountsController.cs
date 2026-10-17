@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.PaymentAccounts;
 using ContaMec.Api.Application.PaymentAccounts.Dto;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +14,7 @@ public class PaymentAccountsController(IPaymentAccountService paymentAccountServ
 {
     [HttpGet]
     [ProducesResponseType(typeof(List<PaymentAccountResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "id")] int? id,
         [FromQuery(Name = "name")] string? name)
@@ -23,30 +25,41 @@ public class PaymentAccountsController(IPaymentAccountService paymentAccountServ
             Name = name
         };
 
-        var result = await paymentAccountService.SearchAsync(request);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await paymentAccountService.SearchAsync(request, applicationId);
         return Ok(result);
     }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(PaymentAccountResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetById(int id)
     {
-        var result = await paymentAccountService.GetByIdAsync(id);
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var result = await paymentAccountService.GetByIdAsync(id, applicationId);
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(PaymentAccountResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] PaymentAccountCreateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var created = await paymentAccountService.CreateAsync(request);
+            var created = await paymentAccountService.CreateAsync(request, applicationId);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -59,14 +72,18 @@ public class PaymentAccountsController(IPaymentAccountService paymentAccountServ
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Update(int id, [FromBody] PaymentAccountUpdateRequest? request)
     {
         if (request is null)
             return BadRequest("Cuerpo JSON requerido.");
 
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var updated = await paymentAccountService.UpdateAsync(id, request);
+            var updated = await paymentAccountService.UpdateAsync(id, request, applicationId);
             return updated ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)
@@ -79,11 +96,15 @@ public class PaymentAccountsController(IPaymentAccountService paymentAccountServ
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Delete(int id)
     {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
         try
         {
-            var deleted = await paymentAccountService.DeleteAsync(id);
+            var deleted = await paymentAccountService.DeleteAsync(id, applicationId);
             return deleted ? NoContent() : NotFound();
         }
         catch (ArgumentException ex)

@@ -2,6 +2,7 @@
   <header class="dashboard__header">
     <div class="dashboard__header-text">
       <h1 class="dashboard__title">ContaMEC</h1>
+      <p class="dashboard__company" *ngIf="applicationName">{{ applicationName }}</p>
       <p class="dashboard__subtitle">Seleccione un módulo para continuar</p>
     </div>
     <button class="dashboard__logout" type="button" (click)="logout()">Cerrar sesión</button>

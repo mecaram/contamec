@@ -14,6 +14,8 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
     public DbSet<Income> Incomes => Set<Income>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    // Calificado: "Application" choca con el namespace ContaMec.Api.Application.
+    public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -26,6 +28,17 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
     {
         modelBuilder.HasPostgresEnum<AccountType>("public", "AccountTypes", new NpgsqlNullNameTranslator());
 
+        modelBuilder.Entity<Domain.Entities.Application>(entity =>
+        {
+            entity.ToTable("Applications");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id");
+            entity.Property(e => e.Name).HasColumnName("Name").IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.Active).HasColumnName("Active");
+        });
+
         modelBuilder.Entity<Closure>(entity =>
         {
             entity.ToTable("Closures");
@@ -36,11 +49,19 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.CloseDate).HasColumnName("CloseDate").HasColumnType("timestamp with time zone");
             entity.Property(e => e.IsClosed).HasColumnName("isClosed");
             entity.Property(e => e.Result).HasColumnName("Result").HasColumnType("numeric");
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
 
             entity.HasMany(e => e.Balances)
                 .WithOne(b => b.Closure)
                 .HasForeignKey(b => b.ClosureId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
+
+            entity.HasOne(e => e.Application)
+                .WithMany(a => a.Closures)
+                .HasForeignKey(e => e.ApplicationId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<ClosureBalance>(entity =>
@@ -52,10 +73,18 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.ClosureId).HasColumnName("ClosureId");
             entity.Property(e => e.PaymentAccountId).HasColumnName("PaymentAccountId");
             entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("numeric");
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
 
             entity.HasOne(e => e.PaymentAccount)
                 .WithMany(t => t.ClosureBalances)
                 .HasForeignKey(e => e.PaymentAccountId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
+
+            entity.HasOne(e => e.Application)
+                .WithMany(a => a.ClosureBalances)
+                .HasForeignKey(e => e.ApplicationId)
                 .OnDelete(DeleteBehavior.NoAction);
         });
 
@@ -66,6 +95,14 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.Name).HasColumnName("Name").HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
+
+            entity.HasOne(e => e.Application)
+                .WithMany(a => a.PaymentAccounts)
+                .HasForeignKey(e => e.ApplicationId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Account>(entity =>
@@ -76,6 +113,14 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.Name).HasColumnName("Name").HasMaxLength(50).IsUnicode(false);
             entity.Property(e => e.Type).HasColumnName("Type");
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
+
+            entity.HasOne(e => e.Application)
+                .WithMany(a => a.Accounts)
+                .HasForeignKey(e => e.ApplicationId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Expense>(entity =>
@@ -105,6 +150,13 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasOne(e => e.CreatedByUser)
                 .WithMany(u => u.ExpensesCreated)
                 .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
+
+            entity.HasOne(e => e.Application)
+                .WithMany(a => a.Expenses)
+                .HasForeignKey(e => e.ApplicationId)
                 .OnDelete(DeleteBehavior.NoAction);
         });
 
@@ -136,6 +188,13 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
                 .WithMany(u => u.IncomesCreated)
                 .HasForeignKey(e => e.CreatedByUserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
+
+            entity.HasOne(e => e.Application)
+                .WithMany(a => a.Incomes)
+                .HasForeignKey(e => e.ApplicationId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -147,14 +206,22 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Name).HasColumnName("Name").HasMaxLength(80).IsUnicode(false);
             entity.Property(e => e.PasswordHash).HasColumnName("PasswordHash").HasMaxLength(256).IsUnicode(false);
             entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt").HasColumnType("timestamp with time zone");
             entity.Property(e => e.UserRoleId).HasColumnName("UserRoleId");
 
-            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.Name);
 
             entity.HasOne(e => e.UserRole)
                 .WithMany(r => r.Users)
                 .HasForeignKey(e => e.UserRoleId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
+
+            entity.HasOne(e => e.Application)
+                .WithMany(a => a.Users)
+                .HasForeignKey(e => e.ApplicationId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<UserRole>(entity =>
@@ -164,6 +231,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.Name).HasColumnName("Name").HasMaxLength(50).IsUnicode(false);
+            entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt").HasColumnType("timestamp with time zone");
         });
     }
 }
