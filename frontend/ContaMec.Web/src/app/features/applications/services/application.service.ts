@@ -1,0 +1,49 @@
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { Application } from '../models/application.model';
+import { ApplicationSearch } from '../models/application-search.model';
+
+@Injectable()
+export class ApplicationService {
+  private readonly apiBaseUrl = ((environment as any).apiUrl ?? environment.apiBaseUrl) as string;
+  private readonly applicationsUrl = `${this.apiBaseUrl}/applications`;
+  private readonly tokenKey = 'contamec_token';
+
+  constructor(private readonly http: HttpClient) {}
+
+  search(filters: ApplicationSearch): Observable<Application[]> {
+    let params = new HttpParams();
+    if (filters.id !== null && filters.id !== undefined) params = params.set('id', String(filters.id));
+    if (filters.name) params = params.set('name', filters.name);
+    if (filters.active !== null && filters.active !== undefined) params = params.set('active', String(filters.active));
+    return this.http.get<Application[]>(this.applicationsUrl, { params, headers: this.getAuthHeaders() });
+  }
+
+  create(application: Application): Observable<Application> {
+    const payload = {
+      name: application.name ?? null,
+      active: application.active
+    };
+    return this.http.post<Application>(this.applicationsUrl, payload, { headers: this.getAuthHeaders() });
+  }
+
+  update(id: number, application: Application): Observable<void> {
+    const payload = {
+      name: application.name ?? null,
+      active: application.active
+    };
+    return this.http.put<void>(`${this.applicationsUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.applicationsUrl}/${id}`, { headers: this.getAuthHeaders() });
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = sessionStorage.getItem(this.tokenKey);
+    if (!token) return new HttpHeaders();
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
+  }
+}

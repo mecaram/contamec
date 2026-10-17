@@ -27,7 +27,8 @@ export class DashboardComponent {
       items: [
         { name: 'Cuentas', icon: 'account_balance', route: '/cuentas' },
         { name: 'Cuentas de pago', icon: 'credit_card', route: '/cuentas-pago' },
-        { name: 'Usuarios', icon: 'people', route: '/usuarios' }
+        { name: 'Usuarios', icon: 'people', route: '/usuarios' },
+        { name: 'Aplicaciones', icon: 'business', route: '/aplicaciones' }
       ]
     },
     {

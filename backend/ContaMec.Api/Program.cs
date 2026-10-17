@@ -1,5 +1,6 @@
 using System.Text;
 using ContaMec.Api.Application.Accounts;
+using ContaMec.Api.Application.Applications;
 using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Closures;
 using ContaMec.Api.Application.ClosureBalances;
@@ -88,6 +89,7 @@ builder.Services.AddScoped<IIncomeService, IncomeService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IPaymentAccountService, PaymentAccountService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

@@ -1,0 +1,22 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="application-form__title">{{ title }}</h2>
+  <div class="application-form">
+    <div class="application-form__field">
+      <label class="application-form__label" for="application-name">Nombre</label>
+      <input id="application-name" class="application-form__control" formControlName="name" maxlength="100" />
+      <div class="application-form__hint">{{ form.controls.name.value?.length || 0 }}/100</div>
+    </div>
+    <div class="application-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
+    <div class="application-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 100 caracteres.</div>
+
+    <label class="application-form__checkbox">
+      <input type="checkbox" formControlName="active" />
+      Aplicación activa
+    </label>
+  </div>
+
+  <div class="application-form__actions">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>

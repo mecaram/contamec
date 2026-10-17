@@ -1,0 +1,44 @@
+<div class="application-list">
+  <div class="application-list__loading" *ngIf="loading">Cargando aplicaciones...</div>
+
+  <div class="application-list__empty" *ngIf="!loading && applications.length === 0">No hay aplicaciones para los filtros seleccionados.</div>
+
+  <table class="application-list__table mat-elevation-z1" *ngIf="!loading && applications.length > 0">
+    <thead>
+      <tr>
+        <th class="application-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
+        <th class="application-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th class="application-list__sortable" (click)="setSort('createdAt')">Fecha de alta <span>{{ sortIndicator('createdAt') }}</span></th>
+        <th class="application-list__sortable" (click)="setSort('active')">Activa <span>{{ sortIndicator('active') }}</span></th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of pagedApplications">
+        <td>{{ row.id }}</td>
+        <td>{{ row.name || '-' }}</td>
+        <td>{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
+        <td>{{ row.active ? 'Sí' : 'No' }}</td>
+        <td class="application-list__actions">
+          <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar aplicación">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar aplicación">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="application-list__footer">
+        <td colspan="5">Total registros: {{ totalRecords }}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="application-list__pagination" *ngIf="!loading && applications.length > pageSize">
+    <button mat-stroked-button type="button" (click)="goToPreviousPage()" [disabled]="!canGoPrevious">Anterior</button>
+    <span class="application-list__pagination-label">{{ pageLabel }}</span>
+    <button mat-stroked-button type="button" (click)="goToNextPage()" [disabled]="!canGoNext">Siguiente</button>
+  </div>
+</div>
