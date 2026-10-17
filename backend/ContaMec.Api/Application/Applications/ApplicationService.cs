@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Applications.Dto;
+using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -58,6 +59,13 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         };
 
         _dbContext.Applications.Add(application);
+        // Toda empresa necesita un cierre abierto para registrar ingresos y egresos; se crea en la misma transacción.
+        _dbContext.Closures.Add(new Closure
+        {
+            OpenDate = DateTime.Now,
+            IsClosed = false,
+            Application = application
+        });
         await _dbContext.SaveChangesAsync();
 
         var created = await GetByIdAsync(application.Id);
