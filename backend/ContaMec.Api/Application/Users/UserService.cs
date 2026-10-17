@@ -2,6 +2,7 @@ using ContaMec.Api.Application.Users.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Linq.Expressions;
 
 namespace ContaMec.Api.Application.Users;
@@ -66,7 +67,7 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         };
 
         _dbContext.Users.Add(user);
-        await _dbContext.SaveChangesAsync();
+        await SaveChangesCheckingDuplicateNameAsync();
 
         var created = await GetByIdAsync(user.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el usuario recién creado.");
@@ -88,7 +89,7 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         if (!string.IsNullOrWhiteSpace(request.Password))
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password.Trim());
 
-        await _dbContext.SaveChangesAsync();
+        await SaveChangesCheckingDuplicateNameAsync();
         return true;
     }
 
@@ -107,6 +108,18 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         _dbContext.Users.Remove(user);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    private async Task SaveChangesCheckingDuplicateNameAsync()
+    {
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: "Users_Name_lower_key" })
+        {
+            throw new ArgumentException("Ya existe un usuario con ese nombre.");
+        }
     }
 
     private static Expression<Func<User, UserResponse>> MapToResponse()
