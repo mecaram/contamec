@@ -3,6 +3,24 @@
 
   <div class="application-list__empty" *ngIf="!loading && applications.length === 0">No hay aplicaciones para los filtros seleccionados.</div>
 
+  <div class="application-list__mobile-sort" *ngIf="!loading && applications.length > 0">
+    <label class="application-list__mobile-sort-label" for="application-mobile-sort">Ordenar por</label>
+    <select id="application-mobile-sort" class="application-list__mobile-sort-select" (change)="sortBy($any($event.target).value)">
+      <option *ngFor="let option of sortOptions" [value]="option.column" [selected]="option.column === sortColumn">
+        {{ option.label }}
+      </option>
+    </select>
+    <button
+      mat-icon-button
+      type="button"
+      (click)="toggleSortDirection()"
+      [attr.aria-label]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+      [title]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+    >
+      <mat-icon>{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+    </button>
+  </div>
+
   <table class="application-list__table mat-elevation-z1" *ngIf="!loading && applications.length > 0">
     <thead>
       <tr>
@@ -18,10 +36,10 @@
     </thead>
     <tbody>
       <tr *ngFor="let row of pagedApplications">
-        <td>{{ row.id }}</td>
-        <td>{{ row.name || '-' }}</td>
-        <td>{{ row.email || '-' }}</td>
-        <td>
+        <td data-label="ID">{{ row.id }}</td>
+        <td data-label="Nombre">{{ row.name || '-' }}</td>
+        <td data-label="Email">{{ row.email || '-' }}</td>
+        <td data-label="WhatsApp">
           <a
             *ngIf="row.whatsApp; else noWhatsApp"
             class="application-list__whatsapp"
@@ -32,9 +50,9 @@
           >{{ formatWhatsApp(row.whatsApp) }}</a>
           <ng-template #noWhatsApp>-</ng-template>
         </td>
-        <td>{{ row.locality || '-' }}</td>
-        <td>{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
-        <td>{{ row.active ? 'Sí' : 'No' }}</td>
+        <td data-label="Localidad">{{ row.locality || '-' }}</td>
+        <td data-label="Fecha de alta">{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
+        <td data-label="Activa">{{ row.active ? 'Sí' : 'No' }}</td>
         <td class="application-list__actions">
           <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar aplicación">
             <mat-icon>edit</mat-icon>

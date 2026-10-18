@@ -11,6 +11,13 @@ type SortableColumn = 'id' | 'name' | 'createdAt' | 'active';
 export class ApplicationListComponent implements OnChanges {
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
+  /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
+  readonly sortOptions: { column: SortableColumn; label: string }[] = [
+    { column: 'id', label: 'ID' },
+    { column: 'name', label: 'Nombre' },
+    { column: 'createdAt', label: 'Fecha de alta' },
+    { column: 'active', label: 'Activa' }
+  ];
   currentPage = 1;
   readonly pageSize = 10;
 
@@ -84,6 +91,16 @@ export class ApplicationListComponent implements OnChanges {
     }
     this.sortColumn = column;
     this.sortDirection = 'asc';
+    this.currentPage = 1;
+  }
+
+  sortBy(column: SortableColumn): void {
+    this.sortColumn = column;
+    this.currentPage = 1;
+  }
+
+  toggleSortDirection(): void {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     this.currentPage = 1;
   }
 

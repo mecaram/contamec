@@ -3,6 +3,24 @@
 
   <div class="user-list__empty" *ngIf="!loading && users.length === 0">No hay usuarios para los filtros seleccionados.</div>
 
+  <div class="user-list__mobile-sort" *ngIf="!loading && users.length > 0">
+    <label class="user-list__mobile-sort-label" for="user-mobile-sort">Ordenar por</label>
+    <select id="user-mobile-sort" class="user-list__mobile-sort-select" (change)="sortBy($any($event.target).value)">
+      <option *ngFor="let option of sortOptions" [value]="option.column" [selected]="option.column === sortColumn">
+        {{ option.label }}
+      </option>
+    </select>
+    <button
+      mat-icon-button
+      type="button"
+      (click)="toggleSortDirection()"
+      [attr.aria-label]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+      [title]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+    >
+      <mat-icon>{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+    </button>
+  </div>
+
   <table class="user-list__table mat-elevation-z1" *ngIf="!loading && users.length > 0">
     <thead>
       <tr>
@@ -16,11 +34,11 @@
     </thead>
     <tbody>
       <tr *ngFor="let row of pagedUsers">
-        <td>{{ row.id }}</td>
-        <td>{{ row.name || '-' }}</td>
-        <td *ngIf="showApplication">{{ row.applicationName || '-' }}</td>
-        <td>{{ row.userRoleName || '-' }}</td>
-        <td>{{ row.isActive ? 'Sí' : 'No' }}</td>
+        <td data-label="ID">{{ row.id }}</td>
+        <td data-label="Nombre">{{ row.name || '-' }}</td>
+        <td data-label="Empresa" *ngIf="showApplication">{{ row.applicationName || '-' }}</td>
+        <td data-label="Rol">{{ row.userRoleName || '-' }}</td>
+        <td data-label="Activo">{{ row.isActive ? 'Sí' : 'No' }}</td>
         <td class="user-list__actions">
           <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar usuario">
             <mat-icon>edit</mat-icon>

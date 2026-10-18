@@ -66,3 +66,102 @@ th {
   color: #334155;
   font-weight: 600;
 }
+
+.income-list__mobile-sort {
+  display: none;
+}
+
+// En el celular cada fila se muestra como una tarjeta, con el nombre de la columna junto a cada dato.
+@media (max-width: 42rem) {
+  .income-list__mobile-sort {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .income-list__mobile-sort-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .income-list__mobile-sort-select {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.4rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.95rem;
+    background: #fff;
+    color: #0f172a;
+  }
+
+  .income-list__table,
+  .income-list__table tbody,
+  .income-list__table tfoot,
+  .income-list__table tr,
+  .income-list__table td {
+    display: block;
+  }
+
+  .income-list__table {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .income-list__table thead {
+    display: none;
+  }
+
+  .income-list__table tr {
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0.9rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  }
+
+  .income-list__table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .income-list__table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #475569;
+    text-align: left;
+  }
+
+  .income-list__table td:last-child {
+    border-bottom: 0;
+  }
+
+  .income-list__table td:empty {
+    display: none;
+  }
+
+  .income-list__actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .income-list__footer td {
+    background: transparent;
+  }
+
+  .income-list__pagination {
+    justify-content: center;
+  }
+}

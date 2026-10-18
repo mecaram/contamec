@@ -5,6 +5,24 @@
     No hay cuentas de pago para los filtros seleccionados.
   </div>
 
+  <div class="payment-account-list__mobile-sort" *ngIf="!loading && paymentAccounts.length > 0">
+    <label class="payment-account-list__mobile-sort-label" for="payment-account-mobile-sort">Ordenar por</label>
+    <select id="payment-account-mobile-sort" class="payment-account-list__mobile-sort-select" (change)="sortBy($any($event.target).value)">
+      <option *ngFor="let option of sortOptions" [value]="option.column" [selected]="option.column === sortColumn">
+        {{ option.label }}
+      </option>
+    </select>
+    <button
+      mat-icon-button
+      type="button"
+      (click)="toggleSortDirection()"
+      [attr.aria-label]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+      [title]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+    >
+      <mat-icon>{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+    </button>
+  </div>
+
   <table class="payment-account-list__table mat-elevation-z1" *ngIf="!loading && paymentAccounts.length > 0">
     <thead>
       <tr>
@@ -15,8 +33,8 @@
     </thead>
     <tbody>
       <tr *ngFor="let row of pagedPaymentAccounts">
-        <td>{{ row.id }}</td>
-        <td>{{ row.name || '-' }}</td>
+        <td data-label="ID">{{ row.id }}</td>
+        <td data-label="Nombre">{{ row.name || '-' }}</td>
         <td class="payment-account-list__actions">
           <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar cuenta de pago">
             <mat-icon>edit</mat-icon>

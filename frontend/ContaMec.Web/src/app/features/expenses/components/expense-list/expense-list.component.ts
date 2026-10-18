@@ -12,6 +12,14 @@ export class ExpenseListComponent implements OnChanges {
   readonly sortableColumns: SortableColumn[] = ['id', 'emissionDate', 'accountName', 'detail', 'amount'];
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
+  /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
+  readonly sortOptions: { column: SortableColumn; label: string }[] = [
+    { column: 'id', label: 'ID' },
+    { column: 'emissionDate', label: 'Fecha' },
+    { column: 'accountName', label: 'Cuenta' },
+    { column: 'detail', label: 'Detalle' },
+    { column: 'amount', label: 'Monto' }
+  ];
   currentPage = 1;
   readonly pageSize = 10;
 
@@ -90,6 +98,16 @@ export class ExpenseListComponent implements OnChanges {
     }
     this.sortColumn = column;
     this.sortDirection = 'asc';
+    this.currentPage = 1;
+  }
+
+  sortBy(column: SortableColumn): void {
+    this.sortColumn = column;
+    this.currentPage = 1;
+  }
+
+  toggleSortDirection(): void {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     this.currentPage = 1;
   }
 

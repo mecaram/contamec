@@ -62,3 +62,102 @@ th {
   color: #334155;
   font-weight: 600;
 }
+
+.payment-account-list__mobile-sort {
+  display: none;
+}
+
+// En el celular cada fila se muestra como una tarjeta, con el nombre de la columna junto a cada dato.
+@media (max-width: 42rem) {
+  .payment-account-list__mobile-sort {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .payment-account-list__mobile-sort-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .payment-account-list__mobile-sort-select {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.4rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.95rem;
+    background: #fff;
+    color: #0f172a;
+  }
+
+  .payment-account-list__table,
+  .payment-account-list__table tbody,
+  .payment-account-list__table tfoot,
+  .payment-account-list__table tr,
+  .payment-account-list__table td {
+    display: block;
+  }
+
+  .payment-account-list__table {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .payment-account-list__table thead {
+    display: none;
+  }
+
+  .payment-account-list__table tr {
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0.9rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  }
+
+  .payment-account-list__table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .payment-account-list__table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #475569;
+    text-align: left;
+  }
+
+  .payment-account-list__table td:last-child {
+    border-bottom: 0;
+  }
+
+  .payment-account-list__table td:empty {
+    display: none;
+  }
+
+  .payment-account-list__actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .payment-account-list__footer td {
+    background: transparent;
+  }
+
+  .payment-account-list__pagination {
+    justify-content: center;
+  }
+}

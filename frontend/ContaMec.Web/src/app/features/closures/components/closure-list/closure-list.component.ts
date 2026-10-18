@@ -11,6 +11,15 @@ type SortableColumn = 'id' | 'openDate' | 'previousBalance' | 'incomes' | 'expen
 export class ClosureListComponent implements OnChanges {
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
+  /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
+  readonly sortOptions: { column: SortableColumn; label: string }[] = [
+    { column: 'id', label: 'ID' },
+    { column: 'openDate', label: 'Apertura' },
+    { column: 'previousBalance', label: 'Saldo' },
+    { column: 'incomes', label: 'Ingresos' },
+    { column: 'expenses', label: 'Egresos' },
+    { column: 'result', label: 'Resultado' }
+  ];
   currentPage = 1;
   readonly pageSize = 10;
 
@@ -133,6 +142,16 @@ export class ClosureListComponent implements OnChanges {
     }
     this.sortColumn = column;
     this.sortDirection = 'asc';
+    this.currentPage = 1;
+  }
+
+  sortBy(column: SortableColumn): void {
+    this.sortColumn = column;
+    this.currentPage = 1;
+  }
+
+  toggleSortDirection(): void {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     this.currentPage = 1;
   }
 
