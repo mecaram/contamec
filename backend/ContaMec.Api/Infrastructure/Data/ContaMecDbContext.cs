@@ -37,6 +37,11 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Name).HasColumnName("Name").IsRequired();
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
             entity.Property(e => e.Active).HasColumnName("Active");
+            entity.Property(e => e.WhatsApp).HasColumnName("WhatsApp");
+            entity.Property(e => e.Email).HasColumnName("Email");
+            entity.Property(e => e.Address).HasColumnName("Address");
+            entity.Property(e => e.Locality).HasColumnName("Locality");
+            entity.Property(e => e.Guid).HasColumnName("Guid");
         });
 
         modelBuilder.Entity<Closure>(entity =>

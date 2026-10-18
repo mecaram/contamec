@@ -22,23 +22,26 @@ export class ApplicationService {
   }
 
   create(application: Application): Observable<Application> {
-    const payload = {
-      name: application.name ?? null,
-      active: application.active
-    };
-    return this.http.post<Application>(this.applicationsUrl, payload, { headers: this.getAuthHeaders() });
+    return this.http.post<Application>(this.applicationsUrl, this.buildPayload(application), { headers: this.getAuthHeaders() });
   }
 
   update(id: number, application: Application): Observable<void> {
-    const payload = {
-      name: application.name ?? null,
-      active: application.active
-    };
-    return this.http.put<void>(`${this.applicationsUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
+    return this.http.put<void>(`${this.applicationsUrl}/${id}`, this.buildPayload(application), { headers: this.getAuthHeaders() });
   }
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.applicationsUrl}/${id}`, { headers: this.getAuthHeaders() });
+  }
+
+  private buildPayload(application: Application) {
+    return {
+      name: application.name ?? null,
+      active: application.active,
+      whatsApp: application.whatsApp ?? null,
+      email: application.email ?? null,
+      address: application.address ?? null,
+      locality: application.locality ?? null
+    };
   }
 
   private getAuthHeaders(): HttpHeaders {

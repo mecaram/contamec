@@ -25,6 +25,17 @@
   color: #334155;
 }
 
+.application-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.application-form__control[readonly] {
+  background: #f1f5f9;
+  color: #475569;
+}
+
 .application-form__control {
   width: 100%;
   min-height: 2.45rem;
@@ -59,6 +70,10 @@
   margin-top: -0.45rem;
   font-size: 0.75rem;
   color: #b91c1c;
+}
+
+.application-form__error--inline {
+  margin-top: 0;
 }
 
 .application-form__actions {

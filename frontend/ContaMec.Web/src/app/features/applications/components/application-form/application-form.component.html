@@ -9,6 +9,34 @@
     <div class="application-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
     <div class="application-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 100 caracteres.</div>
 
+    <div class="application-form__row">
+      <div class="application-form__field">
+        <label class="application-form__label" for="application-whatsapp">WhatsApp</label>
+        <input id="application-whatsapp" class="application-form__control" type="tel" formControlName="whatsApp" />
+      </div>
+      <div class="application-form__field">
+        <label class="application-form__label" for="application-email">Email</label>
+        <input id="application-email" class="application-form__control" type="email" formControlName="email" />
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.email.hasError('email')">El email no tiene un formato válido.</div>
+      </div>
+    </div>
+
+    <div class="application-form__row">
+      <div class="application-form__field">
+        <label class="application-form__label" for="application-address">Dirección</label>
+        <input id="application-address" class="application-form__control" formControlName="address" />
+      </div>
+      <div class="application-form__field">
+        <label class="application-form__label" for="application-locality">Localidad</label>
+        <input id="application-locality" class="application-form__control" formControlName="locality" />
+      </div>
+    </div>
+
+    <div class="application-form__field" *ngIf="mode === 'edit' && application?.guid">
+      <label class="application-form__label" for="application-guid">Guid</label>
+      <input id="application-guid" class="application-form__control" [value]="application?.guid" readonly />
+    </div>
+
     <label class="application-form__checkbox">
       <input type="checkbox" formControlName="active" />
       Aplicación activa

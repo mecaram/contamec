@@ -2,6 +2,7 @@ using ContaMec.Api.Application.Applications.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 // Alias: "Application" choca con el namespace ContaMec.Api.Application.
 using ApplicationEntity = ContaMec.Api.Domain.Entities.Application;
@@ -50,11 +51,17 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
     {
         ArgumentNullException.ThrowIfNull(request);
         await ValidateApplicationAsync(request.Name, null);
+        ValidateEmail(request.Email);
 
         var application = new ApplicationEntity
         {
             Name = request.Name!.Trim(),
             Active = request.Active,
+            WhatsApp = Normalize(request.WhatsApp),
+            Email = Normalize(request.Email),
+            Address = Normalize(request.Address),
+            Locality = Normalize(request.Locality),
+            Guid = System.Guid.NewGuid().ToString(),
             CreatedAt = ArgentinaClock.Now
         };
 
@@ -76,6 +83,7 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
     {
         ArgumentNullException.ThrowIfNull(request);
         await ValidateApplicationAsync(request.Name, id);
+        ValidateEmail(request.Email);
 
         var application = await _dbContext.Applications.FirstOrDefaultAsync(a => a.Id == id);
         if (application is null)
@@ -87,6 +95,12 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
 
         application.Name = request.Name!.Trim();
         application.Active = request.Active;
+        application.WhatsApp = Normalize(request.WhatsApp);
+        application.Email = Normalize(request.Email);
+        application.Address = Normalize(request.Address);
+        application.Locality = Normalize(request.Locality);
+        // Las aplicaciones creadas antes de agregar la columna no tienen Guid.
+        application.Guid ??= System.Guid.NewGuid().ToString();
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -125,8 +139,24 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
             Id = application.Id,
             Name = application.Name,
             Active = application.Active,
+            WhatsApp = application.WhatsApp,
+            Email = application.Email,
+            Address = application.Address,
+            Locality = application.Locality,
+            Guid = application.Guid,
             CreatedAt = application.CreatedAt
         };
+    }
+
+    private static string? Normalize(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static void ValidateEmail(string? email)
+    {
+        if (!string.IsNullOrWhiteSpace(email) && !new EmailAddressAttribute().IsValid(email.Trim()))
+            throw new ArgumentException("Email no tiene un formato válido.");
     }
 
     private async Task ValidateApplicationAsync(string? name, int? currentId)

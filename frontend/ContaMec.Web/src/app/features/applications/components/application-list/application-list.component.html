@@ -8,6 +8,9 @@
       <tr>
         <th class="application-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
         <th class="application-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th>Email</th>
+        <th>WhatsApp</th>
+        <th>Localidad</th>
         <th class="application-list__sortable" (click)="setSort('createdAt')">Fecha de alta <span>{{ sortIndicator('createdAt') }}</span></th>
         <th class="application-list__sortable" (click)="setSort('active')">Activa <span>{{ sortIndicator('active') }}</span></th>
         <th>Acciones</th>
@@ -17,6 +20,9 @@
       <tr *ngFor="let row of pagedApplications">
         <td>{{ row.id }}</td>
         <td>{{ row.name || '-' }}</td>
+        <td>{{ row.email || '-' }}</td>
+        <td>{{ row.whatsApp || '-' }}</td>
+        <td>{{ row.locality || '-' }}</td>
         <td>{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
         <td>{{ row.active ? 'Sí' : 'No' }}</td>
         <td class="application-list__actions">
@@ -31,7 +37,7 @@
     </tbody>
     <tfoot>
       <tr class="application-list__footer">
-        <td colspan="5">Total registros: {{ totalRecords }}</td>
+        <td colspan="8">Total registros: {{ totalRecords }}</td>
       </tr>
     </tfoot>
   </table>

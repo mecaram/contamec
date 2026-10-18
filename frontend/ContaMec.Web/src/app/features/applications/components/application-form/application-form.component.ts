@@ -15,7 +15,11 @@ export class ApplicationFormComponent implements OnChanges {
 
   readonly form = this.fb.group({
     name: ['' as string, [Validators.required, Validators.maxLength(100)]],
-    active: [true]
+    active: [true],
+    whatsApp: [''],
+    email: ['', [Validators.email]],
+    address: [''],
+    locality: ['']
   });
 
   constructor(private readonly fb: FormBuilder) {}
@@ -24,7 +28,11 @@ export class ApplicationFormComponent implements OnChanges {
     if (changes.application || changes.mode) {
       this.form.reset({
         name: this.application?.name ?? '',
-        active: this.application?.active ?? true
+        active: this.application?.active ?? true,
+        whatsApp: this.application?.whatsApp ?? '',
+        email: this.application?.email ?? '',
+        address: this.application?.address ?? '',
+        locality: this.application?.locality ?? ''
       });
     }
   }
@@ -43,7 +51,11 @@ export class ApplicationFormComponent implements OnChanges {
     const payload: Application = {
       id: this.application?.id ?? 0,
       name: raw.name?.trim() || '',
-      active: !!raw.active
+      active: !!raw.active,
+      whatsApp: raw.whatsApp?.trim() || null,
+      email: raw.email?.trim() || null,
+      address: raw.address?.trim() || null,
+      locality: raw.locality?.trim() || null
     };
     this.saveForm.emit(payload);
   }
