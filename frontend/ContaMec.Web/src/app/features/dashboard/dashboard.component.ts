@@ -27,20 +27,20 @@ export class DashboardComponent {
 
   readonly categories: DashboardCategory[] = [
     {
+      title: 'Proceso Diario',
+      items: [
+        { name: 'Ingresos', icon: 'trending_up', route: '/ingresos' },
+        { name: 'Egresos', icon: 'trending_down', route: '/egresos' },
+        { name: 'Cierres', icon: 'point_of_sale', route: '/cierres' }
+      ]
+    },
+    {
       title: 'Archivos',
       items: [
         { name: 'Cuentas', icon: 'account_balance', route: '/cuentas' },
         { name: 'Cuentas de pago', icon: 'credit_card', route: '/cuentas-pago' },
         { name: 'Usuarios', icon: 'people', route: '/usuarios' },
         { name: 'Aplicaciones', icon: 'business', route: '/aplicaciones', superAdminOnly: true }
-      ]
-    },
-    {
-      title: 'Proceso Diario',
-      items: [
-        { name: 'Ingresos', icon: 'trending_up', route: '/ingresos' },
-        { name: 'Egresos', icon: 'trending_down', route: '/egresos' },
-        { name: 'Cierres', icon: 'point_of_sale', route: '/cierres' }
       ]
     },
     {
