@@ -24,3 +24,6 @@ services:
       # Clave de firma JWT: Render genera un valor aleatorio de 256 bits (reemplaza la de appsettings.json).
       - key: Jwt__Key
         generateValue: true
+      # API key de Resend para los avisos por correo (Resend:ApiKey).
+      - key: Resend__ApiKey
+        sync: false

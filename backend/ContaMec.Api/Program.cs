@@ -8,6 +8,7 @@ using ContaMec.Api.Application.ClosureBalances;
 using ContaMec.Api.Application.CompanyRegistration;
 using ContaMec.Api.Application.Expenses;
 using ContaMec.Api.Application.Incomes;
+using ContaMec.Api.Application.Notifications;
 using ContaMec.Api.Application.PaymentAccounts;
 using ContaMec.Api.Application.Users;
 using ContaMec.Api.Domain.Entities;
@@ -26,6 +27,8 @@ const string CorsPolicyName = "AllowFrontend";
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));
 builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection(AuthSettings.SectionName));
+builder.Services.Configure<NotificationSettings>(builder.Configuration.GetSection(NotificationSettings.SectionName));
+builder.Services.Configure<ResendSettings>(builder.Configuration.GetSection(ResendSettings.SectionName));
 
 builder.Services.AddCors(options =>
 {
@@ -108,6 +111,7 @@ builder.Services.AddScoped<IPaymentAccountService, PaymentAccountService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
+builder.Services.AddHttpClient<IEmailNotifier, ResendEmailNotifier>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
