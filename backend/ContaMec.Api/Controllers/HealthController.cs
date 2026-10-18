@@ -1,6 +1,8 @@
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace ContaMec.Api.Controllers;
 
@@ -19,9 +21,16 @@ public class HealthController(ContaMecDbContext dbContext) : ControllerBase
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        var databaseAvailable = await dbContext.Database.CanConnectAsync(cancellationToken);
-        return databaseAvailable
-            ? Ok(new { status = "ok" })
-            : StatusCode(StatusCodes.Status503ServiceUnavailable, new { status = "database_unavailable" });
+        try
+        {
+            // Una consulta real (no solo abrir la conexión) obliga a Entity Framework a armar el modelo,
+            // la parte más lenta del primer pedido tras un arranque.
+            await dbContext.Users.AsNoTracking().AnyAsync(cancellationToken);
+            return Ok(new { status = "ok" });
+        }
+        catch (Exception ex) when (ex is NpgsqlException or TimeoutException or InvalidOperationException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { status = "database_unavailable" });
+        }
     }
 }
