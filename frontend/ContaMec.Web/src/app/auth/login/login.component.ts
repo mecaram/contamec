@@ -24,7 +24,9 @@ export class LoginComponent implements OnInit {
     const u = this.auth.getUsername();
     if (t && u) {
       void this.router.navigateByUrl('/dashboard');
+      return;
     }
+    this.auth.warmUp();
   }
 
   toggleShowPassword(): void {

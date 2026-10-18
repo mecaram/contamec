@@ -34,6 +34,14 @@ export class AuthService {
   private readonly previousLoginAtKey = 'contamec_previous_login_at';
   private readonly superAdministratorRole = 'SuperAdministrador';
 
+  /**
+   * Despierta la API (Render la suspende sin tráfico) y su conexión a la base mientras se escriben las credenciales.
+   * No espera la respuesta ni informa errores: si falla, el login funciona igual.
+   */
+  warmUp(): void {
+    fetch(`${environment.apiBaseUrl}/health`).catch(() => undefined);
+  }
+
   login(body: LoginRequest): Observable<LoginResponse> {
     const url = `${environment.apiBaseUrl}/auth/login`;
     return defer(() => from(this.postLoginJson(url, body))).pipe(

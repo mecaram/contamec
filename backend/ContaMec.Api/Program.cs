@@ -98,6 +98,12 @@ var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetCon
 var csb = dataSourceBuilder.ConnectionStringBuilder;
 csb.Username = RemoveWhitespace(csb.Username);
 csb.Host = RemoveWhitespace(csb.Host);
+// Sin esto, Npgsql cierra las conexiones con 5 minutos de inactividad y el siguiente pedido paga una conexión
+// nueva a Supabase (~2 s). Se mantiene una abierta y el keepalive evita que el pooler la corte por inactividad.
+if (csb.MinPoolSize == 0)
+    csb.MinPoolSize = 1;
+if (csb.KeepAlive == 0)
+    csb.KeepAlive = 30;
 dataSourceBuilder.MapEnum<AccountType>("AccountTypes", new NpgsqlNullNameTranslator());
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddDbContext<ContaMecDbContext>(options => options.UseNpgsql(dataSource));
