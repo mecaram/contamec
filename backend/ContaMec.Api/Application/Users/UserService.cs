@@ -58,24 +58,31 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
     public async Task<UserResponse> CreateAsync(UserCreateRequest request, int applicationId, bool isSuperAdministrator)
     {
         ArgumentNullException.ThrowIfNull(request);
-        await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, null, isSuperAdministrator);
+        var user = await AddAsync(request.Name, request.Password, request.IsActive, request.UserRoleId, isSuperAdministrator);
         var targetApplicationId = await ResolveTargetApplicationIdAsync(request.ApplicationId, applicationId, isSuperAdministrator);
+        user.ApplicationId = targetApplicationId;
 
-        var user = new User
-        {
-            Name = request.Name!.Trim(),
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password!),
-            IsActive = request.IsActive,
-            CreatedAt = ArgentinaClock.Now,
-            UserRoleId = request.UserRoleId!.Value,
-            ApplicationId = targetApplicationId
-        };
-
-        _dbContext.Users.Add(user);
         await SaveChangesCheckingDuplicateNameAsync();
 
         var created = await GetByIdAsync(user.Id, targetApplicationId, isSuperAdministrator);
         return created ?? throw new InvalidOperationException("No se pudo leer el usuario recién creado.");
+    }
+
+    public async Task<User> AddAsync(string? name, string? password, bool isActive, int? userRoleId, bool isSuperAdministrator)
+    {
+        await ValidateUserAsync(name, password, userRoleId, null, isSuperAdministrator);
+
+        var user = new User
+        {
+            Name = name!.Trim(),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password!),
+            IsActive = isActive,
+            CreatedAt = ArgentinaClock.Now,
+            UserRoleId = userRoleId!.Value
+        };
+
+        _dbContext.Users.Add(user);
+        return user;
     }
 
     public async Task<bool> UpdateAsync(int id, UserUpdateRequest request, int applicationId, bool isSuperAdministrator)
@@ -122,7 +129,7 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         return true;
     }
 
-    private async Task SaveChangesCheckingDuplicateNameAsync()
+    public async Task SaveChangesCheckingDuplicateNameAsync()
     {
         try
         {

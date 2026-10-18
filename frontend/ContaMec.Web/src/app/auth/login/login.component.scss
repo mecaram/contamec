@@ -309,6 +309,27 @@ $primary-hover: #1d4ed8;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
 }
 
+.btn--secondary {
+  color: #334155;
+  background: $white;
+  border-color: #cbd5e1;
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btn--secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--secondary:focus-visible {
+  outline: 2px solid $primary;
+  outline-offset: 2px;
+}
+
 .btn__loading {
   display: inline-block;
 }

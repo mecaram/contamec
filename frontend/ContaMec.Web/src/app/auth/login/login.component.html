@@ -90,6 +90,10 @@
           <span *ngIf="!loading">Entrar</span>
           <span *ngIf="loading" class="btn__loading" aria-live="polite">Entrando…</span>
         </button>
+
+        <button type="button" class="btn btn--secondary" routerLink="/registrar-empresa" [disabled]="loading">
+          Registrar Empresa
+        </button>
       </form>
     </div>
   </div>

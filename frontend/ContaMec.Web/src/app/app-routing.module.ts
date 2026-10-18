@@ -6,6 +6,11 @@ const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
   {
+    path: 'registrar-empresa',
+    loadChildren: () =>
+      import('./features/register-company/register-company.module').then((m) => m.RegisterCompanyModule)
+  },
+  {
     path: 'dashboard',
     loadChildren: () =>
       import('./features/dashboard/dashboard.module').then((m) => m.DashboardModule)

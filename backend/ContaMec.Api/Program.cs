@@ -1,9 +1,11 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using ContaMec.Api.Application.Accounts;
 using ContaMec.Api.Application.Applications;
 using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Closures;
 using ContaMec.Api.Application.ClosureBalances;
+using ContaMec.Api.Application.CompanyRegistration;
 using ContaMec.Api.Application.Expenses;
 using ContaMec.Api.Application.Incomes;
 using ContaMec.Api.Application.PaymentAccounts;
@@ -72,6 +74,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// El registro público de empresas es anónimo: se limita por IP para frenar altas automatizadas.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(CompanyRegistrationRateLimit.PolicyName, context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = CompanyRegistrationRateLimit.PermitLimit,
+                Window = CompanyRegistrationRateLimit.Window,
+                QueueLimit = 0
+            }));
+});
+
 builder.Services.AddControllers();
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(builder.Configuration.GetConnectionString("DefaultConnection"));
 // Usuario y host nunca llevan espacios; al pegar la cadena (p. ej. en Render) suelen colarse por saltos de línea.
@@ -90,6 +107,7 @@ builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IPaymentAccountService, PaymentAccountService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -155,6 +173,7 @@ if (enableSwagger)
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 

@@ -1,13 +1,16 @@
 using ContaMec.Api.Application.Auth;
+using ContaMec.Api.Application.CompanyRegistration;
+using ContaMec.Api.Application.CompanyRegistration.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ContaMec.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Autenticación (inicio)")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(IAuthService authService, ICompanyRegistrationService companyRegistrationService) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
@@ -30,6 +33,29 @@ public class AuthController(IAuthService authService) : ControllerBase
         catch (LoginRejectedException ex)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+    }
+
+    /// <summary>Registro público de una empresa y su administrador; ambos quedan inactivos y no se emite token.</summary>
+    [HttpPost("register-company")]
+    [AllowAnonymous]
+    [EnableRateLimiting(CompanyRegistrationRateLimit.PolicyName)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> RegisterCompany([FromBody] CompanyRegistrationRequest? request)
+    {
+        if (request is null)
+            return BadRequest(new { message = "Cuerpo JSON requerido." });
+
+        try
+        {
+            await companyRegistrationService.RegisterAsync(request);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

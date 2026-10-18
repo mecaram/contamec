@@ -50,6 +50,15 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
 
     public async Task<ApplicationResponse> CreateAsync(ApplicationCreateRequest request)
     {
+        var application = await AddAsync(request);
+        await _dbContext.SaveChangesAsync();
+
+        var created = await GetByIdAsync(application.Id);
+        return created ?? throw new InvalidOperationException("No se pudo leer la aplicación recién creada.");
+    }
+
+    public async Task<ApplicationEntity> AddAsync(ApplicationCreateRequest request)
+    {
         ArgumentNullException.ThrowIfNull(request);
         await ValidateApplicationAsync(request.Name, null);
         ValidateEmail(request.Email);
@@ -75,10 +84,7 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
             IsClosed = false,
             Application = application
         });
-        await _dbContext.SaveChangesAsync();
-
-        var created = await GetByIdAsync(application.Id);
-        return created ?? throw new InvalidOperationException("No se pudo leer la aplicación recién creada.");
+        return application;
     }
 
     public async Task<bool> UpdateAsync(int id, ApplicationUpdateRequest request, int currentApplicationId)
