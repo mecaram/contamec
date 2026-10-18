@@ -79,3 +79,43 @@
 .user-form__rule--ok {
   color: #15803d;
 }
+
+.user-form__password-wrap {
+  position: relative;
+}
+
+.user-form__control--with-action {
+  padding-right: 2.6rem;
+}
+
+.user-form__reveal {
+  position: absolute;
+  right: 0.15rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+
+  &:hover {
+    color: #0f172a;
+    background: rgba(15, 23, 42, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}

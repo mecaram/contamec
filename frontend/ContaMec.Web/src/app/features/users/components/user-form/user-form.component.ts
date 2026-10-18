@@ -1,8 +1,15 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { passwordPolicyValidator, passwordRules, PasswordRule } from '../../../../auth/password-policy';
 import { User } from '../../models/user.model';
 import { UserApplicationOption, UserRoleOption } from '../../services/user.service';
+
+/** Solo se exige la repetición cuando se escribe una contraseña (al editar, vacía significa no cambiarla). */
+function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const password = group.get('password')?.value ?? '';
+  const confirmPassword = group.get('confirmPassword')?.value ?? '';
+  return password && password !== confirmPassword ? { mismatch: true } : null;
+}
 
 @Component({
   selector: 'app-user-form',
@@ -19,25 +26,45 @@ export class UserFormComponent implements OnChanges {
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<User>();
 
-  readonly form = this.fb.group({
-    name: ['' as string, [Validators.required, Validators.maxLength(80)]],
-    password: ['' as string, passwordPolicyValidator],
-    isActive: [true],
-    userRoleId: [null as number | null],
-    applicationId: [null as number | null]
-  });
+  readonly form = this.fb.group(
+    {
+      name: ['' as string, [Validators.required, Validators.maxLength(80)]],
+      password: ['' as string, passwordPolicyValidator],
+      confirmPassword: ['' as string],
+      isActive: [true],
+      userRoleId: [null as number | null],
+      applicationId: [null as number | null]
+    },
+    { validators: passwordsMatchValidator }
+  );
+
+  readonly visible: Record<'password' | 'confirmPassword', boolean> = {
+    password: false,
+    confirmPassword: false
+  };
 
   constructor(private readonly fb: FormBuilder) {}
+
+  toggleVisible(field: 'password' | 'confirmPassword'): void {
+    this.visible[field] = !this.visible[field];
+  }
+
+  isVisible(field: 'password' | 'confirmPassword'): boolean {
+    return this.visible[field];
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.user || changes.mode || changes.currentApplicationId) {
       this.form.reset({
         name: this.user?.name ?? '',
         password: '',
+        confirmPassword: '',
         isActive: this.user?.isActive ?? true,
         userRoleId: this.user?.userRoleId ?? null,
         applicationId: this.currentApplicationId
       });
+      this.visible.password = false;
+      this.visible.confirmPassword = false;
     }
   }
 
@@ -48,6 +75,14 @@ export class UserFormComponent implements OnChanges {
   /** Al crear siempre se muestran los requisitos; al editar, solo si se está escribiendo una nueva. */
   get showPasswordRules(): boolean {
     return this.mode === 'create' || !!this.form.controls.password.value;
+  }
+
+  get showConfirmPassword(): boolean {
+    return this.showPasswordRules;
+  }
+
+  get showMismatch(): boolean {
+    return this.form.hasError('mismatch') && !!this.form.controls.confirmPassword.touched;
   }
 
   get showApplication(): boolean {

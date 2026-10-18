@@ -11,14 +11,17 @@
 
     <div class="user-form__field">
       <label class="user-form__label" for="user-password">Contraseña</label>
-      <input
-        id="user-password"
-        class="user-form__control"
-        type="password"
-        formControlName="password"
-        autocomplete="new-password"
-        placeholder="{{ mode === 'edit' ? 'Dejar vacío para no cambiar' : '' }}"
-      />
+      <div class="user-form__password-wrap">
+        <input
+          id="user-password"
+          class="user-form__control user-form__control--with-action"
+          [type]="visible.password ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="new-password"
+          placeholder="{{ mode === 'edit' ? 'Dejar vacío para no cambiar' : '' }}"
+        />
+        <ng-container *ngTemplateOutlet="revealButton; context: { $implicit: 'password' }"></ng-container>
+      </div>
     </div>
     <div class="user-form__error" *ngIf="form.controls.password.hasError('required')">La contraseña es obligatoria.</div>
     <ul class="user-form__rules" *ngIf="showPasswordRules" aria-live="polite">
@@ -26,6 +29,23 @@
         {{ rule.ok ? '✔' : '•' }} {{ rule.label }}
       </li>
     </ul>
+
+    <div class="user-form__field" *ngIf="showConfirmPassword">
+      <label class="user-form__label" for="user-confirm-password">Repetir contraseña nueva</label>
+      <div class="user-form__password-wrap">
+        <input
+          id="user-confirm-password"
+          class="user-form__control user-form__control--with-action"
+          [type]="visible.confirmPassword ? 'text' : 'password'"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+        />
+        <ng-container *ngTemplateOutlet="revealButton; context: { $implicit: 'confirmPassword' }"></ng-container>
+      </div>
+    </div>
+    <div class="user-form__error" *ngIf="showConfirmPassword && showMismatch">
+      La contraseña nueva y su repetición no coinciden.
+    </div>
 
     <div class="user-form__field">
       <label class="user-form__label" for="user-role">Rol</label>
@@ -53,3 +73,25 @@
     <button mat-flat-button color="primary" type="submit">Guardar</button>
   </div>
 </form>
+
+<ng-template #revealButton let-field>
+  <button
+    type="button"
+    class="user-form__reveal"
+    (click)="toggleVisible(field)"
+    [attr.aria-pressed]="isVisible(field)"
+    [attr.aria-label]="isVisible(field) ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+    [attr.title]="isVisible(field) ? 'Ocultar' : 'Mostrar'"
+  >
+    <svg *ngIf="!isVisible(field)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+    <svg *ngIf="isVisible(field)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path
+        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"
+      />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  </button>
+</ng-template>
