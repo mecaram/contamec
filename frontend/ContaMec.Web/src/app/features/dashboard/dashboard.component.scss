@@ -1,5 +1,9 @@
 @import '~@angular/material/theming';
 
+// Colores de ingresos y egresos: los usan los indicadores y las tarjetas de Proceso Diario.
+$income-color: #0284c7;
+$expense-color: #ea580c;
+
 .dashboard {
   min-height: 100vh;
   min-height: 100dvh;
@@ -131,7 +135,7 @@
   }
 }
 
-.dashboard__section--1 {
+.dashboard__section--files {
   .dashboard__section-title {
     color: #075985;
   }
@@ -150,7 +154,7 @@
   }
 }
 
-.dashboard__section--0 {
+.dashboard__section--daily {
   .dashboard__section-title {
     color: #5b21b6;
   }
@@ -169,7 +173,7 @@
   }
 }
 
-.dashboard__section--2 {
+.dashboard__section--reports {
   .dashboard__section-title {
     color: #166534;
   }
@@ -239,4 +243,111 @@
   font-size: 1.05rem;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.78);
+}
+
+.dashboard__indicators {
+  .dashboard__section-title {
+    color: #9a3412;
+  }
+
+  .dashboard__section-title::before {
+    background: #f97316;
+  }
+}
+
+.dashboard__indicators-period {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.dashboard__indicators-message {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.dashboard__indicators-message--error {
+  color: #b91c1c;
+}
+
+.indicator-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+  padding: 1.5rem 1.25rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px !important;
+}
+
+.indicator-card__icon {
+  font-size: 2.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: #64748b;
+}
+
+.indicator-card__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.indicator-card__value {
+  font-size: clamp(1.5rem, 4vw, 1.9rem);
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.indicator-card__hint {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+// El resultado se pinta según el signo; ingresos y egresos llevan el color de su módulo.
+.indicator-card--positive {
+  border-color: #bbf7d0;
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+
+  .indicator-card__icon,
+  .indicator-card__value {
+    color: #15803d;
+  }
+}
+
+.indicator-card--negative {
+  border-color: #fecaca;
+  background: linear-gradient(180deg, #ffffff 0%, #fef2f2 100%);
+
+  .indicator-card__icon,
+  .indicator-card__value {
+    color: #b91c1c;
+  }
+}
+
+.indicator-card--incomes {
+  .indicator-card__icon,
+  .indicator-card__value {
+    color: $income-color;
+  }
+}
+
+.indicator-card--expenses {
+  .indicator-card__icon,
+  .indicator-card__value {
+    color: $expense-color;
+  }
+}
+
+// Mayor especificidad que el color del grupo (.dashboard__section--{tone} .dashboard-card__icon).
+.dashboard-card .dashboard-card__icon--incomes {
+  color: $income-color;
+}
+
+.dashboard-card .dashboard-card__icon--expenses {
+  color: $expense-color;
 }

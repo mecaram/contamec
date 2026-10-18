@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { Closure } from '../closures/models/closure.model';
+import { ClosureService } from '../closures/services/closure.service';
 import { DashboardCategory } from './dashboard.models';
 
 @Component({
@@ -8,15 +10,34 @@ import { DashboardCategory } from './dashboard.models';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   readonly applicationName = this.auth.getApplicationName();
   readonly username = this.auth.getUsername();
   readonly previousLoginAt = this.auth.getPreviousLoginAt();
 
+  /** Liquidación activa: el cierre abierto de la empresa, con sus totales calculados por el backend. */
+  activeClosure: Closure | null = null;
+  indicatorsLoading = true;
+  indicatorsError: string | null = null;
+
   constructor(
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly closureService: ClosureService
   ) {}
+
+  ngOnInit(): void {
+    this.closureService.search({ isClosed: false }).subscribe({
+      next: (closures) => {
+        this.activeClosure = closures[0] ?? null;
+        this.indicatorsLoading = false;
+      },
+      error: () => {
+        this.indicatorsError = 'No se pudieron cargar los indicadores.';
+        this.indicatorsLoading = false;
+      }
+    });
+  }
 
   logout(): void {
     this.auth.logout();
@@ -25,17 +46,19 @@ export class DashboardComponent {
 
   private readonly isSuperAdministrator = this.auth.isSuperAdministrator();
 
-  readonly categories: DashboardCategory[] = [
+  readonly categories: DashboardCategory[] = ([
     {
       title: 'Proceso Diario',
+      tone: 'daily',
       items: [
-        { name: 'Ingresos', icon: 'trending_up', route: '/ingresos' },
-        { name: 'Egresos', icon: 'trending_down', route: '/egresos' },
+        { name: 'Ingresos', icon: 'trending_up', route: '/ingresos', iconTone: 'incomes' },
+        { name: 'Egresos', icon: 'trending_down', route: '/egresos', iconTone: 'expenses' },
         { name: 'Cierres', icon: 'point_of_sale', route: '/cierres' }
       ]
     },
     {
       title: 'Archivos',
+      tone: 'files',
       items: [
         { name: 'Cuentas', icon: 'account_balance', route: '/cuentas' },
         { name: 'Cuentas de pago', icon: 'credit_card', route: '/cuentas-pago' },
@@ -45,10 +68,14 @@ export class DashboardComponent {
     },
     {
       title: 'Informes',
-      items: []
+      tone: 'reports',
+      items: [],
+      hidden: true
     }
-  ].map((category) => ({
-    ...category,
-    items: category.items.filter((item) => !item.superAdminOnly || this.isSuperAdministrator)
-  }));
+  ] as DashboardCategory[])
+    .filter((category) => !category.hidden)
+    .map((category) => ({
+      ...category,
+      items: category.items.filter((item) => !item.superAdminOnly || this.isSuperAdministrator)
+    }));
 }
