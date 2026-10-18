@@ -62,7 +62,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
+            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+            // Sin los 5 minutos de tolerancia por defecto: la sesión vence justo a Jwt:ExpiresInMinutes de inactividad.
+            ClockSkew = TimeSpan.Zero
         };
         options.Events = new JwtBearerEvents
         {

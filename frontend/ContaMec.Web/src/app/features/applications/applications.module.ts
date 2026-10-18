@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,7 +12,7 @@ import { ApplicationsComponent } from './applications.component';
 
 @NgModule({
   declarations: [ApplicationsComponent, ApplicationFormComponent, ApplicationListComponent],
-  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, MatButtonModule, MatIconModule, ApplicationsRoutingModule],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, ApplicationsRoutingModule],
   providers: [ApplicationService]
 })
 export class ApplicationsModule {}

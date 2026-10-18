@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -16,15 +16,19 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    const t = this.auth.getToken();
-    const u = this.auth.getUsername();
-    if (t && u) {
+    if (this.auth.isSessionValid() && this.auth.getUsername()) {
       void this.router.navigateByUrl('/dashboard');
       return;
+    }
+    // Un token vencido que quedó guardado no debe mandar al Dashboard.
+    this.auth.logout();
+    if (this.route.snapshot.queryParamMap.get('sesion') === 'expirada') {
+      this.errorMessage = 'Su sesión expiró. Ingrese nuevamente.';
     }
     this.auth.warmUp();
   }

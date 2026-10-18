@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,7 +12,7 @@ import { ClosureService } from './services/closure.service';
 
 @NgModule({
   declarations: [ClosuresComponent, ClosureListComponent],
-  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, MatButtonModule, MatIconModule, ClosuresRoutingModule],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, ClosuresRoutingModule],
   providers: [ClosureService, ClosureBalanceService]
 })
 export class ClosuresModule {}

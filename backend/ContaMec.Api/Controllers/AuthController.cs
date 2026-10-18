@@ -59,6 +59,23 @@ public class AuthController(IAuthService authService, ICompanyRegistrationServic
         }
     }
 
+    /// <summary>
+    /// Renueva el token mientras el usuario usa el sistema: así la sesión vence por inactividad
+    /// (Jwt:ExpiresInMinutes sin renovar) y no a un plazo fijo desde el inicio de sesión.
+    /// </summary>
+    [HttpPost("refresh")]
+    [Authorize]
+    [ProducesResponseType(typeof(RefreshTokenResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var result = await authService.RefreshAsync(userId, cancellationToken);
+        return result is null ? Unauthorized() : Ok(result);
+    }
+
     [HttpPost("change-password")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

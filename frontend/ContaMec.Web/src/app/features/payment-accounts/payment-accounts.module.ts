@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,7 +12,7 @@ import { PaymentAccountService } from './services/payment-account.service';
 
 @NgModule({
   declarations: [PaymentAccountsComponent, PaymentAccountFormComponent, PaymentAccountListComponent],
-  imports: [CommonModule, HttpClientModule, ReactiveFormsModule, MatButtonModule, MatIconModule, PaymentAccountsRoutingModule],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, PaymentAccountsRoutingModule],
   providers: [PaymentAccountService]
 })
 export class PaymentAccountsModule {}

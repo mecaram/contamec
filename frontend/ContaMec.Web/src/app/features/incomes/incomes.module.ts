@@ -1,5 +1,4 @@
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,7 +15,6 @@ import { IncomeService } from './services/income.service';
   declarations: [IncomesComponent, IncomeFormComponent, IncomeListComponent],
   imports: [
     CommonModule,
-    HttpClientModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,

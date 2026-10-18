@@ -62,6 +62,22 @@ public class AuthService(
         };
     }
 
+    public async Task<RefreshTokenResponse?> RefreshAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        // Se vuelve a leer el usuario: si lo desactivaron (a él o a su empresa) durante la sesión, no se renueva.
+        var user = await _dbContext.Users
+            .AsNoTracking()
+            .Include(u => u.Application)
+            .Include(u => u.UserRole)
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+        if (user is null || !user.IsActive || user.Application is null || !user.Application.Active)
+            return null;
+
+        var token = CreateJwt(user.Id, user.Name ?? string.Empty, user.Application.Id, user.UserRole?.Name ?? string.Empty);
+        return new RefreshTokenResponse { Token = token };
+    }
+
     public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
