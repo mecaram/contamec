@@ -13,6 +13,7 @@ export interface UserRoleOption {
 export interface UserApplicationOption {
   id: number;
   name?: string | null;
+  active?: boolean;
 }
 
 @Injectable()
@@ -29,6 +30,7 @@ export class UserService {
     if (filters.name) params = params.set('name', filters.name);
     if (filters.isActive !== null && filters.isActive !== undefined) params = params.set('isActive', String(filters.isActive));
     if (filters.userRoleId !== null && filters.userRoleId !== undefined) params = params.set('userRoleId', String(filters.userRoleId));
+    if (filters.applicationId !== null && filters.applicationId !== undefined) params = params.set('applicationId', String(filters.applicationId));
     return this.http.get<User[]>(this.usersUrl, { params, headers: this.getAuthHeaders() });
   }
 
@@ -36,10 +38,9 @@ export class UserService {
     return this.http.get<UserRoleOption[]>(`${this.usersUrl}/role-options`, { headers: this.getAuthHeaders() });
   }
 
-  /** Empresas activas para elegir al crear un usuario. La API solo responde a un SuperAdministrador. */
+  /** Todas las empresas (activas e inactivas). La API solo responde a un SuperAdministrador. */
   getApplicationOptions(): Observable<UserApplicationOption[]> {
-    const params = new HttpParams().set('active', 'true');
-    return this.http.get<UserApplicationOption[]>(`${this.apiBaseUrl}/applications`, { params, headers: this.getAuthHeaders() });
+    return this.http.get<UserApplicationOption[]>(`${this.apiBaseUrl}/applications`, { headers: this.getAuthHeaders() });
   }
 
   create(user: User): Observable<User> {

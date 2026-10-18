@@ -21,14 +21,16 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
         [FromQuery(Name = "id")] int? id,
         [FromQuery(Name = "name")] string? name,
         [FromQuery(Name = "isActive")] bool? isActive,
-        [FromQuery(Name = "userRoleId")] int? userRoleId)
+        [FromQuery(Name = "userRoleId")] int? userRoleId,
+        [FromQuery(Name = "applicationId")] int? applicationIdFilter)
     {
         var request = new UserSearchRequest
         {
             Id = id,
             Name = name,
             IsActive = isActive,
-            UserRoleId = userRoleId
+            UserRoleId = userRoleId,
+            ApplicationId = applicationIdFilter
         };
 
         if (!User.TryGetApplicationId(out var applicationId))

@@ -14,7 +14,10 @@ import { UserApplicationOption, UserRoleOption, UserService } from './services/u
 export class UsersComponent implements OnInit {
   users: User[] = [];
   roleOptions: UserRoleOption[] = [];
+  /** Todas las empresas, para el filtro del listado. */
   applicationOptions: UserApplicationOption[] = [];
+  /** Solo las activas: un usuario nuevo no puede crearse en una empresa inactiva. */
+  activeApplicationOptions: UserApplicationOption[] = [];
   readonly currentApplicationId = this.auth.getApplicationId();
   readonly isSuperAdministrator = this.auth.isSuperAdministrator();
   loading = false;
@@ -31,7 +34,8 @@ export class UsersComponent implements OnInit {
     id: [null as number | null],
     name: [''],
     isActive: [''],
-    userRoleId: [null as number | null]
+    userRoleId: [null as number | null],
+    applicationId: [null as number | null]
   });
 
   constructor(
@@ -71,7 +75,8 @@ export class UsersComponent implements OnInit {
       id: null,
       name: '',
       isActive: '',
-      userRoleId: null
+      userRoleId: null,
+      applicationId: null
     });
     this.sortResetToken += 1;
     this.search();
@@ -170,10 +175,12 @@ export class UsersComponent implements OnInit {
   private loadApplicationOptions(): void {
     this.userService.getApplicationOptions().subscribe({
       next: (options) => {
-        this.applicationOptions = options ?? [];
+        this.applicationOptions = [...(options ?? [])].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+        this.activeApplicationOptions = this.applicationOptions.filter((a) => a.active !== false);
       },
       error: () => {
         this.applicationOptions = [];
+        this.activeApplicationOptions = [];
       }
     });
   }
@@ -197,7 +204,8 @@ export class UsersComponent implements OnInit {
       id: raw.id,
       name: raw.name?.trim() || null,
       isActive,
-      userRoleId: raw.userRoleId
+      userRoleId: raw.userRoleId,
+      applicationId: raw.applicationId
     };
   }
 

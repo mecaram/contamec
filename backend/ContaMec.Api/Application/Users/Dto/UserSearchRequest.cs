@@ -6,4 +6,5 @@ public class UserSearchRequest
     public string? Name { get; set; }
     public bool? IsActive { get; set; }
     public int? UserRoleId { get; set; }
+    public int? ApplicationId { get; set; }
 }

@@ -37,6 +37,15 @@
           <option *ngFor="let role of roleOptions" [ngValue]="role.id">{{ role.name || '-' }}</option>
         </select>
       </div>
+      <div class="users-field" *ngIf="isSuperAdministrator">
+        <label class="users-field__label" for="filter-application">Empresa</label>
+        <select id="filter-application" class="users-field__control" formControlName="applicationId" (change)="search()">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let application of applicationOptions" [ngValue]="application.id">
+            {{ application.name || '-' }}{{ application.active === false ? ' (inactiva)' : '' }}
+          </option>
+        </select>
+      </div>
     </form>
 
     <div class="users-filters__actions">
@@ -59,7 +68,7 @@
       [mode]="formMode"
       [user]="editingUser"
       [roleOptions]="roleOptions"
-      [applicationOptions]="applicationOptions"
+      [applicationOptions]="activeApplicationOptions"
       [currentApplicationId]="currentApplicationId"
       (cancelForm)="cancelForm()"
       (saveForm)="submitForm($event)"

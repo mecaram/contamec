@@ -3,4 +3,5 @@ export interface UserSearch {
   name?: string | null;
   isActive?: boolean | null;
   userRoleId?: number | null;
+  applicationId?: number | null;
 }

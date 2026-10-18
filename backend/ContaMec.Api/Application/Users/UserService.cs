@@ -35,6 +35,9 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         if (request.UserRoleId.HasValue)
             query = query.Where(u => u.UserRoleId == request.UserRoleId.Value);
 
+        if (request.ApplicationId.HasValue)
+            query = query.Where(u => u.ApplicationId == request.ApplicationId.Value);
+
         return await query
             .OrderBy(u => u.Name)
             .ThenBy(u => u.Id)
