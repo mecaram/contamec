@@ -207,6 +207,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.PasswordHash).HasColumnName("PasswordHash").HasMaxLength(256).IsUnicode(false);
             entity.Property(e => e.IsActive).HasColumnName("IsActive");
             entity.Property(e => e.CreatedAt).HasColumnName("CreatedAt").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.LastLoginAt).HasColumnName("LastLoginAt").HasColumnType("timestamp with time zone");
             entity.Property(e => e.UserRoleId).HasColumnName("UserRoleId");
 
             entity.HasIndex(e => e.Name);

@@ -14,6 +14,7 @@ export interface LoginResponse {
   applicationId: number;
   applicationName: string;
   role: string;
+  previousLoginAt: string | null;
 }
 
 interface FetchLoginError {
@@ -30,6 +31,7 @@ export class AuthService {
   private readonly applicationIdKey = 'contamec_application_id';
   private readonly applicationNameKey = 'contamec_application_name';
   private readonly roleKey = 'contamec_role';
+  private readonly previousLoginAtKey = 'contamec_previous_login_at';
   private readonly superAdministratorRole = 'SuperAdministrador';
 
   login(body: LoginRequest): Observable<LoginResponse> {
@@ -102,6 +104,8 @@ export class AuthService {
     sessionStorage.setItem(this.applicationIdKey, String(response.applicationId));
     sessionStorage.setItem(this.applicationNameKey, response.applicationName);
     sessionStorage.setItem(this.roleKey, response.role ?? '');
+    // Vacío significa "primer acceso"; la clave ausente, una sesión iniciada antes de existir este dato.
+    sessionStorage.setItem(this.previousLoginAtKey, response.previousLoginAt ?? '');
   }
 
   getToken(): string | null {
@@ -125,6 +129,11 @@ export class AuthService {
     return sessionStorage.getItem(this.applicationNameKey);
   }
 
+  /** Fecha ISO del inicio de sesión anterior: '' si es el primero, null si no se conoce. */
+  getPreviousLoginAt(): string | null {
+    return sessionStorage.getItem(this.previousLoginAtKey);
+  }
+
   /** Solo para la interfaz: el backend autoriza por el rol del JWT. */
   isSuperAdministrator(): boolean {
     return sessionStorage.getItem(this.roleKey) === this.superAdministratorRole;
@@ -136,5 +145,6 @@ export class AuthService {
     sessionStorage.removeItem(this.applicationIdKey);
     sessionStorage.removeItem(this.applicationNameKey);
     sessionStorage.removeItem(this.roleKey);
+    sessionStorage.removeItem(this.previousLoginAtKey);
   }
 }

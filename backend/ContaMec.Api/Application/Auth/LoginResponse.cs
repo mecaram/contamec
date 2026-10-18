@@ -18,4 +18,8 @@ public class LoginResponse
 
     [JsonPropertyName("role")]
     public string Role { get; set; } = string.Empty;
+
+    /// <summary>Inicio de sesión anterior al actual, en hora de Argentina y sin zona; null si es el primero.</summary>
+    [JsonPropertyName("previousLoginAt")]
+    public DateTime? PreviousLoginAt { get; set; }
 }

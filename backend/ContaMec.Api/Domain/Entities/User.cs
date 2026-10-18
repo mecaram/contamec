@@ -9,6 +9,9 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTime? CreatedAt { get; set; }
+
+    /// <summary>Último inicio de sesión exitoso, en hora de reloj de Argentina.</summary>
+    public DateTime? LastLoginAt { get; set; }
     public int UserRoleId { get; set; }
     public int? ApplicationId { get; set; }
 

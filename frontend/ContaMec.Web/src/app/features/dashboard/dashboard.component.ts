@@ -10,6 +10,8 @@ import { DashboardCategory } from './dashboard.models';
 })
 export class DashboardComponent {
   readonly applicationName = this.auth.getApplicationName();
+  readonly username = this.auth.getUsername();
+  readonly previousLoginAt = this.auth.getPreviousLoginAt();
 
   constructor(
     private readonly auth: AuthService,

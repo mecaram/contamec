@@ -24,7 +24,6 @@ public class AuthService(
             return null;
 
         var user = await _dbContext.Users
-            .AsNoTracking()
             .Include(u => u.Application)
             .Include(u => u.UserRole)
             .FirstOrDefaultAsync(u => u.Name.ToLower() == request.Username.ToLower(), cancellationToken);
@@ -45,6 +44,10 @@ public class AuthService(
             throw new LoginRejectedException(
                 "No es posible iniciar sesión porque la aplicación asociada a su empresa no se encuentra activa. Comuníquese con el administrador del sistema.");
 
+        var previousLoginAt = user.LastLoginAt;
+        user.LastLoginAt = ArgentinaClock.Now;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
         var name = user.Name ?? string.Empty;
         var roleName = user.UserRole?.Name ?? string.Empty;
         var token = CreateJwt(user.Id, name, application.Id, roleName);
@@ -54,7 +57,8 @@ public class AuthService(
             Username = name,
             ApplicationId = application.Id,
             ApplicationName = application.Name,
-            Role = roleName
+            Role = roleName,
+            PreviousLoginAt = previousLoginAt
         };
     }
 
