@@ -21,7 +21,17 @@
         <td>{{ row.id }}</td>
         <td>{{ row.name || '-' }}</td>
         <td>{{ row.email || '-' }}</td>
-        <td>{{ formatWhatsApp(row.whatsApp) }}</td>
+        <td>
+          <a
+            *ngIf="row.whatsApp; else noWhatsApp"
+            class="application-list__whatsapp"
+            [href]="'https://wa.me/' + row.whatsApp"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Abrir chat de WhatsApp"
+          >{{ formatWhatsApp(row.whatsApp) }}</a>
+          <ng-template #noWhatsApp>-</ng-template>
+        </td>
         <td>{{ row.locality || '-' }}</td>
         <td>{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
         <td>{{ row.active ? 'Sí' : 'No' }}</td>

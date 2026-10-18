@@ -39,6 +39,17 @@ th {
   color: #475569;
 }
 
+.application-list__whatsapp {
+  color: #15803d;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.application-list__whatsapp:hover {
+  text-decoration: underline;
+}
+
 .application-list__actions {
   white-space: nowrap;
 }
