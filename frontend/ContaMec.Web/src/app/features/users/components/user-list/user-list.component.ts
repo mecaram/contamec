@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { User } from '../../models/user.model';
 
-type SortableColumn = 'id' | 'name' | 'userRoleName' | 'isActive';
+type SortableColumn = 'id' | 'name' | 'applicationName' | 'userRoleName' | 'isActive';
 
 @Component({
   selector: 'app-user-list',
@@ -17,6 +17,8 @@ export class UserListComponent implements OnChanges {
   @Input() users: User[] = [];
   @Input() sortResetToken = 0;
   @Input() loading = false;
+  /** Solo un SuperAdministrador ve usuarios de varias empresas. */
+  @Input() showApplication = false;
   @Output() edit = new EventEmitter<User>();
   @Output() remove = new EventEmitter<User>();
 
@@ -108,6 +110,8 @@ export class UserListComponent implements OnChanges {
         return user.id ?? 0;
       case 'name':
         return (user.name ?? '').toLocaleLowerCase();
+      case 'applicationName':
+        return (user.applicationName ?? '').toLocaleLowerCase();
       case 'userRoleName':
         return (user.userRoleName ?? '').toLocaleLowerCase();
       case 'isActive':

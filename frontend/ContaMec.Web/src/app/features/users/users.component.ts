@@ -16,6 +16,7 @@ export class UsersComponent implements OnInit {
   roleOptions: UserRoleOption[] = [];
   applicationOptions: UserApplicationOption[] = [];
   readonly currentApplicationId = this.auth.getApplicationId();
+  readonly isSuperAdministrator = this.auth.isSuperAdministrator();
   loading = false;
   errorMessage: string | null = null;
   formVisible = false;
@@ -41,7 +42,7 @@ export class UsersComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadRoleOptions();
-    if (this.auth.isSuperAdministrator()) {
+    if (this.isSuperAdministrator) {
       this.loadApplicationOptions();
     }
     this.search();
@@ -177,7 +178,7 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  /** El listado solo muestra la empresa propia, así que se avisa si el usuario se creó en otra. */
+  /** Se nombra la empresa cuando el usuario se creó en una distinta de la propia. */
   private buildCreatedMessage(applicationId?: number | null): string {
     if (!applicationId || applicationId === this.currentApplicationId) {
       return 'Usuario creado correctamente.';

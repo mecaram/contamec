@@ -8,6 +8,7 @@
       <tr>
         <th class="user-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
         <th class="user-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th class="user-list__sortable" *ngIf="showApplication" (click)="setSort('applicationName')">Empresa <span>{{ sortIndicator('applicationName') }}</span></th>
         <th class="user-list__sortable" (click)="setSort('userRoleName')">Rol <span>{{ sortIndicator('userRoleName') }}</span></th>
         <th class="user-list__sortable" (click)="setSort('isActive')">Activo <span>{{ sortIndicator('isActive') }}</span></th>
         <th>Acciones</th>
@@ -17,6 +18,7 @@
       <tr *ngFor="let row of pagedUsers">
         <td>{{ row.id }}</td>
         <td>{{ row.name || '-' }}</td>
+        <td *ngIf="showApplication">{{ row.applicationName || '-' }}</td>
         <td>{{ row.userRoleName || '-' }}</td>
         <td>{{ row.isActive ? 'Sí' : 'No' }}</td>
         <td class="user-list__actions">
@@ -31,7 +33,7 @@
     </tbody>
     <tfoot>
       <tr class="user-list__footer">
-        <td colspan="5">Total registros: {{ totalRecords }}</td>
+        <td [attr.colspan]="showApplication ? 6 : 5">Total registros: {{ totalRecords }}</td>
       </tr>
     </tfoot>
   </table>

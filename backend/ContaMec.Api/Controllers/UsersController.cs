@@ -34,7 +34,7 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
         if (!User.TryGetApplicationId(out var applicationId))
             return Forbid();
 
-        var result = await userService.SearchAsync(request, applicationId);
+        var result = await userService.SearchAsync(request, applicationId, User.IsInRole(UserRoleNames.SuperAdministrator));
         return Ok(result);
     }
 
@@ -47,7 +47,7 @@ public class UsersController(IUserService userService, ContaMecDbContext dbConte
         if (!User.TryGetApplicationId(out var applicationId))
             return Forbid();
 
-        var result = await userService.GetByIdAsync(id, applicationId);
+        var result = await userService.GetByIdAsync(id, applicationId, User.IsInRole(UserRoleNames.SuperAdministrator));
         return result is null ? NotFound() : Ok(result);
     }
 

@@ -12,14 +12,13 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
-    public async Task<List<UserResponse>> SearchAsync(UserSearchRequest request, int applicationId)
+    public async Task<List<UserResponse>> SearchAsync(UserSearchRequest request, int applicationId, bool isSuperAdministrator)
     {
         request ??= new UserSearchRequest();
 
-        var query = _dbContext.Users
+        IQueryable<User> query = UsersInScope(applicationId, isSuperAdministrator)
             .AsNoTracking()
-            .Include(u => u.UserRole)
-            .Where(u => u.ApplicationId == applicationId);
+            .Include(u => u.UserRole);
 
         if (request.Id.HasValue)
             query = query.Where(u => u.Id == request.Id.Value);
@@ -43,12 +42,12 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             .ToListAsync();
     }
 
-    public async Task<UserResponse?> GetByIdAsync(int id, int applicationId)
+    public async Task<UserResponse?> GetByIdAsync(int id, int applicationId, bool isSuperAdministrator)
     {
-        return await _dbContext.Users
+        return await UsersInScope(applicationId, isSuperAdministrator)
             .AsNoTracking()
             .Include(u => u.UserRole)
-            .Where(u => u.Id == id && u.ApplicationId == applicationId)
+            .Where(u => u.Id == id)
             .Select(MapToResponse())
             .FirstOrDefaultAsync();
     }
@@ -72,7 +71,7 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         _dbContext.Users.Add(user);
         await SaveChangesCheckingDuplicateNameAsync();
 
-        var created = await GetByIdAsync(user.Id, targetApplicationId);
+        var created = await GetByIdAsync(user.Id, targetApplicationId, isSuperAdministrator);
         return created ?? throw new InvalidOperationException("No se pudo leer el usuario recién creado.");
     }
 
@@ -81,9 +80,9 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         ArgumentNullException.ThrowIfNull(request);
         await ValidateUserAsync(request.Name, request.Password, request.UserRoleId, id, isSuperAdministrator);
 
-        var user = await _dbContext.Users
+        var user = await UsersInScope(applicationId, isSuperAdministrator)
             .Include(u => u.UserRole)
-            .FirstOrDefaultAsync(u => u.Id == id && u.ApplicationId == applicationId);
+            .FirstOrDefaultAsync(u => u.Id == id);
         if (user is null)
             return false;
 
@@ -102,11 +101,11 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
 
     public async Task<bool> DeleteAsync(int id, int applicationId, bool isSuperAdministrator)
     {
-        var user = await _dbContext.Users
+        var user = await UsersInScope(applicationId, isSuperAdministrator)
             .Include(u => u.UserRole)
             .Include(u => u.IncomesCreated)
             .Include(u => u.ExpensesCreated)
-            .FirstOrDefaultAsync(u => u.Id == id && u.ApplicationId == applicationId);
+            .FirstOrDefaultAsync(u => u.Id == id);
         if (user is null)
             return false;
 
@@ -132,6 +131,12 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
         }
     }
 
+    /// <summary>Un SuperAdministrador administra los usuarios de todas las empresas; el resto, solo los de la propia.</summary>
+    private IQueryable<User> UsersInScope(int applicationId, bool isSuperAdministrator) =>
+        isSuperAdministrator
+            ? _dbContext.Users
+            : _dbContext.Users.Where(u => u.ApplicationId == applicationId);
+
     private static Expression<Func<User, UserResponse>> MapToResponse()
     {
         return user => new UserResponse
@@ -140,7 +145,9 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             Name = user.Name,
             IsActive = user.IsActive,
             UserRoleId = user.UserRoleId,
-            UserRoleName = user.UserRole != null ? user.UserRole.Name : null
+            UserRoleName = user.UserRole != null ? user.UserRole.Name : null,
+            ApplicationId = user.ApplicationId,
+            ApplicationName = user.Application != null ? user.Application.Name : null
         };
     }
 
