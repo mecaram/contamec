@@ -75,17 +75,20 @@ $primary-hover: #1d4ed8;
   pointer-events: none;
 }
 
+// Logo de 4x, igual al de https://4x.com.ar/ (favicon.svg): "4x" blanco sobre azul marino.
 .login-card__logo {
   width: 3rem;
   height: 3rem;
-  border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.15);
+  border-radius: 0.65rem;
+  background: #0f1d44;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: Inter, system-ui, sans-serif;
   font-weight: 800;
-  font-size: 0.9rem;
-  letter-spacing: 0.04em;
+  font-size: 1.55rem;
+  letter-spacing: -0.02em;
   margin: 0 auto 1rem;
   position: relative;
   z-index: 1;
@@ -122,6 +125,28 @@ $primary-hover: #1d4ed8;
   .login-card__tagline {
     margin-left: 0;
     max-width: 28ch;
+  }
+}
+
+// Centrado también en pantallas anchas, donde el resto del panel se alinea a la izquierda.
+.login-card__credit {
+  margin: 1.25rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+
+  a {
+    color: $white;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover,
+    &:focus-visible {
+      color: rgba(255, 255, 255, 0.85);
+    }
   }
 }
 
@@ -346,3 +371,26 @@ $primary-hover: #1d4ed8;
   border: 0;
 }
 
+.login-card__demo {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.login-card__contact {
+  margin-top: 0.35rem;
+}
+
+.login-card__whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.login-card__whatsapp-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+  color: #25d366;
+}
