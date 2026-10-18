@@ -76,7 +76,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             AccountId = request.AccountId!.Value,
             Detail = request.Detail?.Trim() ?? string.Empty,
             Amount = request.Amount,
-            CreatedAt = DateTime.Now,
+            CreatedAt = ArgentinaClock.Now,
             CreatedByUserId = createdByUserId,
             ClosureId = openClosureId.Value,
             ApplicationId = applicationId

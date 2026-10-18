@@ -350,7 +350,7 @@ SELECT
             if (Math.Abs(difference) > 0.009m)
                 throw new ArgumentException("Solo se puede cerrar cuando la diferencia es igual a cero.");
 
-            var now = DateTime.Now;
+            var now = ArgentinaClock.Now;
             await using (var updateCommand = connection.CreateCommand())
             {
                 updateCommand.Transaction = transaction;

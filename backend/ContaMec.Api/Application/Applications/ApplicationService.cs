@@ -55,14 +55,14 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         {
             Name = request.Name!.Trim(),
             Active = request.Active,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = ArgentinaClock.Now
         };
 
         _dbContext.Applications.Add(application);
         // Toda empresa necesita un cierre abierto para registrar ingresos y egresos; se crea en la misma transacción.
         _dbContext.Closures.Add(new Closure
         {
-            OpenDate = DateTime.Now,
+            OpenDate = ArgentinaClock.Now,
             IsClosed = false,
             Application = application
         });

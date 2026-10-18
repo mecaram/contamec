@@ -66,7 +66,7 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             Name = request.Name!.Trim(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password!),
             IsActive = request.IsActive,
-            CreatedAt = DateTime.Now,
+            CreatedAt = ArgentinaClock.Now,
             UserRoleId = request.UserRoleId!.Value,
             ApplicationId = targetApplicationId
         };
