@@ -59,6 +59,32 @@
   color: #64748b;
 }
 
+.application-form__hint--left {
+  text-align: left;
+}
+
+.application-form__phone {
+  display: flex;
+  align-items: stretch;
+}
+
+.application-form__phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.application-form__phone .application-form__control {
+  border-radius: 0 6px 6px 0;
+}
+
 .application-form__checkbox {
   display: inline-flex;
   align-items: center;

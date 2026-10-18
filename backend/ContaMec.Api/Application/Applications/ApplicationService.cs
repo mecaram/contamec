@@ -4,6 +4,7 @@ using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 // Alias: "Application" choca con el namespace ContaMec.Api.Application.
 using ApplicationEntity = ContaMec.Api.Domain.Entities.Application;
 
@@ -52,6 +53,7 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         ArgumentNullException.ThrowIfNull(request);
         await ValidateApplicationAsync(request.Name, null);
         ValidateEmail(request.Email);
+        ValidateWhatsApp(request.WhatsApp);
 
         var application = new ApplicationEntity
         {
@@ -84,6 +86,7 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         ArgumentNullException.ThrowIfNull(request);
         await ValidateApplicationAsync(request.Name, id);
         ValidateEmail(request.Email);
+        ValidateWhatsApp(request.WhatsApp);
 
         var application = await _dbContext.Applications.FirstOrDefaultAsync(a => a.Id == id);
         if (application is null)
@@ -157,6 +160,16 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
     {
         if (!string.IsNullOrWhiteSpace(email) && !new EmailAddressAttribute().IsValid(email.Trim()))
             throw new ArgumentException("Email no tiene un formato válido.");
+    }
+
+    // Celular de Argentina en formato de WhatsApp: 549 + código de área y número (10 dígitos, sin 0 ni 15).
+    private static void ValidateWhatsApp(string? whatsApp)
+    {
+        if (string.IsNullOrWhiteSpace(whatsApp))
+            return;
+        var value = whatsApp.Trim();
+        if (!Regex.IsMatch(value, @"^549[1-9]\d{9}$") || value.StartsWith("54915"))
+            throw new ArgumentException("WhatsApp debe ser un celular de Argentina: 549 + código de área y número, sin 0 ni 15.");
     }
 
     private async Task ValidateApplicationAsync(string? name, int? currentId)

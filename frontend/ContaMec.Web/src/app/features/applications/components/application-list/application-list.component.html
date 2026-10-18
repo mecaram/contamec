@@ -21,7 +21,7 @@
         <td>{{ row.id }}</td>
         <td>{{ row.name || '-' }}</td>
         <td>{{ row.email || '-' }}</td>
-        <td>{{ row.whatsApp || '-' }}</td>
+        <td>{{ formatWhatsApp(row.whatsApp) }}</td>
         <td>{{ row.locality || '-' }}</td>
         <td>{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
         <td>{{ row.active ? 'Sí' : 'No' }}</td>

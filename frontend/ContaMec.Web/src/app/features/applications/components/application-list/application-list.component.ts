@@ -92,6 +92,11 @@ export class ApplicationListComponent implements OnChanges {
     return this.sortDirection === 'asc' ? '▲' : '▼';
   }
 
+  formatWhatsApp(whatsApp: string | null | undefined): string {
+    if (!whatsApp) return '-';
+    return whatsApp.startsWith('549') ? `+54 9 ${whatsApp.slice(3)}` : whatsApp;
+  }
+
   goToPreviousPage(): void {
     if (!this.canGoPrevious) return;
     this.currentPage -= 1;

@@ -1,6 +1,23 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Application } from '../../models/application.model';
+
+// Prefijo internacional de celulares de Argentina; se guarda junto al número (formato de WhatsApp).
+const ARGENTINA_MOBILE_PREFIX = '549';
+
+function onlyDigits(value: string | null | undefined): string {
+  return (value ?? '').replace(/\D/g, '');
+}
+
+// Código de área + número, sin 0 ni 15: siempre 10 dígitos. Ningún código de área empieza con 0 ni con 15.
+function argentinaMobileValidator(control: AbstractControl): ValidationErrors | null {
+  const digits = onlyDigits(control.value);
+  if (!digits) return null;
+  if (digits.startsWith('0')) return { mobileLeadingZero: true };
+  if (digits.startsWith('15')) return { mobileFifteen: true };
+  if (digits.length !== 10) return { mobileLength: true };
+  return null;
+}
 
 @Component({
   selector: 'app-application-form',
@@ -16,7 +33,7 @@ export class ApplicationFormComponent implements OnChanges {
   readonly form = this.fb.group({
     name: ['' as string, [Validators.required, Validators.maxLength(100)]],
     active: [true],
-    whatsApp: [''],
+    whatsApp: ['', [argentinaMobileValidator]],
     email: ['', [Validators.email]],
     address: [''],
     locality: ['']
@@ -29,7 +46,7 @@ export class ApplicationFormComponent implements OnChanges {
       this.form.reset({
         name: this.application?.name ?? '',
         active: this.application?.active ?? true,
-        whatsApp: this.application?.whatsApp ?? '',
+        whatsApp: this.toLocalMobile(this.application?.whatsApp),
         email: this.application?.email ?? '',
         address: this.application?.address ?? '',
         locality: this.application?.locality ?? ''
@@ -52,7 +69,7 @@ export class ApplicationFormComponent implements OnChanges {
       id: this.application?.id ?? 0,
       name: raw.name?.trim() || '',
       active: !!raw.active,
-      whatsApp: raw.whatsApp?.trim() || null,
+      whatsApp: onlyDigits(raw.whatsApp) ? ARGENTINA_MOBILE_PREFIX + onlyDigits(raw.whatsApp) : null,
       email: raw.email?.trim() || null,
       address: raw.address?.trim() || null,
       locality: raw.locality?.trim() || null
@@ -62,5 +79,10 @@ export class ApplicationFormComponent implements OnChanges {
 
   cancel(): void {
     this.cancelForm.emit();
+  }
+
+  private toLocalMobile(whatsApp: string | null | undefined): string {
+    const digits = onlyDigits(whatsApp);
+    return digits.startsWith(ARGENTINA_MOBILE_PREFIX) ? digits.slice(ARGENTINA_MOBILE_PREFIX.length) : digits;
   }
 }

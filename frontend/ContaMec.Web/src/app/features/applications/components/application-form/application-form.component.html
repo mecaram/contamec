@@ -12,7 +12,21 @@
     <div class="application-form__row">
       <div class="application-form__field">
         <label class="application-form__label" for="application-whatsapp">WhatsApp</label>
-        <input id="application-whatsapp" class="application-form__control" type="tel" formControlName="whatsApp" />
+        <div class="application-form__phone">
+          <span class="application-form__phone-prefix">+54 9</span>
+          <input
+            id="application-whatsapp"
+            class="application-form__control"
+            type="tel"
+            inputmode="numeric"
+            formControlName="whatsApp"
+            placeholder="Ej: 3511234567"
+          />
+        </div>
+        <div class="application-form__hint application-form__hint--left">Código de área y número, sin 0 y sin 15.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.whatsApp.hasError('mobileLeadingZero')">No ingrese el 0 del código de área.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.whatsApp.hasError('mobileFifteen')">Falta el código de área; no ingrese el 15.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.whatsApp.hasError('mobileLength')">Debe tener 10 dígitos (código de área + número, sin el 15).</div>
       </div>
       <div class="application-form__field">
         <label class="application-form__label" for="application-email">Email</label>
