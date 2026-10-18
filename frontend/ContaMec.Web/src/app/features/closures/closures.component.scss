@@ -10,7 +10,8 @@
 .closures-filters,
 .closures-page__error,
 app-closure-list {
-  max-width: 74rem;
+  // Más ancho que las demás pantallas: la lista de cierres tiene 11 columnas.
+  max-width: 96rem;
   margin-left: auto;
   margin-right: auto;
 }

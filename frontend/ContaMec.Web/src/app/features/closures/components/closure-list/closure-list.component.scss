@@ -1,3 +1,9 @@
+// Si la ventana es más angosta que la tabla, se desplaza solo la tabla y no toda la página.
+.closure-list__table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
 .closure-list__table {
   width: 100%;
   border-collapse: collapse;
@@ -29,6 +35,23 @@ th {
 
 .closure-list__table th {
   text-align: center;
+}
+
+// Celdas compactas para que las 11 columnas entren en un monitor sin barra horizontal.
+.closure-list__table th,
+.closure-list__table td {
+  padding: 0.6rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.closure-list__table td {
+  white-space: nowrap;
+}
+
+.closure-list__actions .mat-icon-button {
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
 }
 
 .closure-list__sortable {
@@ -87,8 +110,12 @@ th {
 }
 
 // En el celular cada fila se muestra como una tarjeta, con el nombre de la columna junto a cada dato.
-// Con 11 columnas la tabla tampoco entra en una tablet, por eso el corte es más ancho que en Ingresos y Egresos.
-@media (max-width: 60rem) {
+// Con 11 columnas la tabla solo entra en pantallas anchas, por eso el corte es más ancho que en Ingresos y Egresos.
+@media (max-width: 75rem) {
+  .closure-list__table-wrap {
+    overflow: visible;
+  }
+
   .closure-list__mobile-sort {
     margin-bottom: 0.75rem;
     display: flex;
@@ -148,6 +175,7 @@ th {
     gap: 1rem;
     padding: 0.5rem 0;
     text-align: right;
+    white-space: normal;
     overflow-wrap: anywhere;
   }
 
