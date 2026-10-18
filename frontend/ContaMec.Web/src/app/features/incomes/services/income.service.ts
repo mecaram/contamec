@@ -34,6 +34,9 @@ export class IncomeService {
     if (filters.accountId !== null && filters.accountId !== undefined) {
       params = params.set('accountId', String(filters.accountId));
     }
+    if (filters.paymentAccountId !== null && filters.paymentAccountId !== undefined) {
+      params = params.set('paymentAccountId', String(filters.paymentAccountId));
+    }
     if (filters.amountFrom !== null && filters.amountFrom !== undefined) {
       params = params.set('amountFrom', String(filters.amountFrom));
     }
@@ -62,7 +65,8 @@ export class IncomeService {
       emissionDate: income.emissionDate ?? null,
       accountId: income.accountId ?? null,
       detail: income.detail ?? null,
-      amount: income.amount ?? null
+      amount: income.amount ?? null,
+      paymentAccountId: income.paymentAccountId ?? null
     };
     return this.http.post<Income>(this.incomesUrl, payload, { headers: this.getAuthHeaders() });
   }
@@ -72,7 +76,8 @@ export class IncomeService {
       emissionDate: income.emissionDate ?? null,
       accountId: income.accountId ?? null,
       detail: income.detail ?? null,
-      amount: income.amount ?? null
+      amount: income.amount ?? null,
+      paymentAccountId: income.paymentAccountId ?? null
     };
     return this.http.put<void>(`${this.incomesUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
   }

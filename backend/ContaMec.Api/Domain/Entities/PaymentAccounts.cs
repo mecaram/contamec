@@ -12,4 +12,6 @@ public class PaymentAccount
     public Application? Application { get; set; }
 
     public ICollection<ClosureBalance> ClosureBalances { get; set; } = new List<ClosureBalance>();
+    public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
+    public ICollection<Income> Incomes { get; set; } = new List<Income>();
 }

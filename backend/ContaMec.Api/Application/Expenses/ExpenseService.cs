@@ -32,6 +32,9 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         if (request.AccountId.HasValue)
             query = query.Where(e => e.AccountId == request.AccountId.Value);
 
+        if (request.PaymentAccountId.HasValue)
+            query = query.Where(e => e.PaymentAccountId == request.PaymentAccountId.Value);
+
         if (request.AmountFrom.HasValue)
             query = query.Where(e => e.Amount.HasValue && e.Amount.Value >= request.AmountFrom.Value);
 
@@ -64,8 +67,9 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
     public async Task<ExpenseResponse> CreateAsync(ExpenseCreateRequest request, int createdByUserId, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateExpense(request.AccountId, request.Amount, request.Detail);
+        ValidateExpense(request.AccountId, request.Amount, request.Detail, request.PaymentAccountId);
         await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
         var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
@@ -76,6 +80,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             AccountId = request.AccountId!.Value,
             Detail = request.Detail?.Trim() ?? string.Empty,
             Amount = request.Amount,
+            PaymentAccountId = request.PaymentAccountId!.Value,
             CreatedAt = ArgentinaClock.Now,
             CreatedByUserId = createdByUserId,
             ClosureId = openClosureId.Value,
@@ -92,8 +97,9 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
     public async Task<bool> UpdateAsync(int id, ExpenseUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateExpense(request.AccountId, request.Amount, request.Detail);
+        ValidateExpense(request.AccountId, request.Amount, request.Detail, request.PaymentAccountId);
         await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
 
         var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.ApplicationId == applicationId);
         if (expense is null)
@@ -105,6 +111,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         expense.AccountId = request.AccountId!.Value;
         expense.Detail = request.Detail?.Trim() ?? string.Empty;
         expense.Amount = request.Amount;
+        expense.PaymentAccountId = request.PaymentAccountId!.Value;
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -132,6 +139,15 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             throw new ArgumentException("La cuenta seleccionada no existe.");
     }
 
+    // Igual que la cuenta: una cuenta de pago de otra aplicación se trata como inexistente.
+    private async Task EnsurePaymentAccountBelongsToApplicationAsync(int paymentAccountId, int applicationId)
+    {
+        var exists = await _dbContext.PaymentAccounts
+            .AnyAsync(a => a.Id == paymentAccountId && a.ApplicationId == applicationId);
+        if (!exists)
+            throw new ArgumentException("La cuenta de pago seleccionada no existe.");
+    }
+
     private static Expression<Func<Expense, ExpenseResponse>> MapToResponse()
     {
         return expense => new ExpenseResponse
@@ -143,15 +159,20 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             AccountName = expense.Account != null ? expense.Account.Name : null,
             Detail = expense.Detail,
             Amount = expense.Amount,
+            PaymentAccountId = expense.PaymentAccountId,
+            PaymentAccountName = expense.PaymentAccount != null ? expense.PaymentAccount.Name : null,
             CreatedByUserId = expense.CreatedByUserId,
             CreatedAt = expense.CreatedAt
         };
     }
 
-    private static void ValidateExpense(int? accountId, decimal? amount, string? detail)
+    private static void ValidateExpense(int? accountId, decimal? amount, string? detail, int? paymentAccountId)
     {
         if (!accountId.HasValue)
             throw new ArgumentException("AccountId es obligatorio.");
+
+        if (!paymentAccountId.HasValue)
+            throw new ArgumentException("Debe seleccionar una cuenta de pago.");
 
         if (!amount.HasValue || amount.Value <= 0)
             throw new ArgumentException("Amount debe ser mayor a 0.");

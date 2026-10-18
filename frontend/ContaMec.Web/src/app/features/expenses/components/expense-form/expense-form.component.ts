@@ -11,6 +11,7 @@ export class ExpenseFormComponent implements OnChanges {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() expense: Expense | null = null;
   @Input() accountOptions: Array<{ id: number; label: string }> = [];
+  @Input() paymentAccountOptions: Array<{ id: number; label: string }> = [];
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<Expense>();
   amountDisplay = '';
@@ -19,7 +20,8 @@ export class ExpenseFormComponent implements OnChanges {
     emissionDate: [null as Date | null, [Validators.required]],
     accountId: [null as number | null, [Validators.required, Validators.min(1)]],
     detail: ['' as string, [Validators.maxLength(80)]],
-    amount: [null as number | null, [Validators.required, Validators.min(0.01)]]
+    amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    paymentAccountId: [null as number | null, [Validators.required]]
   });
 
   constructor(private readonly fb: FormBuilder) {}
@@ -31,7 +33,9 @@ export class ExpenseFormComponent implements OnChanges {
         emissionDate: this.expense?.emissionDate ? this.toDate(this.expense.emissionDate) : defaultEmissionDate,
         accountId: this.expense?.accountId ?? null,
         detail: this.expense?.detail ?? '',
-        amount: this.expense?.amount ?? null
+        amount: this.expense?.amount ?? null,
+        // Los egresos anteriores pueden no tener cuenta de pago: el combo queda vacío y hay que elegir una.
+        paymentAccountId: this.expense?.paymentAccountId ?? null
       });
       this.amountDisplay = this.formatAmount(this.form.controls.amount.value);
     }
@@ -53,7 +57,8 @@ export class ExpenseFormComponent implements OnChanges {
       emissionDate: this.toIsoDate(raw.emissionDate as Date),
       accountId: raw.accountId,
       detail: raw.detail?.trim() || '',
-      amount: raw.amount
+      amount: raw.amount,
+      paymentAccountId: raw.paymentAccountId
     };
 
     this.saveForm.emit(payload);

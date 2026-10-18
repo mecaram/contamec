@@ -6,6 +6,8 @@ export interface Expense {
   accountName?: string | null;
   detail?: string | null;
   amount?: number | null;
+  paymentAccountId?: number | null;
+  paymentAccountName?: string | null;
   createdByUserId?: number | null;
   createdAt?: string | null;
 }

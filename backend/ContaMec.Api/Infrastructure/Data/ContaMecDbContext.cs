@@ -163,6 +163,14 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
                 .WithMany(a => a.Expenses)
                 .HasForeignKey(e => e.ApplicationId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // Columna ya existente en Supabase; los egresos anteriores pueden no tenerla cargada.
+            entity.Property(e => e.PaymentAccountId).HasColumnName("PaymentAccountId");
+
+            entity.HasOne(e => e.PaymentAccount)
+                .WithMany(a => a.Expenses)
+                .HasForeignKey(e => e.PaymentAccountId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Income>(entity =>
@@ -199,6 +207,14 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasOne(e => e.Application)
                 .WithMany(a => a.Incomes)
                 .HasForeignKey(e => e.ApplicationId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Columna ya existente en Supabase; los ingresos anteriores pueden no tenerla cargada.
+            entity.Property(e => e.PaymentAccountId).HasColumnName("PaymentAccountId");
+
+            entity.HasOne(e => e.PaymentAccount)
+                .WithMany(a => a.Incomes)
+                .HasForeignKey(e => e.PaymentAccountId)
                 .OnDelete(DeleteBehavior.NoAction);
         });
 

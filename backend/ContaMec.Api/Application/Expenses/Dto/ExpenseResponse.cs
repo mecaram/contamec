@@ -9,6 +9,8 @@ public class ExpenseResponse
     public string? AccountName { get; set; }
     public string? Detail { get; set; }
     public decimal? Amount { get; set; }
+    public int? PaymentAccountId { get; set; }
+    public string? PaymentAccountName { get; set; }
     public int? CreatedByUserId { get; set; }
     public DateTime? CreatedAt { get; set; }
 }

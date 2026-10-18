@@ -6,4 +6,5 @@ public class ExpenseUpdateRequest
     public int? AccountId { get; set; }
     public string? Detail { get; set; }
     public decimal? Amount { get; set; }
+    public int? PaymentAccountId { get; set; }
 }

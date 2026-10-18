@@ -4,6 +4,7 @@ import { finalize } from 'rxjs/operators';
 import { Expense } from './models/expense.model';
 import { ExpenseSearch } from './models/expense-search.model';
 import { ClosureLookup, ExpenseAccountOption, ExpenseService } from './services/expense.service';
+import { PaymentAccountService } from '../payment-accounts/services/payment-account.service';
 
 @Component({
   selector: 'app-expenses',
@@ -14,6 +15,7 @@ export class ExpensesComponent implements OnInit {
   expenses: Expense[] = [];
   closureOptions: ClosureLookup[] = [];
   accountOptions: Array<{ id: number; label: string }> = [];
+  paymentAccountOptions: Array<{ id: number; label: string }> = [];
   loading = false;
   errorMessage: string | null = null;
   formVisible = false;
@@ -36,6 +38,7 @@ export class ExpensesComponent implements OnInit {
     dateTo: [this.today as Date | null],
     closureId: [null as number | null],
     accountId: [null as number | null],
+    paymentAccountId: [null as number | null],
     amountFrom: [null as number | null],
     amountTo: [null as number | null],
     detail: ['']
@@ -43,12 +46,14 @@ export class ExpensesComponent implements OnInit {
 
   constructor(
     private readonly fb: FormBuilder,
-    private readonly expensesService: ExpenseService
+    private readonly expensesService: ExpenseService,
+    private readonly paymentAccountService: PaymentAccountService
   ) {}
 
   ngOnInit(): void {
     this.loadClosures();
     this.loadExpenseAccounts();
+    this.loadPaymentAccounts();
   }
 
   search(): void {
@@ -78,6 +83,7 @@ export class ExpensesComponent implements OnInit {
       dateTo: this.today,
       closureId: pendingClosure ? pendingClosure.id : null,
       accountId: null,
+      paymentAccountId: null,
       amountFrom: null,
       amountTo: null,
       detail: ''
@@ -216,6 +222,7 @@ export class ExpensesComponent implements OnInit {
       dateTo: raw.dateTo ? this.toIsoDate(raw.dateTo) : null,
       closureId: raw.closureId,
       accountId: raw.accountId,
+      paymentAccountId: raw.paymentAccountId,
       amountFrom: raw.amountFrom,
       amountTo: raw.amountTo,
       detail: raw.detail?.trim() || null
@@ -260,6 +267,20 @@ export class ExpensesComponent implements OnInit {
       },
       error: () => {
         this.accountOptions = [];
+      }
+    });
+  }
+
+  // La API ya filtra por la aplicación del token; acá solo se ordena por nombre.
+  private loadPaymentAccounts(): void {
+    this.paymentAccountService.search({}).subscribe({
+      next: (accounts) => {
+        this.paymentAccountOptions = (accounts ?? [])
+          .map((a) => ({ id: a.id, label: a.name?.trim() || `#${a.id}` }))
+          .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
+      },
+      error: () => {
+        this.paymentAccountOptions = [];
       }
     });
   }

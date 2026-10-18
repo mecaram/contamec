@@ -10,6 +10,7 @@ import { IncomeListComponent } from './components/income-list/income-list.compon
 import { IncomesRoutingModule } from './incomes-routing.module';
 import { IncomesComponent } from './incomes.component';
 import { IncomeService } from './services/income.service';
+import { PaymentAccountService } from '../payment-accounts/services/payment-account.service';
 
 @NgModule({
   declarations: [IncomesComponent, IncomeFormComponent, IncomeListComponent],
@@ -21,6 +22,6 @@ import { IncomeService } from './services/income.service';
     MatSelectModule,
     IncomesRoutingModule
   ],
-  providers: [IncomeService]
+  providers: [IncomeService, PaymentAccountService]
 })
 export class IncomesModule {}

@@ -6,6 +6,7 @@ public class ExpenseSearchRequest
     public DateTime? DateTo { get; set; }
     public int? ClosureId { get; set; }
     public int? AccountId { get; set; }
+    public int? PaymentAccountId { get; set; }
     public decimal? AmountFrom { get; set; }
     public decimal? AmountTo { get; set; }
     public string? Detail { get; set; }

@@ -67,6 +67,16 @@
       </div>
 
       <div class="incomes-field">
+        <label class="incomes-field__label" for="filter-payment-account">Cuenta de Pago</label>
+        <select id="filter-payment-account" class="incomes-field__control" formControlName="paymentAccountId" (change)="search()">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let paymentAccount of paymentAccountOptions" [ngValue]="paymentAccount.id">
+            {{ paymentAccount.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="incomes-field">
         <label class="incomes-field__label" for="filter-amount-from">Monto desde</label>
         <input id="filter-amount-from" class="incomes-field__control" type="number" step="0.01" formControlName="amountFrom" />
       </div>
@@ -102,6 +112,7 @@
       [mode]="formMode"
       [income]="editingIncome"
       [accountOptions]="accountOptions"
+      [paymentAccountOptions]="paymentAccountOptions"
       (cancelForm)="cancelForm()"
       (saveForm)="submitForm($event)"
     ></app-income-form>

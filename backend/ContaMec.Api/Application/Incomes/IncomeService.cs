@@ -32,6 +32,9 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         if (request.AccountId.HasValue)
             query = query.Where(i => i.AccountId == request.AccountId.Value);
 
+        if (request.PaymentAccountId.HasValue)
+            query = query.Where(i => i.PaymentAccountId == request.PaymentAccountId.Value);
+
         if (request.AmountFrom.HasValue)
             query = query.Where(i => i.Amount.HasValue && i.Amount.Value >= request.AmountFrom.Value);
 
@@ -64,8 +67,9 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
     public async Task<IncomeResponse> CreateAsync(IncomeCreateRequest request, int createdByUserId, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateIncome(request.AccountId, request.Amount, request.Detail);
+        ValidateIncome(request.AccountId, request.Amount, request.Detail, request.PaymentAccountId);
         await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
         var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
@@ -76,6 +80,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             AccountId = request.AccountId!.Value,
             Detail = request.Detail?.Trim() ?? string.Empty,
             Amount = request.Amount,
+            PaymentAccountId = request.PaymentAccountId!.Value,
             CreatedAt = ArgentinaClock.Now,
             CreatedByUserId = createdByUserId,
             ClosureId = openClosureId.Value,
@@ -92,8 +97,9 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
     public async Task<bool> UpdateAsync(int id, IncomeUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);
-        ValidateIncome(request.AccountId, request.Amount, request.Detail);
+        ValidateIncome(request.AccountId, request.Amount, request.Detail, request.PaymentAccountId);
         await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
 
         var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ApplicationId == applicationId);
         if (income is null)
@@ -105,6 +111,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         income.AccountId = request.AccountId!.Value;
         income.Detail = request.Detail?.Trim() ?? string.Empty;
         income.Amount = request.Amount;
+        income.PaymentAccountId = request.PaymentAccountId!.Value;
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -132,6 +139,15 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             throw new ArgumentException("La cuenta seleccionada no existe.");
     }
 
+    // Igual que la cuenta: una cuenta de pago de otra aplicación se trata como inexistente.
+    private async Task EnsurePaymentAccountBelongsToApplicationAsync(int paymentAccountId, int applicationId)
+    {
+        var exists = await _dbContext.PaymentAccounts
+            .AnyAsync(a => a.Id == paymentAccountId && a.ApplicationId == applicationId);
+        if (!exists)
+            throw new ArgumentException("La cuenta de pago seleccionada no existe.");
+    }
+
     private static Expression<Func<Income, IncomeResponse>> MapToResponse()
     {
         return income => new IncomeResponse
@@ -143,15 +159,20 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             AccountName = income.Account != null ? income.Account.Name : null,
             Detail = income.Detail,
             Amount = income.Amount,
+            PaymentAccountId = income.PaymentAccountId,
+            PaymentAccountName = income.PaymentAccount != null ? income.PaymentAccount.Name : null,
             CreatedByUserId = income.CreatedByUserId,
             CreatedAt = income.CreatedAt
         };
     }
 
-    private static void ValidateIncome(int? accountId, decimal? amount, string? detail)
+    private static void ValidateIncome(int? accountId, decimal? amount, string? detail, int? paymentAccountId)
     {
         if (!accountId.HasValue)
             throw new ArgumentException("AccountId es obligatorio.");
+
+        if (!paymentAccountId.HasValue)
+            throw new ArgumentException("Debe seleccionar una cuenta de pago.");
 
         if (!amount.HasValue || amount.Value <= 0)
             throw new ArgumentException("Amount debe ser mayor a 0.");

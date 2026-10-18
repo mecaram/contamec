@@ -10,6 +10,7 @@ import { ExpenseListComponent } from './components/expense-list/expense-list.com
 import { ExpensesRoutingModule } from './expenses-routing.module';
 import { ExpensesComponent } from './expenses.component';
 import { ExpenseService } from './services/expense.service';
+import { PaymentAccountService } from '../payment-accounts/services/payment-account.service';
 
 @NgModule({
   declarations: [ExpensesComponent, ExpenseFormComponent, ExpenseListComponent],
@@ -21,6 +22,6 @@ import { ExpenseService } from './services/expense.service';
     MatSelectModule,
     ExpensesRoutingModule
   ],
-  providers: [ExpenseService]
+  providers: [ExpenseService, PaymentAccountService]
 })
 export class ExpensesModule {}

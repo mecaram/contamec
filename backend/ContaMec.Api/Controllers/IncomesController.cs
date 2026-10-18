@@ -21,6 +21,7 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
         [FromQuery(Name = "dateTo")] DateTime? dateTo,
         [FromQuery(Name = "closureId")] int? closureId,
         [FromQuery(Name = "accountId")] int? accountId,
+        [FromQuery(Name = "paymentAccountId")] int? paymentAccountId,
         [FromQuery(Name = "amountFrom")] decimal? amountFrom,
         [FromQuery(Name = "amountTo")] decimal? amountTo,
         [FromQuery(Name = "detail")] string? detail)
@@ -31,6 +32,7 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
             DateTo = dateTo,
             ClosureId = closureId,
             AccountId = accountId,
+            PaymentAccountId = paymentAccountId,
             AmountFrom = amountFrom,
             AmountTo = amountTo,
             Detail = detail

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Income } from '../../models/income.model';
 
-type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'detail' | 'amount';
+type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'detail' | 'amount' | 'paymentAccountName';
 
 @Component({
   selector: 'app-income-list',
@@ -9,7 +9,7 @@ type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'detail' | 'amount
   styleUrls: ['./income-list.component.scss']
 })
 export class IncomeListComponent implements OnChanges {
-  readonly sortableColumns: SortableColumn[] = ['id', 'emissionDate', 'accountName', 'detail', 'amount'];
+  readonly sortableColumns: SortableColumn[] = ['id', 'emissionDate', 'accountName', 'detail', 'amount', 'paymentAccountName'];
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
   /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
@@ -18,7 +18,8 @@ export class IncomeListComponent implements OnChanges {
     { column: 'emissionDate', label: 'Fecha' },
     { column: 'accountName', label: 'Cuenta' },
     { column: 'detail', label: 'Detalle' },
-    { column: 'amount', label: 'Monto' }
+    { column: 'amount', label: 'Monto' },
+    { column: 'paymentAccountName', label: 'Cuenta de Pago' }
   ];
   currentPage = 1;
   readonly pageSize = 10;
@@ -145,6 +146,8 @@ export class IncomeListComponent implements OnChanges {
         return (income.detail ?? '').toLocaleLowerCase();
       case 'amount':
         return income.amount ?? 0;
+      case 'paymentAccountName':
+        return (income.paymentAccountName ?? '').toLocaleLowerCase();
       default:
         return 0;
     }

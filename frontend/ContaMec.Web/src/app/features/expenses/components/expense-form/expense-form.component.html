@@ -47,6 +47,17 @@
     </div>
     <div class="expense-form__error" *ngIf="form.controls.amount.hasError('required')">El monto es obligatorio.</div>
     <div class="expense-form__error" *ngIf="form.controls.amount.hasError('min')">El monto debe ser mayor a 0.</div>
+
+    <div class="expense-form__field">
+      <label class="expense-form__label" for="expense-payment-account-id">Cuenta de Pago</label>
+      <select id="expense-payment-account-id" class="expense-form__control" formControlName="paymentAccountId">
+        <option [ngValue]="null">Seleccione una cuenta de pago</option>
+        <option *ngFor="let paymentAccount of paymentAccountOptions" [ngValue]="paymentAccount.id">
+          {{ paymentAccount.label }}
+        </option>
+      </select>
+    </div>
+    <div class="expense-form__error" *ngIf="form.controls.paymentAccountId.hasError('required')">Debe seleccionar una cuenta de pago.</div>
   </div>
   <div class="expense-form__actions">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>
