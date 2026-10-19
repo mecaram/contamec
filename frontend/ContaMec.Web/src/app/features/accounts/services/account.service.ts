@@ -24,7 +24,10 @@ export class AccountService {
   create(account: Account): Observable<Account> {
     const payload = {
       name: account.name ?? null,
-      type: account.type ?? null
+      type: account.type ?? null,
+      subAccountRequires: account.subAccountRequires ?? false,
+      behaviorType: account.behaviorType ?? null,
+      active: account.active ?? true
     };
     return this.http.post<Account>(this.accountsUrl, payload, { headers: this.getAuthHeaders() });
   }
@@ -32,7 +35,10 @@ export class AccountService {
   update(id: number, account: Account): Observable<void> {
     const payload = {
       name: account.name ?? null,
-      type: account.type ?? null
+      type: account.type ?? null,
+      subAccountRequires: account.subAccountRequires ?? false,
+      behaviorType: account.behaviorType ?? null,
+      active: account.active ?? true
     };
     return this.http.put<void>(`${this.accountsUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
   }

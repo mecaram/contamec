@@ -13,11 +13,33 @@
       <label class="account-form__label" for="account-type">Tipo</label>
       <select id="account-type" class="account-form__control" formControlName="type">
         <option [ngValue]="''" disabled>Seleccione tipo</option>
-        <option value="Ingreso">Ingreso</option>
-        <option value="Egreso">Egreso</option>
+        <option value="Ingreso">Ingresos</option>
+        <option value="Egreso">Egresos</option>
+        <option value="Ambos">Ambos</option>
       </select>
     </div>
     <div class="account-form__error" *ngIf="form.controls.type.hasError('required')">El tipo es obligatorio.</div>
+
+    <label class="account-form__checkbox">
+      <input type="checkbox" formControlName="subAccountRequires" />
+      Requiere Subcuentas
+    </label>
+
+    <div class="account-form__field">
+      <label class="account-form__label" for="account-behavior-type">Comportamiento</label>
+      <select id="account-behavior-type" class="account-form__control" formControlName="behaviorType">
+        <option [ngValue]="''" disabled>Seleccione comportamiento</option>
+        <option value="Fijo">Fijo</option>
+        <option value="Variable">Variable</option>
+        <option value="Mixto">Mixto</option>
+      </select>
+    </div>
+    <div class="account-form__error" *ngIf="form.controls.behaviorType.hasError('required')">El comportamiento es obligatorio.</div>
+
+    <label class="account-form__checkbox">
+      <input type="checkbox" formControlName="active" />
+      Activo
+    </label>
   </div>
   <div class="account-form__actions">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>

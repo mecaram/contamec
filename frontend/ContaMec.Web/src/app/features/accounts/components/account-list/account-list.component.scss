@@ -25,6 +25,7 @@ th {
   font-weight: 600;
   color: rgba(0, 0, 0, 0.75);
   background: #f8fafc;
+  text-align: center;
 }
 
 .account-list__sortable {
@@ -39,8 +40,19 @@ th {
   color: #475569;
 }
 
+// Reserva a la izquierda el mismo ancho que el indicador de orden, para que el texto quede centrado en la columna.
+.account-list__sortable::before {
+  content: '';
+  display: inline-block;
+  width: 1rem;
+}
+
 .account-list__actions {
   white-space: nowrap;
+}
+
+.account-list__center {
+  text-align: center;
 }
 
 .account-list__footer td {

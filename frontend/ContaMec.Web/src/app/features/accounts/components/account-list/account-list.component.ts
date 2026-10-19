@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Account } from '../../models/account.model';
 
-type SortableColumn = 'id' | 'name' | 'type';
+type SortableColumn = 'id' | 'name' | 'type' | 'subAccountRequires' | 'behaviorType' | 'active';
 
 @Component({
   selector: 'app-account-list',
@@ -15,7 +15,10 @@ export class AccountListComponent implements OnChanges {
   readonly sortOptions: { column: SortableColumn; label: string }[] = [
     { column: 'id', label: 'ID' },
     { column: 'name', label: 'Nombre' },
-    { column: 'type', label: 'Tipo' }
+    { column: 'type', label: 'Tipo' },
+    { column: 'subAccountRequires', label: 'Subcuentas' },
+    { column: 'behaviorType', label: 'Comportamiento' },
+    { column: 'active', label: 'Activo' }
   ];
   currentPage = 1;
   readonly pageSize = 10;
@@ -108,6 +111,12 @@ export class AccountListComponent implements OnChanges {
     return this.sortDirection === 'asc' ? '▲' : '▼';
   }
 
+  /** Sin dato en la base (registros anteriores) se muestra un guion. */
+  formatYesNo(value: boolean | null | undefined): string {
+    if (value === null || value === undefined) return '-';
+    return value ? 'Sí' : 'No';
+  }
+
   goToPreviousPage(): void {
     if (!this.canGoPrevious) return;
     this.currentPage -= 1;
@@ -126,6 +135,12 @@ export class AccountListComponent implements OnChanges {
         return (account.name ?? '').toLocaleLowerCase();
       case 'type':
         return (account.type ?? '').toLocaleLowerCase();
+      case 'subAccountRequires':
+        return this.formatYesNo(account.subAccountRequires).toLocaleLowerCase();
+      case 'behaviorType':
+        return (account.behaviorType ?? '').toLocaleLowerCase();
+      case 'active':
+        return this.formatYesNo(account.active).toLocaleLowerCase();
       default:
         return 0;
     }

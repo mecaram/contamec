@@ -144,7 +144,9 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
 SELECT ""Id"", ""Name""
 FROM ""{tableName}""
 WHERE ""ApplicationId"" = @applicationId
-  AND ""Type"" IS NOT NULL AND ""Type""::text ILIKE @typeFilter
+  AND ""Type"" IS NOT NULL
+  -- Una cuenta de tipo Ambos se usa tanto en ingresos como en egresos.
+  AND (""Type""::text ILIKE @typeFilter OR ""Type""::text = 'Ambos')
 ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
 
             var parameter = command.CreateParameter();
@@ -202,6 +204,7 @@ WHERE ""ApplicationId"" = @applicationId
   AND (
     ""Type""::text ILIKE @egresoFilter
     OR ""Type""::text ILIKE @gastoFilter
+    OR ""Type""::text = 'Ambos'
   )
 ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
 

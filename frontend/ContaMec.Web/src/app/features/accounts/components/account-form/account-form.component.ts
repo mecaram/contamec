@@ -15,7 +15,10 @@ export class AccountFormComponent implements OnChanges {
 
   readonly form = this.fb.group({
     name: ['' as string, [Validators.required, Validators.maxLength(50)]],
-    type: ['' as string, [Validators.required, Validators.maxLength(50)]]
+    type: ['' as string, [Validators.required, Validators.maxLength(50)]],
+    subAccountRequires: [false],
+    behaviorType: ['' as string, [Validators.required]],
+    active: [true]
   });
 
   constructor(private readonly fb: FormBuilder) {}
@@ -24,7 +27,13 @@ export class AccountFormComponent implements OnChanges {
     if (changes.account || changes.mode) {
       this.form.reset({
         name: this.account?.name ?? '',
-        type: this.normalizeType(this.account?.type)
+        type: this.normalizeType(this.account?.type),
+        // Las cuentas anteriores no tienen el dato cargado: se toman como que no requieren subcuentas.
+        subAccountRequires: this.account?.subAccountRequires ?? false,
+        // Alta: Fijo por defecto. Las cuentas anteriores sin dato quedan sin seleccionar y hay que elegir uno.
+        behaviorType: this.account ? this.account.behaviorType ?? '' : 'Fijo',
+        // Sin dato cargado (cuentas anteriores o alta nueva) la cuenta se considera activa.
+        active: this.account?.active ?? true
       });
     }
   }
@@ -42,7 +51,10 @@ export class AccountFormComponent implements OnChanges {
     const payload: Account = {
       id: this.account?.id ?? 0,
       name: raw.name?.trim() || '',
-      type: raw.type?.trim() || ''
+      type: raw.type?.trim() || '',
+      subAccountRequires: !!raw.subAccountRequires,
+      behaviorType: raw.behaviorType || null,
+      active: !!raw.active
     };
     this.saveForm.emit(payload);
   }
@@ -53,6 +65,7 @@ export class AccountFormComponent implements OnChanges {
 
   private normalizeType(type: string | null | undefined): string {
     const value = (type ?? '').trim().toLowerCase();
+    if (value.includes('ambos')) return 'Ambos';
     if (value.includes('egreso') || value.includes('gasto')) return 'Egreso';
     return 'Ingreso';
   }

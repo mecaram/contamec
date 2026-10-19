@@ -27,6 +27,9 @@
         <th class="account-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
         <th class="account-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
         <th class="account-list__sortable" (click)="setSort('type')">Tipo <span>{{ sortIndicator('type') }}</span></th>
+        <th class="account-list__sortable" (click)="setSort('subAccountRequires')">Subcuentas <span>{{ sortIndicator('subAccountRequires') }}</span></th>
+        <th class="account-list__sortable" (click)="setSort('behaviorType')">Comportamiento <span>{{ sortIndicator('behaviorType') }}</span></th>
+        <th class="account-list__sortable" (click)="setSort('active')">Activo <span>{{ sortIndicator('active') }}</span></th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -35,6 +38,9 @@
         <td data-label="ID">{{ row.id }}</td>
         <td data-label="Nombre">{{ row.name || '-' }}</td>
         <td data-label="Tipo">{{ row.type || '-' }}</td>
+        <td data-label="Subcuentas" class="account-list__center">{{ formatYesNo(row.subAccountRequires) }}</td>
+        <td data-label="Comportamiento" class="account-list__center">{{ row.behaviorType || '-' }}</td>
+        <td data-label="Activo" class="account-list__center">{{ formatYesNo(row.active) }}</td>
         <td class="account-list__actions">
           <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar cuenta">
             <mat-icon>edit</mat-icon>
@@ -47,7 +53,7 @@
     </tbody>
     <tfoot>
       <tr class="account-list__footer">
-        <td colspan="4">Total registros: {{ totalRecords }}</td>
+        <td colspan="7">Total registros: {{ totalRecords }}</td>
       </tr>
     </tfoot>
   </table>

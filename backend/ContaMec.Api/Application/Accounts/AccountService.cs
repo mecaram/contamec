@@ -63,6 +63,9 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         {
             Name = request.Name?.Trim(),
             Type = ParseType(request.Type),
+            SubAccountRequires = request.SubAccountRequires,
+            BehaviorType = ParseBehaviorType(request.BehaviorType),
+            Active = request.Active,
             ApplicationId = applicationId
         };
 
@@ -84,6 +87,9 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
 
         account.Name = request.Name?.Trim();
         account.Type = ParseType(request.Type);
+        account.SubAccountRequires = request.SubAccountRequires;
+        account.BehaviorType = ParseBehaviorType(request.BehaviorType);
+        account.Active = request.Active;
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -114,7 +120,14 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
             Name = account.Name,
             Type = account.Type == AccountType.Ingresos ? nameof(AccountType.Ingresos)
                 : account.Type == AccountType.Egresos ? nameof(AccountType.Egresos)
-                : null
+                : account.Type == AccountType.Ambos ? nameof(AccountType.Ambos)
+                : null,
+            SubAccountRequires = account.SubAccountRequires,
+            BehaviorType = account.BehaviorType == BehaviorType.Fijo ? nameof(BehaviorType.Fijo)
+                : account.BehaviorType == BehaviorType.Variable ? nameof(BehaviorType.Variable)
+                : account.BehaviorType == BehaviorType.Mixto ? nameof(BehaviorType.Mixto)
+                : null,
+            Active = account.Active
         };
     }
 
@@ -128,7 +141,7 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         ParseType(type);
     }
 
-    // El frontend envía "Ingreso"/"Egreso"; en la base es el enum AccountTypes (Ingresos, Egresos).
+    // El frontend envía "Ingreso"/"Egreso"/"Ambos"; en la base es el enum AccountTypes (Ingresos, Egresos, Ambos).
     private static AccountType ParseType(string? type)
     {
         if (string.IsNullOrWhiteSpace(type))
@@ -139,7 +152,20 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
             return AccountType.Ingresos;
         if (value.Contains("egreso", StringComparison.OrdinalIgnoreCase) || value.Contains("gasto", StringComparison.OrdinalIgnoreCase))
             return AccountType.Egresos;
+        if (value.Contains("ambos", StringComparison.OrdinalIgnoreCase))
+            return AccountType.Ambos;
 
-        throw new ArgumentException("Type debe ser Ingreso o Egreso.");
+        throw new ArgumentException("Type debe ser Ingreso, Egreso o Ambos.");
+    }
+
+    // Etiquetas del enum BehaviorTypes de la base: Fijo, Variable, Mixto.
+    private static BehaviorType ParseBehaviorType(string? behaviorType)
+    {
+        if (string.IsNullOrWhiteSpace(behaviorType))
+            throw new ArgumentException("Debe seleccionar un comportamiento.");
+        if (Enum.TryParse<BehaviorType>(behaviorType.Trim(), ignoreCase: true, out var value) && Enum.IsDefined(value))
+            return value;
+
+        throw new ArgumentException("BehaviorType debe ser Fijo, Variable o Mixto.");
     }
 }
