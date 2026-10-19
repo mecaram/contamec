@@ -144,6 +144,8 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
 SELECT ""Id"", ""Name""
 FROM ""{tableName}""
 WHERE ""ApplicationId"" = @applicationId
+  -- Las cuentas inactivas no se ofrecen; sin dato cargado se consideran activas.
+  AND COALESCE(""Active"", TRUE)
   AND ""Type"" IS NOT NULL
   -- Una cuenta de tipo Ambos se usa tanto en ingresos como en egresos.
   AND (""Type""::text ILIKE @typeFilter OR ""Type""::text = 'Ambos')
@@ -200,6 +202,8 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
 SELECT ""Id"", ""Name""
 FROM ""{tableName}""
 WHERE ""ApplicationId"" = @applicationId
+  -- Las cuentas inactivas no se ofrecen; sin dato cargado se consideran activas.
+  AND COALESCE(""Active"", TRUE)
   AND ""Type"" IS NOT NULL
   AND (
     ""Type""::text ILIKE @egresoFilter
