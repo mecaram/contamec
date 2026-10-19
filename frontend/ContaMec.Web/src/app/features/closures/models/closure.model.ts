@@ -4,6 +4,7 @@ export interface Closure {
   previousBalance?: number | null;
   incomes?: number | null;
   expenses?: number | null;
+  netFlow?: number | null;
   inAccount?: number | null;
   closeDate?: string | null;
   isClosed?: boolean | null;

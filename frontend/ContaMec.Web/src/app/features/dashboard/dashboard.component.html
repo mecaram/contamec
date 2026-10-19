@@ -39,20 +39,31 @@
             [ngClass]="(activeClosure.result ?? 0) < 0 ? 'indicator-card--negative' : 'indicator-card--positive'"
           >
             <span class="indicator-card__icon material-icons" aria-hidden="true">account_balance</span>
-            <span class="indicator-card__label">Resultado del cierre</span>
+            <span class="indicator-card__label">Saldo Final</span>
             <span class="indicator-card__value">{{ (activeClosure.result ?? 0) | currency:'USD':'symbol':'1.2-2' }}</span>
-            <span class="indicator-card__hint">Saldo anterior + ingresos − egresos</span>
+            <span class="indicator-card__hint">Saldo inicial + ingresos − egresos</span>
+          </article>
+
+          <article
+            class="indicator-card mat-elevation-z2"
+            role="listitem"
+            [ngClass]="(activeClosure.netFlow ?? 0) < 0 ? 'indicator-card--negative' : 'indicator-card--positive'"
+          >
+            <span class="indicator-card__icon material-icons" aria-hidden="true">swap_vert</span>
+            <span class="indicator-card__label">Flujo Neto</span>
+            <span class="indicator-card__value">{{ (activeClosure.netFlow ?? 0) | currency:'USD':'symbol':'1.2-2' }}</span>
+            <span class="indicator-card__hint">Ingresos − egresos</span>
           </article>
 
           <article class="indicator-card indicator-card--incomes mat-elevation-z2" role="listitem">
             <span class="indicator-card__icon material-icons" aria-hidden="true">trending_up</span>
-            <span class="indicator-card__label">Total de ingresos</span>
+            <span class="indicator-card__label">Total ingresos</span>
             <span class="indicator-card__value">{{ (activeClosure.incomes ?? 0) | currency:'USD':'symbol':'1.2-2' }}</span>
           </article>
 
           <article class="indicator-card indicator-card--expenses mat-elevation-z2" role="listitem">
             <span class="indicator-card__icon material-icons" aria-hidden="true">trending_down</span>
-            <span class="indicator-card__label">Total de egresos</span>
+            <span class="indicator-card__label">Total egresos</span>
             <span class="indicator-card__value">{{ (activeClosure.expenses ?? 0) | currency:'USD':'symbol':'1.2-2' }}</span>
           </article>
         </div>

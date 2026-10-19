@@ -7,6 +7,8 @@ public class ClosureResponse
     public decimal? PreviousBalance { get; set; }
     public decimal Incomes { get; set; }
     public decimal Expenses { get; set; }
+    /// <summary>Flujo neto del cierre: ingresos menos egresos, sin el saldo inicial.</summary>
+    public decimal NetFlow => Incomes - Expenses;
     public decimal InAccount { get; set; }
     public DateTime? CloseDate { get; set; }
     public bool? IsClosed { get; set; }
