@@ -20,4 +20,5 @@ public class User
 
     public ICollection<Income> IncomesCreated { get; set; } = new List<Income>();
     public ICollection<Expense> ExpensesCreated { get; set; } = new List<Expense>();
+    public ICollection<ExchangeRate> ExchangeRatesCreated { get; set; } = new List<ExchangeRate>();
 }

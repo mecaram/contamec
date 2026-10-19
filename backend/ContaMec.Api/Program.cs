@@ -107,6 +107,10 @@ if (csb.MinPoolSize == 0)
 if (csb.KeepAlive == 0)
     csb.KeepAlive = 30;
 dataSourceBuilder.MapEnum<AccountType>("AccountTypes", new NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<ApplicationType>("ApplicationTypes", new NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<BehaviorType>("BehaviorTypes", new NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<OccurrenceType>("OccurrenceTypes", new NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<RateType>("RateTypes", new NpgsqlNullNameTranslator());
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddDbContext<ContaMecDbContext>(options => options.UseNpgsql(dataSource));
 builder.Services.AddScoped<IAuthService, AuthService>();

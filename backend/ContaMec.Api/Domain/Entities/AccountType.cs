@@ -6,5 +6,6 @@ namespace ContaMec.Api.Domain.Entities;
 public enum AccountType
 {
     Ingresos,
-    Egresos
+    Egresos,
+    Ambos
 }

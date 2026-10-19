@@ -14,6 +14,8 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
     public DbSet<Income> Incomes => Set<Income>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<SubAccount> SubAccounts => Set<SubAccount>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
     // Calificado: "Application" choca con el namespace ContaMec.Api.Application.
     public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
 
@@ -27,6 +29,10 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresEnum<AccountType>("public", "AccountTypes", new NpgsqlNullNameTranslator());
+        modelBuilder.HasPostgresEnum<ApplicationType>("public", "ApplicationTypes", new NpgsqlNullNameTranslator());
+        modelBuilder.HasPostgresEnum<BehaviorType>("public", "BehaviorTypes", new NpgsqlNullNameTranslator());
+        modelBuilder.HasPostgresEnum<OccurrenceType>("public", "OccurrenceTypes", new NpgsqlNullNameTranslator());
+        modelBuilder.HasPostgresEnum<RateType>("public", "RateTypes", new NpgsqlNullNameTranslator());
 
         modelBuilder.Entity<Domain.Entities.Application>(entity =>
         {
@@ -38,6 +44,8 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
             entity.Property(e => e.Active).HasColumnName("Active");
             entity.Property(e => e.WhatsApp).HasColumnName("WhatsApp");
+            entity.Property(e => e.Type).HasColumnName("Type");
+            entity.Property(e => e.ApplicationTypeDate).HasColumnName("ApplicationTypeDate").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
             entity.Property(e => e.Email).HasColumnName("Email");
             entity.Property(e => e.Address).HasColumnName("Address");
             entity.Property(e => e.Locality).HasColumnName("Locality");
@@ -119,12 +127,52 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Name).HasColumnName("Name").HasMaxLength(50).IsUnicode(false);
             entity.Property(e => e.Type).HasColumnName("Type");
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.SubAccountRequires).HasColumnName("SubAccountRequires");
+            entity.Property(e => e.Active).HasColumnName("Active");
+            entity.Property(e => e.BehaviorType).HasColumnName("BehaviorType");
 
             entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
 
             entity.HasOne(e => e.Application)
                 .WithMany(a => a.Accounts)
                 .HasForeignKey(e => e.ApplicationId)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<SubAccount>(entity =>
+        {
+            entity.ToTable("SubAccounts");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id");
+            entity.Property(e => e.Name).HasColumnName("Name");
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.AccountId).HasColumnName("AccountId");
+            entity.Property(e => e.Active).HasColumnName("Active");
+            entity.Property(e => e.BehaviorType).HasColumnName("BehaviorType");
+
+            entity.HasOne(e => e.Account)
+                .WithMany(a => a.SubAccounts)
+                .HasForeignKey(e => e.AccountId)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        modelBuilder.Entity<ExchangeRate>(entity =>
+        {
+            entity.ToTable("ExchangeRates");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id");
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.RateDate).HasColumnName("RateDate").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.RateType).HasColumnName("RateType");
+            entity.Property(e => e.BuyRate).HasColumnName("BuyRate").HasColumnType("numeric");
+            entity.Property(e => e.SellRate).HasColumnName("SellRate").HasColumnType("numeric");
+            entity.Property(e => e.CreatedByUserId).HasColumnName("CreatedByUserId");
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany(u => u.ExchangeRatesCreated)
+                .HasForeignKey(e => e.CreatedByUserId)
                 .OnDelete(DeleteBehavior.NoAction);
         });
 
@@ -171,6 +219,20 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
                 .WithMany(a => a.Expenses)
                 .HasForeignKey(e => e.PaymentAccountId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            entity.Property(e => e.SubAccountId).HasColumnName("SubAccountId");
+            entity.Property(e => e.OccurrenceType).HasColumnName("OccurrenceType");
+            entity.Property(e => e.ExchangeRateId).HasColumnName("ExchangeRateId");
+
+            entity.HasOne(e => e.SubAccount)
+                .WithMany(s => s.Expenses)
+                .HasForeignKey(e => e.SubAccountId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.ExchangeRate)
+                .WithMany(r => r.Expenses)
+                .HasForeignKey(e => e.ExchangeRateId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<Income>(entity =>
@@ -215,6 +277,20 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.HasOne(e => e.PaymentAccount)
                 .WithMany(a => a.Incomes)
                 .HasForeignKey(e => e.PaymentAccountId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.Property(e => e.SubAccountId).HasColumnName("SubAccountId");
+            entity.Property(e => e.OccurrenceType).HasColumnName("OccurrenceType");
+            entity.Property(e => e.ExchangeRateId).HasColumnName("ExchangeRateId");
+
+            entity.HasOne(e => e.SubAccount)
+                .WithMany(s => s.Incomes)
+                .HasForeignKey(e => e.SubAccountId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.ExchangeRate)
+                .WithMany(r => r.Incomes)
+                .HasForeignKey(e => e.ExchangeRateId)
                 .OnDelete(DeleteBehavior.NoAction);
         });
 

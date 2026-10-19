@@ -14,10 +14,15 @@ public class Income
     public DateTime? CreatedAt { get; set; }
     public int? ApplicationId { get; set; }
     public int? PaymentAccountId { get; set; }
+    public int? SubAccountId { get; set; }
+    public OccurrenceType? OccurrenceType { get; set; }
+    public int? ExchangeRateId { get; set; }
 
     public Closure Closure { get; set; } = null!;
     public Account Account { get; set; } = null!;
     public User CreatedByUser { get; set; } = null!;
     public Application? Application { get; set; }
     public PaymentAccount? PaymentAccount { get; set; }
+    public SubAccount? SubAccount { get; set; }
+    public ExchangeRate? ExchangeRate { get; set; }
 }

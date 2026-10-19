@@ -14,6 +14,8 @@ public class Application
     public string? Address { get; set; }
     public string? Locality { get; set; }
     public string? Guid { get; set; }
+    public ApplicationType? Type { get; set; }
+    public DateTime? ApplicationTypeDate { get; set; }
 
     public ICollection<Account> Accounts { get; set; } = new List<Account>();
     public ICollection<Closure> Closures { get; set; } = new List<Closure>();
