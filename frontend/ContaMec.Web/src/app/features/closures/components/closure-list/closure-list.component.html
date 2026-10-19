@@ -27,10 +27,10 @@
         <tr>
           <th class="closure-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
           <th class="closure-list__sortable" (click)="setSort('openDate')">Apertura <span>{{ sortIndicator('openDate') }}</span></th>
-          <th class="closure-list__sortable" (click)="setSort('previousBalance')">Saldo<span>{{ sortIndicator('previousBalance') }}</span></th>
+          <th class="closure-list__sortable" (click)="setSort('previousBalance')">Saldo Inicial <span>{{ sortIndicator('previousBalance') }}</span></th>
           <th class="closure-list__sortable" (click)="setSort('incomes')">Ingresos <span>{{ sortIndicator('incomes') }}</span></th>
           <th class="closure-list__sortable" (click)="setSort('expenses')">Egresos <span>{{ sortIndicator('expenses') }}</span></th>
-          <th class="closure-list__sortable" (click)="setSort('result')">Resultado <span>{{ sortIndicator('result') }}</span></th>
+          <th class="closure-list__sortable" (click)="setSort('result')">Saldo Final <span>{{ sortIndicator('result') }}</span></th>
           <th>Valores en cuenta</th>
           <th>Diferencia</th>
           <th>Cierre</th>
@@ -42,10 +42,10 @@
         <tr *ngFor="let row of pagedClosures" [ngClass]="{ 'closure-list__row--open': !row.isClosed }">
           <td data-label="ID">{{ row.id }}</td>
           <td data-label="Apertura">{{ formatDate(row.openDate) }}</td>
-          <td data-label="Saldo" class="closure-list__amount">{{ formatResult(row.previousBalance) }}</td>
+          <td data-label="Saldo Inicial" class="closure-list__amount">{{ formatResult(row.previousBalance) }}</td>
           <td data-label="Ingresos" class="closure-list__amount">{{ formatResult(row.incomes) }}</td>
           <td data-label="Egresos" class="closure-list__amount">{{ formatResult(row.expenses) }}</td>
-          <td data-label="Resultado" class="closure-list__amount">{{ formatResult(row.result) }}</td>
+          <td data-label="Saldo Final" class="closure-list__amount">{{ formatResult(row.result) }}</td>
           <td data-label="Valores en cuenta" class="closure-list__amount">{{ formatResult(row.inAccount) }}</td>
           <td data-label="Diferencia" class="closure-list__amount">{{ formatResult(getDifference(row)) }}</td>
           <td data-label="Cierre">{{ formatDate(row.closeDate) }}</td>
@@ -90,10 +90,10 @@
         <tr class="closure-list__footer">
           <td>Total: {{ totalRecords }}</td>
           <td class="closure-list__footer-filler">-</td>
-          <td data-label="Saldo" class="closure-list__amount">{{ formatResult(totalPreviousBalance) }}</td>
+          <td data-label="Saldo Inicial" class="closure-list__amount">{{ formatResult(totalPreviousBalance) }}</td>
           <td data-label="Ingresos" class="closure-list__amount">{{ formatResult(totalIncomes) }}</td>
           <td data-label="Egresos" class="closure-list__amount">{{ formatResult(totalExpenses) }}</td>
-          <td data-label="Resultado" class="closure-list__amount">{{ formatResult(totalResultCalculated) }}</td>
+          <td data-label="Saldo Final" class="closure-list__amount">{{ formatResult(totalResultCalculated) }}</td>
           <td colspan="5"></td>
         </tr>
       </tfoot>

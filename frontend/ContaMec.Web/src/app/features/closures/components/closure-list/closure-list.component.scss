@@ -67,6 +67,13 @@ th {
   color: #475569;
 }
 
+// Reserva a la izquierda el mismo ancho que el indicador de orden, para que el texto quede centrado en la columna.
+.closure-list__sortable::before {
+  content: '';
+  display: inline-block;
+  width: 1rem;
+}
+
 .closure-list__row--open {
   background: #ecfdf5;
 }

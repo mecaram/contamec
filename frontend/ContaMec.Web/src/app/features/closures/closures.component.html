@@ -91,7 +91,7 @@
 
         <div class="closures-modal__meta-col">
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
-            <span class="closures-modal__meta-label">Saldo:</span>
+            <span class="closures-modal__meta-label">Saldo Inicial:</span>
             <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.previousBalance) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
@@ -103,7 +103,7 @@
             <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.expenses) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
-            <span class="closures-modal__meta-label">Resultado:</span>
+            <span class="closures-modal__meta-label">Saldo Final:</span>
             <span class="closures-modal__meta-value">{{ formatCurrency(detailTarget.result) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
@@ -150,7 +150,7 @@
 
         <div class="closures-modal__meta-col">
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
-            <span class="closures-modal__meta-label">Saldo:</span>
+            <span class="closures-modal__meta-label">Saldo Inicial:</span>
             <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.previousBalance) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
@@ -162,7 +162,7 @@
             <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.expenses) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
-            <span class="closures-modal__meta-label">Resultado:</span>
+            <span class="closures-modal__meta-label">Saldo Final:</span>
             <span class="closures-modal__meta-value">{{ formatCurrency(closeTarget.result) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
@@ -434,7 +434,7 @@
                 <td class="closures-modal__tfoot-amount"><strong>{{ formatCurrency(totalBalanceAmount) }}</strong></td>
               </tr>
               <tr>
-                <td><strong>Resultado</strong></td>
+                <td><strong>Saldo Final</strong></td>
                 <td class="closures-modal__tfoot-amount"><strong>{{ formatCurrency(balanceValuesResult) }}</strong></td>
               </tr>
               <tr>

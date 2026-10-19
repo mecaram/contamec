@@ -15,10 +15,10 @@ export class ClosureListComponent implements OnChanges {
   readonly sortOptions: { column: SortableColumn; label: string }[] = [
     { column: 'id', label: 'ID' },
     { column: 'openDate', label: 'Apertura' },
-    { column: 'previousBalance', label: 'Saldo' },
+    { column: 'previousBalance', label: 'Saldo Inicial' },
     { column: 'incomes', label: 'Ingresos' },
     { column: 'expenses', label: 'Egresos' },
-    { column: 'result', label: 'Resultado' }
+    { column: 'result', label: 'Saldo Final' }
   ];
   currentPage = 1;
   readonly pageSize = 10;
