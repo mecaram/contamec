@@ -99,6 +99,17 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         return created ?? throw new InvalidOperationException("No se pudo leer el ingreso recién creado.");
     }
 
+    // Cuenta de pago del último ingreso que registró el usuario en la aplicación, para proponerla en el alta.
+    public async Task<int?> GetLastPaymentAccountIdAsync(int userId, int applicationId)
+    {
+        return await _dbContext.Incomes
+            .AsNoTracking()
+            .Where(i => i.ApplicationId == applicationId && i.CreatedByUserId == userId && i.PaymentAccountId != null)
+            .OrderByDescending(i => i.Id)
+            .Select(i => i.PaymentAccountId)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<bool> UpdateAsync(int id, IncomeUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);

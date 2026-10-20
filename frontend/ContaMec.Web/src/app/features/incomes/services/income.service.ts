@@ -56,6 +56,11 @@ export class IncomeService {
     return this.http.get<ClosureLookup[]>(`${this.apiBaseUrl}/closures`, { headers: this.getAuthHeaders() });
   }
 
+  /** Cuenta de pago del último ingreso que registró el usuario; null si todavía no registró ninguno. */
+  getLastPaymentAccount(): Observable<{ paymentAccountId: number | null }> {
+    return this.http.get<{ paymentAccountId: number | null }>(`${this.incomesUrl}/last-payment-account`, { headers: this.getAuthHeaders() });
+  }
+
   getIncomeAccounts(): Observable<IncomeAccountOption[]> {
     return this.http.get<IncomeAccountOption[]>(`${this.apiBaseUrl}/accounts/income-options`, { headers: this.getAuthHeaders() });
   }

@@ -14,6 +14,8 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() expense: Expense | null = null;
   @Input() accountOptions: Array<{ id: number; label: string; subAccountRequires?: boolean }> = [];
   @Input() paymentAccountOptions: Array<{ id: number; label: string }> = [];
+  /** En el alta se propone esta cuenta de pago (la del último egreso registrado), si sigue disponible. */
+  @Input() defaultPaymentAccountId: number | null = null;
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<Expense>();
   amountDisplay = '';
@@ -66,6 +68,19 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
     } else if (changes.accountOptions) {
       // Las cuentas llegan después de abrir el formulario: recién ahí se sabe si requiere subcuentas.
       this.refreshSubAccounts();
+    }
+    if (changes.expense || changes.mode || changes.defaultPaymentAccountId || changes.paymentAccountOptions) {
+      this.applyDefaultPaymentAccount();
+    }
+  }
+
+  /** Solo en el alta y si todavía no se eligió una: la cuenta propuesta debe estar entre las opciones (activas). */
+  private applyDefaultPaymentAccount(): void {
+    const control = this.form.controls.paymentAccountId;
+    if (this.mode !== 'create' || this.expense || control.value !== null || control.dirty) return;
+    const id = this.defaultPaymentAccountId;
+    if (id !== null && this.paymentAccountOptions.some((p) => p.id === id)) {
+      control.setValue(id);
     }
   }
 

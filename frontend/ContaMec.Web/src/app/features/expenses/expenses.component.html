@@ -115,6 +115,7 @@
       [expense]="editingExpense"
       [accountOptions]="accountOptions"
       [paymentAccountOptions]="paymentAccountOptions"
+      [defaultPaymentAccountId]="lastPaymentAccountId"
       (cancelForm)="cancelForm()"
       (saveForm)="submitForm($event)"
     ></app-expense-form>

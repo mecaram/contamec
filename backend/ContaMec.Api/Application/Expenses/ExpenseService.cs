@@ -99,6 +99,17 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         return created ?? throw new InvalidOperationException("No se pudo leer el egreso recién creado.");
     }
 
+    // Cuenta de pago del último egreso que registró el usuario en la aplicación, para proponerla en el alta.
+    public async Task<int?> GetLastPaymentAccountIdAsync(int userId, int applicationId)
+    {
+        return await _dbContext.Expenses
+            .AsNoTracking()
+            .Where(e => e.ApplicationId == applicationId && e.CreatedByUserId == userId && e.PaymentAccountId != null)
+            .OrderByDescending(e => e.Id)
+            .Select(e => e.PaymentAccountId)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<bool> UpdateAsync(int id, ExpenseUpdateRequest request, int applicationId)
     {
         ArgumentNullException.ThrowIfNull(request);

@@ -17,6 +17,8 @@ export class ExpensesComponent implements OnInit {
   closureOptions: ClosureLookup[] = [];
   accountOptions: Array<{ id: number; label: string; subAccountRequires?: boolean }> = [];
   paymentAccountOptions: Array<{ id: number; label: string }> = [];
+  /** Cuenta de pago que se propone en el alta: la del último egreso que registró el usuario. */
+  lastPaymentAccountId: number | null = null;
   /** Subcuentas activas de la cuenta elegida en el filtro; vacío si no hay cuenta o no requiere subcuentas. */
   subAccountFilterOptions: Array<{ id: number; label: string }> = [];
   loading = false;
@@ -179,7 +181,12 @@ export class ExpensesComponent implements OnInit {
   openCreate(): void {
     this.formMode = 'create';
     this.editingExpense = null;
+    this.lastPaymentAccountId = null;
     this.formVisible = true;
+    this.expensesService.getLastPaymentAccount().subscribe({
+      next: (result) => (this.lastPaymentAccountId = result?.paymentAccountId ?? null),
+      error: () => (this.lastPaymentAccountId = null)
+    });
   }
 
   openEdit(expense: Expense): void {
