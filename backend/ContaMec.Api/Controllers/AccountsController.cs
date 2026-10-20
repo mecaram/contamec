@@ -141,7 +141,7 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
         {
             await using var command = connection.CreateCommand();
             command.CommandText = $@"
-SELECT ""Id"", ""Name""
+SELECT ""Id"", ""Name"", COALESCE(""SubAccountRequires"", FALSE)
 FROM ""{tableName}""
 WHERE ""ApplicationId"" = @applicationId
   -- Las cuentas inactivas no se ofrecen; sin dato cargado se consideran activas.
@@ -164,7 +164,8 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
                 accounts.Add(new IncomeAccountOptionResponse
                 {
                     Id = reader.GetInt32(0),
-                    Name = reader.IsDBNull(1) ? null : reader.GetString(1)
+                    Name = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    SubAccountRequires = reader.GetBoolean(2)
                 });
             }
         }
@@ -199,7 +200,7 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
         {
             await using var command = connection.CreateCommand();
             command.CommandText = $@"
-SELECT ""Id"", ""Name""
+SELECT ""Id"", ""Name"", COALESCE(""SubAccountRequires"", FALSE)
 FROM ""{tableName}""
 WHERE ""ApplicationId"" = @applicationId
   -- Las cuentas inactivas no se ofrecen; sin dato cargado se consideran activas.
@@ -230,7 +231,8 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
                 accounts.Add(new IncomeAccountOptionResponse
                 {
                     Id = reader.GetInt32(0),
-                    Name = reader.IsDBNull(1) ? null : reader.GetString(1)
+                    Name = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    SubAccountRequires = reader.GetBoolean(2)
                 });
             }
         }
@@ -287,5 +289,6 @@ ORDER BY ""Name"" ASC NULLS FIRST, ""Id"" ASC";
     {
         public int Id { get; set; }
         public string? Name { get; set; }
+        public bool SubAccountRequires { get; set; }
     }
 }

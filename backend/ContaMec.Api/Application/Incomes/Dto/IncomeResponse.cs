@@ -11,6 +11,8 @@ public class IncomeResponse
     public decimal? Amount { get; set; }
     public int? PaymentAccountId { get; set; }
     public string? PaymentAccountName { get; set; }
+    public int? SubAccountId { get; set; }
+    public string? SubAccountName { get; set; }
     public int? CreatedByUserId { get; set; }
     public DateTime? CreatedAt { get; set; }
 }

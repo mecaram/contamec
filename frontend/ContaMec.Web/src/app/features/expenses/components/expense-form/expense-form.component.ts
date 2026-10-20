@@ -1,5 +1,7 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { SubAccountService } from '../../../sub-accounts/services/sub-account.service';
 import { Expense } from '../../models/expense.model';
 
 @Component({
@@ -7,24 +9,45 @@ import { Expense } from '../../models/expense.model';
   templateUrl: './expense-form.component.html',
   styleUrls: ['./expense-form.component.scss']
 })
-export class ExpenseFormComponent implements OnChanges {
+export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() expense: Expense | null = null;
-  @Input() accountOptions: Array<{ id: number; label: string }> = [];
+  @Input() accountOptions: Array<{ id: number; label: string; subAccountRequires?: boolean }> = [];
   @Input() paymentAccountOptions: Array<{ id: number; label: string }> = [];
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<Expense>();
   amountDisplay = '';
+  subAccountOptions: Array<{ id: number; label: string }> = [];
+  subAccountsLoading = false;
+  private subAccountsRequest: Subscription | null = null;
+  private accountChanges: Subscription | null = null;
 
   readonly form = this.fb.group({
     emissionDate: [null as Date | null, [Validators.required]],
     accountId: [null as number | null, [Validators.required, Validators.min(1)]],
     detail: ['' as string, [Validators.maxLength(80)]],
     amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
-    paymentAccountId: [null as number | null, [Validators.required]]
+    paymentAccountId: [null as number | null, [Validators.required]],
+    subAccountId: [null as number | null]
   });
 
-  constructor(private readonly fb: FormBuilder) {}
+  constructor(
+    private readonly fb: FormBuilder,
+    private readonly subAccountService: SubAccountService
+  ) {}
+
+  ngOnInit(): void {
+    // Al cambiar la cuenta se descarta la subcuenta elegida y se cargan las de la nueva cuenta.
+    this.accountChanges = this.form.controls.accountId.valueChanges.subscribe(() => {
+      this.form.controls.subAccountId.setValue(null);
+      this.refreshSubAccounts();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.accountChanges?.unsubscribe();
+    this.subAccountsRequest?.unsubscribe();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.expense || changes.mode) {
@@ -35,10 +58,64 @@ export class ExpenseFormComponent implements OnChanges {
         detail: this.expense?.detail ?? '',
         amount: this.expense?.amount ?? null,
         // Los egresos anteriores pueden no tener cuenta de pago: el combo queda vacío y hay que elegir una.
-        paymentAccountId: this.expense?.paymentAccountId ?? null
-      });
+        paymentAccountId: this.expense?.paymentAccountId ?? null,
+        subAccountId: this.expense?.subAccountId ?? null
+      }, { emitEvent: false });
       this.amountDisplay = this.formatAmount(this.form.controls.amount.value);
+      this.refreshSubAccounts();
+    } else if (changes.accountOptions) {
+      // Las cuentas llegan después de abrir el formulario: recién ahí se sabe si requiere subcuentas.
+      this.refreshSubAccounts();
     }
+  }
+
+  get subAccountPlaceholder(): string {
+    if (!this.form.controls.accountId.value) return 'Seleccione primero una cuenta';
+    if (!this.selectedAccountRequiresSubAccounts) return 'La cuenta no requiere subcuenta';
+    if (this.subAccountsLoading) return 'Cargando subcuentas...';
+    if (this.subAccountOptions.length === 0) return 'La cuenta no tiene subcuentas activas';
+    return 'Seleccione una subcuenta';
+  }
+
+  private get selectedAccountRequiresSubAccounts(): boolean {
+    const accountId = this.form.controls.accountId.value;
+    return !!this.accountOptions.find((a) => a.id === accountId)?.subAccountRequires;
+  }
+
+  /** Habilita la subcuenta (obligatoria) solo si la cuenta elegida requiere subcuentas, y carga las activas de esa cuenta. */
+  private refreshSubAccounts(): void {
+    this.subAccountsRequest?.unsubscribe();
+    this.subAccountsRequest = null;
+    this.subAccountsLoading = false;
+    this.subAccountOptions = [];
+
+    const subAccount = this.form.controls.subAccountId;
+    const accountId = this.form.controls.accountId.value;
+    if (!accountId || !this.selectedAccountRequiresSubAccounts) {
+      subAccount.clearValidators();
+      subAccount.setValue(null, { emitEvent: false });
+      subAccount.disable({ emitEvent: false });
+      return;
+    }
+
+    subAccount.setValidators([Validators.required]);
+    subAccount.enable({ emitEvent: false });
+    this.subAccountsLoading = true;
+    this.subAccountsRequest = this.subAccountService.search({ accountId }).subscribe({
+      next: (items) => {
+        this.subAccountsLoading = false;
+        // Al editar se conserva la subcuenta del egreso aunque se haya desactivado.
+        const currentId = this.expense?.accountId === accountId ? this.expense?.subAccountId : null;
+        this.subAccountOptions = (items ?? [])
+          .filter((s) => (s.active ?? true) || s.id === currentId)
+          .map((s) => ({ id: s.id, label: s.name?.trim() || `#${s.id}` }))
+          .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
+      },
+      error: () => {
+        this.subAccountsLoading = false;
+        this.subAccountOptions = [];
+      }
+    });
   }
 
   get title(): string {
@@ -58,7 +135,8 @@ export class ExpenseFormComponent implements OnChanges {
       accountId: raw.accountId,
       detail: raw.detail?.trim() || '',
       amount: raw.amount,
-      paymentAccountId: raw.paymentAccountId
+      paymentAccountId: raw.paymentAccountId,
+      subAccountId: raw.subAccountId
     };
 
     this.saveForm.emit(payload);

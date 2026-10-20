@@ -4,6 +4,7 @@ export interface IncomeSearch {
   closureId?: number | null;
   accountId?: number | null;
   paymentAccountId?: number | null;
+  subAccountId?: number | null;
   amountFrom?: number | null;
   amountTo?: number | null;
   detail?: string | null;

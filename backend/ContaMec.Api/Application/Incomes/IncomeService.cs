@@ -35,6 +35,9 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         if (request.PaymentAccountId.HasValue)
             query = query.Where(i => i.PaymentAccountId == request.PaymentAccountId.Value);
 
+        if (request.SubAccountId.HasValue)
+            query = query.Where(i => i.SubAccountId == request.SubAccountId.Value);
+
         if (request.AmountFrom.HasValue)
             query = query.Where(i => i.Amount.HasValue && i.Amount.Value >= request.AmountFrom.Value);
 
@@ -68,8 +71,9 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateIncome(request.AccountId, request.Amount, request.Detail, request.PaymentAccountId);
-        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        var subAccountRequires = await GetAccountSubAccountRequiresAsync(request.AccountId!.Value, applicationId);
         await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
+        var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, null);
         var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
@@ -81,6 +85,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             Detail = request.Detail?.Trim() ?? string.Empty,
             Amount = request.Amount,
             PaymentAccountId = request.PaymentAccountId!.Value,
+            SubAccountId = subAccountId,
             CreatedAt = ArgentinaClock.Now,
             CreatedByUserId = createdByUserId,
             ClosureId = openClosureId.Value,
@@ -98,7 +103,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateIncome(request.AccountId, request.Amount, request.Detail, request.PaymentAccountId);
-        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        var subAccountRequires = await GetAccountSubAccountRequiresAsync(request.AccountId!.Value, applicationId);
         await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
 
         var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ApplicationId == applicationId);
@@ -107,11 +112,14 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         if (!await CanModifyIncomeAsync(income.ClosureId))
             throw new ArgumentException("Solo se puede modificar un ingreso con cierre abierto (IsClosed = 0).");
 
+        var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, income.SubAccountId);
+
         income.EmissionDate = request.EmissionDate;
         income.AccountId = request.AccountId!.Value;
         income.Detail = request.Detail?.Trim() ?? string.Empty;
         income.Amount = request.Amount;
         income.PaymentAccountId = request.PaymentAccountId!.Value;
+        income.SubAccountId = subAccountId;
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -130,13 +138,39 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         return true;
     }
 
-    // Una cuenta de otra aplicación se trata como inexistente.
-    private async Task EnsureAccountBelongsToApplicationAsync(int accountId, int applicationId)
+    // Una cuenta de otra aplicación se trata como inexistente. Devuelve si la cuenta requiere subcuentas.
+    private async Task<bool> GetAccountSubAccountRequiresAsync(int accountId, int applicationId)
     {
-        var exists = await _dbContext.Accounts
-            .AnyAsync(a => a.Id == accountId && a.ApplicationId == applicationId);
-        if (!exists)
+        var account = await _dbContext.Accounts
+            .AsNoTracking()
+            .Where(a => a.Id == accountId && a.ApplicationId == applicationId)
+            .Select(a => new { a.SubAccountRequires })
+            .FirstOrDefaultAsync();
+        if (account is null)
             throw new ArgumentException("La cuenta seleccionada no existe.");
+        return account.SubAccountRequires == true;
+    }
+
+    // Si la cuenta requiere subcuentas, la subcuenta es obligatoria, debe ser de esa cuenta y estar activa
+    // (se acepta la que el ingreso ya tenía aunque se haya desactivado). Si no las requiere, no se guarda subcuenta.
+    private async Task<int?> ResolveSubAccountIdAsync(int accountId, bool subAccountRequires, int? subAccountId, int? currentSubAccountId)
+    {
+        if (!subAccountRequires)
+            return null;
+        if (!subAccountId.HasValue)
+            throw new ArgumentException("Debe seleccionar una subcuenta.");
+
+        var subAccount = await _dbContext.SubAccounts
+            .AsNoTracking()
+            .Where(s => s.Id == subAccountId.Value && s.AccountId == accountId)
+            .Select(s => new { s.Active })
+            .FirstOrDefaultAsync();
+        if (subAccount is null)
+            throw new ArgumentException("La subcuenta seleccionada no pertenece a la cuenta.");
+        if (subAccount.Active == false && subAccountId != currentSubAccountId)
+            throw new ArgumentException("La subcuenta seleccionada está inactiva.");
+
+        return subAccountId;
     }
 
     // Igual que la cuenta: una cuenta de pago de otra aplicación se trata como inexistente.
@@ -161,6 +195,8 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             Amount = income.Amount,
             PaymentAccountId = income.PaymentAccountId,
             PaymentAccountName = income.PaymentAccount != null ? income.PaymentAccount.Name : null,
+            SubAccountId = income.SubAccountId,
+            SubAccountName = income.SubAccount != null ? income.SubAccount.Name : null,
             CreatedByUserId = income.CreatedByUserId,
             CreatedAt = income.CreatedAt
         };

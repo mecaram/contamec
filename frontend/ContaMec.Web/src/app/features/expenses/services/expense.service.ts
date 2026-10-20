@@ -13,6 +13,7 @@ export interface ClosureLookup {
 export interface ExpenseAccountOption {
   id: number;
   name?: string | null;
+  subAccountRequires?: boolean;
 }
 
 @Injectable()
@@ -31,6 +32,7 @@ export class ExpenseService {
     if (filters.closureId !== null && filters.closureId !== undefined) params = params.set('closureId', String(filters.closureId));
     if (filters.accountId !== null && filters.accountId !== undefined) params = params.set('accountId', String(filters.accountId));
     if (filters.paymentAccountId !== null && filters.paymentAccountId !== undefined) params = params.set('paymentAccountId', String(filters.paymentAccountId));
+    if (filters.subAccountId !== null && filters.subAccountId !== undefined) params = params.set('subAccountId', String(filters.subAccountId));
     if (filters.amountFrom !== null && filters.amountFrom !== undefined) params = params.set('amountFrom', String(filters.amountFrom));
     if (filters.amountTo !== null && filters.amountTo !== undefined) params = params.set('amountTo', String(filters.amountTo));
     if (filters.detail) params = params.set('detail', filters.detail);
@@ -52,7 +54,8 @@ export class ExpenseService {
       accountId: expense.accountId ?? null,
       detail: expense.detail ?? null,
       amount: expense.amount ?? null,
-      paymentAccountId: expense.paymentAccountId ?? null
+      paymentAccountId: expense.paymentAccountId ?? null,
+      subAccountId: expense.subAccountId ?? null
     };
     return this.http.post<Expense>(this.expensesUrl, payload, { headers: this.getAuthHeaders() });
   }
@@ -63,7 +66,8 @@ export class ExpenseService {
       accountId: expense.accountId ?? null,
       detail: expense.detail ?? null,
       amount: expense.amount ?? null,
-      paymentAccountId: expense.paymentAccountId ?? null
+      paymentAccountId: expense.paymentAccountId ?? null,
+      subAccountId: expense.subAccountId ?? null
     };
     return this.http.put<void>(`${this.expensesUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
   }

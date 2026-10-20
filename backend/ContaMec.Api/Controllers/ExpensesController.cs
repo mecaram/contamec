@@ -22,6 +22,7 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
         [FromQuery(Name = "closureId")] int? closureId,
         [FromQuery(Name = "accountId")] int? accountId,
         [FromQuery(Name = "paymentAccountId")] int? paymentAccountId,
+        [FromQuery(Name = "subAccountId")] int? subAccountId,
         [FromQuery(Name = "amountFrom")] decimal? amountFrom,
         [FromQuery(Name = "amountTo")] decimal? amountTo,
         [FromQuery(Name = "detail")] string? detail)
@@ -33,6 +34,7 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
             ClosureId = closureId,
             AccountId = accountId,
             PaymentAccountId = paymentAccountId,
+            SubAccountId = subAccountId,
             AmountFrom = amountFrom,
             AmountTo = amountTo,
             Detail = detail

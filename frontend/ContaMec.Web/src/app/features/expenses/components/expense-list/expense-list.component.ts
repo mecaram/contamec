@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Expense } from '../../models/expense.model';
 
-type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'detail' | 'amount' | 'paymentAccountName';
+type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'subAccountName' | 'detail' | 'amount' | 'paymentAccountName';
 
 @Component({
   selector: 'app-expense-list',
@@ -9,7 +9,7 @@ type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'detail' | 'amount
   styleUrls: ['./expense-list.component.scss']
 })
 export class ExpenseListComponent implements OnChanges {
-  readonly sortableColumns: SortableColumn[] = ['id', 'emissionDate', 'accountName', 'detail', 'amount', 'paymentAccountName'];
+  readonly sortableColumns: SortableColumn[] = ['id', 'emissionDate', 'accountName', 'subAccountName', 'detail', 'amount', 'paymentAccountName'];
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
   /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
@@ -17,6 +17,7 @@ export class ExpenseListComponent implements OnChanges {
     { column: 'id', label: 'ID' },
     { column: 'emissionDate', label: 'Fecha' },
     { column: 'accountName', label: 'Cuenta' },
+    { column: 'subAccountName', label: 'Subcuenta' },
     { column: 'detail', label: 'Detalle' },
     { column: 'amount', label: 'Monto' },
     { column: 'paymentAccountName', label: 'Cuenta de Pago' }
@@ -140,6 +141,8 @@ export class ExpenseListComponent implements OnChanges {
         return expense.emissionDate ? new Date(expense.emissionDate).getTime() : 0;
       case 'accountName':
         return (expense.accountName ?? '').toLocaleLowerCase();
+      case 'subAccountName':
+        return (expense.subAccountName ?? '').toLocaleLowerCase();
       case 'detail':
         return (expense.detail ?? '').toLocaleLowerCase();
       case 'amount':

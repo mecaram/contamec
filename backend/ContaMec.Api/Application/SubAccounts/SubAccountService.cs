@@ -49,7 +49,7 @@ public class SubAccountService(ContaMecDbContext dbContext) : ISubAccountService
         ArgumentNullException.ThrowIfNull(request);
         ValidateSubAccount(request.Name, request.AccountId);
         var behaviorType = ParseBehaviorType(request.BehaviorType);
-        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        await EnsureAccountAcceptsSubAccountsAsync(request.AccountId!.Value, applicationId);
 
         var subAccount = new SubAccount
         {
@@ -77,7 +77,9 @@ public class SubAccountService(ContaMecDbContext dbContext) : ISubAccountService
         if (subAccount is null)
             return false;
 
-        await EnsureAccountBelongsToApplicationAsync(request.AccountId!.Value, applicationId);
+        // Si se mantiene la cuenta actual se acepta aunque haya dejado de cumplir las condiciones, como en el formulario.
+        if (subAccount.AccountId != request.AccountId)
+            await EnsureAccountAcceptsSubAccountsAsync(request.AccountId!.Value, applicationId);
 
         subAccount.Name = request.Name?.Trim();
         subAccount.AccountId = request.AccountId;
@@ -113,11 +115,20 @@ public class SubAccountService(ContaMecDbContext dbContext) : ISubAccountService
             .Where(s => s.Account != null && s.Account.ApplicationId == applicationId);
     }
 
-    private async Task EnsureAccountBelongsToApplicationAsync(int accountId, int applicationId)
+    // La cuenta debe ser de la aplicación, estar activa (sin dato cargado se considera activa) y requerir subcuentas.
+    private async Task EnsureAccountAcceptsSubAccountsAsync(int accountId, int applicationId)
     {
-        var exists = await _dbContext.Accounts.AnyAsync(a => a.Id == accountId && a.ApplicationId == applicationId);
-        if (!exists)
+        var account = await _dbContext.Accounts
+            .AsNoTracking()
+            .Where(a => a.Id == accountId && a.ApplicationId == applicationId)
+            .Select(a => new { a.Active, a.SubAccountRequires })
+            .FirstOrDefaultAsync();
+        if (account is null)
             throw new ArgumentException("La cuenta seleccionada no existe.");
+        if (account.Active == false)
+            throw new ArgumentException("La cuenta seleccionada está inactiva.");
+        if (account.SubAccountRequires != true)
+            throw new ArgumentException("La cuenta seleccionada no requiere subcuentas.");
     }
 
     private static Expression<Func<SubAccount, SubAccountResponse>> MapToResponse()

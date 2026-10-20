@@ -29,6 +29,7 @@
         <th class="income-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
         <th class="income-list__sortable" (click)="setSort('emissionDate')">Fecha <span>{{ sortIndicator('emissionDate') }}</span></th>
         <th class="income-list__sortable" (click)="setSort('accountName')">Cuenta <span>{{ sortIndicator('accountName') }}</span></th>
+        <th class="income-list__sortable" (click)="setSort('subAccountName')">Subcuenta <span>{{ sortIndicator('subAccountName') }}</span></th>
         <th class="income-list__sortable" (click)="setSort('detail')">Detalle <span>{{ sortIndicator('detail') }}</span></th>
         <th class="income-list__sortable income-list__amount" (click)="setSort('amount')">Monto <span>{{ sortIndicator('amount') }}</span></th>
         <th class="income-list__sortable" (click)="setSort('paymentAccountName')">Cuenta de Pago <span>{{ sortIndicator('paymentAccountName') }}</span></th>
@@ -40,6 +41,7 @@
         <td data-label="ID">{{ row.id }}</td>
         <td data-label="Fecha">{{ row.emissionDate ? (row.emissionDate | date: 'dd/MM/yyyy') : '-' }}</td>
         <td data-label="Cuenta">{{ row.accountName || (row.accountId !== null && row.accountId !== undefined ? ('#' + row.accountId) : '-') }}</td>
+        <td data-label="Subcuenta">{{ row.subAccountName || '-' }}</td>
         <td data-label="Detalle">{{ row.detail || '-' }}</td>
         <td data-label="Monto" class="income-list__amount">{{ row.amount != null ? (row.amount | currency:'USD':'symbol':'1.2-2') : '-' }}</td>
         <td data-label="Cuenta de Pago">{{ row.paymentAccountName || '-' }}</td>
@@ -58,7 +60,7 @@
     </tbody>
     <tfoot>
       <tr class="income-list__footer">
-        <td colspan="4">Total registros: {{ totalRecords }}</td>
+        <td colspan="5">Total registros: {{ totalRecords }}</td>
         <td data-label="Total" class="income-list__amount">{{ totalAmount | currency:'USD':'symbol':'1.2-2' }}</td>
         <td></td>
         <td></td>

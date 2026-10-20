@@ -32,6 +32,17 @@
     </div>
 
     <div class="income-form__field">
+      <label class="income-form__label" for="income-sub-account-id">Subcuenta</label>
+      <select id="income-sub-account-id" class="income-form__control" formControlName="subAccountId">
+        <option [ngValue]="null">{{ subAccountPlaceholder }}</option>
+        <option *ngFor="let subAccount of subAccountOptions" [ngValue]="subAccount.id">
+          {{ subAccount.label }}
+        </option>
+      </select>
+    </div>
+    <div class="income-form__error" *ngIf="form.controls.subAccountId.hasError('required')">Debe seleccionar una subcuenta.</div>
+
+    <div class="income-form__field">
       <label class="income-form__label" for="income-detail">Detalle</label>
       <input id="income-detail" class="income-form__control" formControlName="detail" maxlength="80" />
       <div class="income-form__hint">{{ form.controls.detail.value?.length || 0 }}/80</div>

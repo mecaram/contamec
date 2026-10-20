@@ -11,6 +11,7 @@ import { ExpensesRoutingModule } from './expenses-routing.module';
 import { ExpensesComponent } from './expenses.component';
 import { ExpenseService } from './services/expense.service';
 import { PaymentAccountService } from '../payment-accounts/services/payment-account.service';
+import { SubAccountService } from '../sub-accounts/services/sub-account.service';
 
 @NgModule({
   declarations: [ExpensesComponent, ExpenseFormComponent, ExpenseListComponent],
@@ -22,6 +23,6 @@ import { PaymentAccountService } from '../payment-accounts/services/payment-acco
     MatSelectModule,
     ExpensesRoutingModule
   ],
-  providers: [ExpenseService, PaymentAccountService]
+  providers: [ExpenseService, PaymentAccountService, SubAccountService]
 })
 export class ExpensesModule {}

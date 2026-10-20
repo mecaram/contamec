@@ -5,6 +5,7 @@ import { Income } from './models/income.model';
 import { IncomeSearch } from './models/income-search.model';
 import { ClosureLookup, IncomeAccountOption, IncomeService } from './services/income.service';
 import { PaymentAccountService } from '../payment-accounts/services/payment-account.service';
+import { SubAccountService } from '../sub-accounts/services/sub-account.service';
 
 @Component({
   selector: 'app-incomes',
@@ -14,8 +15,10 @@ import { PaymentAccountService } from '../payment-accounts/services/payment-acco
 export class IncomesComponent implements OnInit {
   incomes: Income[] = [];
   closureOptions: ClosureLookup[] = [];
-  accountOptions: Array<{ id: number; label: string }> = [];
+  accountOptions: Array<{ id: number; label: string; subAccountRequires?: boolean }> = [];
   paymentAccountOptions: Array<{ id: number; label: string }> = [];
+  /** Subcuentas activas de la cuenta elegida en el filtro; vacío si no hay cuenta o no requiere subcuentas. */
+  subAccountFilterOptions: Array<{ id: number; label: string }> = [];
   loading = false;
   errorMessage: string | null = null;
   formVisible = false;
@@ -41,6 +44,7 @@ export class IncomesComponent implements OnInit {
     closureId: [null as number | null],
     accountId: [null as number | null],
     paymentAccountId: [null as number | null],
+    subAccountId: [{ value: null as number | null, disabled: true }],
     amountFrom: [null as number | null],
     amountTo: [null as number | null],
     detail: ['']
@@ -49,7 +53,8 @@ export class IncomesComponent implements OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly incomesService: IncomeService,
-    private readonly paymentAccountService: PaymentAccountService
+    private readonly paymentAccountService: PaymentAccountService,
+    private readonly subAccountService: SubAccountService
   ) {}
 
   ngOnInit(): void {
@@ -86,14 +91,49 @@ export class IncomesComponent implements OnInit {
       closureId: pendingClosure ? pendingClosure.id : null,
       accountId: null,
       paymentAccountId: null,
+      subAccountId: null,
       amountFrom: null,
       amountTo: null,
       detail: ''
     });
     this.dateFromInput = this.toDisplayDate(this.today);
     this.dateToInput = this.toDisplayDate(this.today);
+    this.refreshSubAccountFilter();
     this.sortResetToken += 1;
     this.search();
+  }
+
+  /** Al cambiar la cuenta del filtro se descarta la subcuenta y se cargan las de la nueva cuenta. */
+  onAccountFilterChange(): void {
+    this.filterForm.controls.subAccountId.setValue(null);
+    this.refreshSubAccountFilter();
+    this.search();
+  }
+
+  private refreshSubAccountFilter(): void {
+    this.subAccountFilterOptions = [];
+    const control = this.filterForm.controls.subAccountId;
+    const accountId = this.filterForm.controls.accountId.value;
+    const requires = !!this.accountOptions.find((a) => a.id === accountId)?.subAccountRequires;
+    if (!accountId || !requires) {
+      control.disable({ emitEvent: false });
+      return;
+    }
+
+    control.enable({ emitEvent: false });
+    this.subAccountService.search({ accountId }).subscribe({
+      next: (items) => {
+        // Si mientras tanto cambió la cuenta del filtro, esta respuesta ya no corresponde.
+        if (this.filterForm.controls.accountId.value !== accountId) return;
+        this.subAccountFilterOptions = (items ?? [])
+          .filter((s) => s.active ?? true)
+          .map((s) => ({ id: s.id, label: s.name?.trim() || `#${s.id}` }))
+          .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
+      },
+      error: () => {
+        this.subAccountFilterOptions = [];
+      }
+    });
   }
 
   onDateFromChange(value: string): void {
@@ -229,6 +269,7 @@ export class IncomesComponent implements OnInit {
       closureId: raw.closureId,
       accountId: raw.accountId,
       paymentAccountId: raw.paymentAccountId,
+      subAccountId: raw.subAccountId,
       amountFrom: raw.amountFrom,
       amountTo: raw.amountTo,
       detail: raw.detail?.trim() || null
@@ -277,8 +318,10 @@ export class IncomesComponent implements OnInit {
         this.accountOptions = (accounts ?? [])
           .map((a) => ({
             id: a.id,
-            label: a.name?.trim() || `#${a.id}`
+            label: a.name?.trim() || `#${a.id}`,
+            subAccountRequires: !!a.subAccountRequires
           }))
+
           .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
       },
       error: () => {

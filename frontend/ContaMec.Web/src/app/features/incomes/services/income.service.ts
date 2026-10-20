@@ -13,6 +13,7 @@ export interface ClosureLookup {
 export interface IncomeAccountOption {
   id: number;
   name?: string | null;
+  subAccountRequires?: boolean;
 }
 
 @Injectable()
@@ -36,6 +37,9 @@ export class IncomeService {
     }
     if (filters.paymentAccountId !== null && filters.paymentAccountId !== undefined) {
       params = params.set('paymentAccountId', String(filters.paymentAccountId));
+    }
+    if (filters.subAccountId !== null && filters.subAccountId !== undefined) {
+      params = params.set('subAccountId', String(filters.subAccountId));
     }
     if (filters.amountFrom !== null && filters.amountFrom !== undefined) {
       params = params.set('amountFrom', String(filters.amountFrom));
@@ -66,7 +70,8 @@ export class IncomeService {
       accountId: income.accountId ?? null,
       detail: income.detail ?? null,
       amount: income.amount ?? null,
-      paymentAccountId: income.paymentAccountId ?? null
+      paymentAccountId: income.paymentAccountId ?? null,
+      subAccountId: income.subAccountId ?? null
     };
     return this.http.post<Income>(this.incomesUrl, payload, { headers: this.getAuthHeaders() });
   }
@@ -77,7 +82,8 @@ export class IncomeService {
       accountId: income.accountId ?? null,
       detail: income.detail ?? null,
       amount: income.amount ?? null,
-      paymentAccountId: income.paymentAccountId ?? null
+      paymentAccountId: income.paymentAccountId ?? null,
+      subAccountId: income.subAccountId ?? null
     };
     return this.http.put<void>(`${this.incomesUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
   }

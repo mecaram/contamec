@@ -58,11 +58,19 @@
 
       <div class="incomes-field">
         <label class="incomes-field__label" for="filter-account">Cuenta</label>
-        <select id="filter-account" class="incomes-field__control" formControlName="accountId" (change)="search()">
+        <select id="filter-account" class="incomes-field__control" formControlName="accountId" (change)="onAccountFilterChange()">
           <option [ngValue]="null">Todas</option>
           <option *ngFor="let account of accountOptions" [ngValue]="account.id">
             {{ account.label }}
           </option>
+        </select>
+      </div>
+
+      <div class="incomes-field">
+        <label class="incomes-field__label" for="filter-sub-account">Subcuenta</label>
+        <select id="filter-sub-account" class="incomes-field__control" formControlName="subAccountId" (change)="search()">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let subAccount of subAccountFilterOptions" [ngValue]="subAccount.id">{{ subAccount.label }}</option>
         </select>
       </div>
 

@@ -8,6 +8,8 @@ export interface Income {
   amount?: number | null;
   paymentAccountId?: number | null;
   paymentAccountName?: string | null;
+  subAccountId?: number | null;
+  subAccountName?: string | null;
   createdByUserId?: number | null;
   createdAt?: string | null;
 }
