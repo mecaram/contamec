@@ -30,7 +30,8 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
     detail: ['' as string, [Validators.maxLength(80)]],
     amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
     paymentAccountId: [null as number | null, [Validators.required]],
-    subAccountId: [null as number | null]
+    subAccountId: [null as number | null],
+    occurrenceType: ['' as string, [Validators.required]]
   });
 
   constructor(
@@ -61,7 +62,9 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
         amount: this.expense?.amount ?? null,
         // Los egresos anteriores pueden no tener cuenta de pago: el combo queda vacío y hay que elegir una.
         paymentAccountId: this.expense?.paymentAccountId ?? null,
-        subAccountId: this.expense?.subAccountId ?? null
+        subAccountId: this.expense?.subAccountId ?? null,
+        // Alta: Ordinaria por defecto. Los egresos anteriores sin dato quedan sin seleccionar y hay que elegir una.
+        occurrenceType: this.expense ? this.expense.occurrenceType ?? '' : 'Ordinaria'
       }, { emitEvent: false });
       this.amountDisplay = this.formatAmount(this.form.controls.amount.value);
       this.refreshSubAccounts();
@@ -151,7 +154,8 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
       detail: raw.detail?.trim() || '',
       amount: raw.amount,
       paymentAccountId: raw.paymentAccountId,
-      subAccountId: raw.subAccountId
+      subAccountId: raw.subAccountId,
+      occurrenceType: raw.occurrenceType || null
     };
 
     this.saveForm.emit(payload);

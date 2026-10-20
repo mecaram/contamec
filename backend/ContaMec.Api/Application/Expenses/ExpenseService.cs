@@ -74,6 +74,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         var subAccountRequires = await GetAccountSubAccountRequiresAsync(request.AccountId!.Value, applicationId);
         await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, null);
+        var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
         var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
@@ -86,6 +87,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             Amount = request.Amount,
             PaymentAccountId = request.PaymentAccountId!.Value,
             SubAccountId = subAccountId,
+            OccurrenceType = occurrenceType,
             CreatedAt = ArgentinaClock.Now,
             CreatedByUserId = createdByUserId,
             ClosureId = openClosureId.Value,
@@ -124,6 +126,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             throw new ArgumentException("Solo se puede modificar un egreso con cierre abierto (IsClosed = 0).");
 
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, expense.SubAccountId);
+        var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
 
         expense.EmissionDate = request.EmissionDate;
         expense.AccountId = request.AccountId!.Value;
@@ -131,6 +134,7 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         expense.Amount = request.Amount;
         expense.PaymentAccountId = request.PaymentAccountId!.Value;
         expense.SubAccountId = subAccountId;
+        expense.OccurrenceType = occurrenceType;
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -208,9 +212,23 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             PaymentAccountName = expense.PaymentAccount != null ? expense.PaymentAccount.Name : null,
             SubAccountId = expense.SubAccountId,
             SubAccountName = expense.SubAccount != null ? expense.SubAccount.Name : null,
+            OccurrenceType = expense.OccurrenceType == OccurrenceType.Ordinaria ? nameof(OccurrenceType.Ordinaria)
+                : expense.OccurrenceType == OccurrenceType.Extraordinaria ? nameof(OccurrenceType.Extraordinaria)
+                : null,
             CreatedByUserId = expense.CreatedByUserId,
             CreatedAt = expense.CreatedAt
         };
+    }
+
+    // Etiquetas del enum OccurrenceTypes de la base: Ordinaria, Extraordinaria.
+    private static OccurrenceType ParseOccurrenceType(string? occurrenceType)
+    {
+        if (string.IsNullOrWhiteSpace(occurrenceType))
+            throw new ArgumentException("Debe seleccionar una ocurrencia.");
+        if (Enum.TryParse<OccurrenceType>(occurrenceType.Trim(), ignoreCase: true, out var value) && Enum.IsDefined(value))
+            return value;
+
+        throw new ArgumentException("OccurrenceType debe ser Ordinaria o Extraordinaria.");
     }
 
     private static void ValidateExpense(int? accountId, decimal? amount, string? detail, int? paymentAccountId)

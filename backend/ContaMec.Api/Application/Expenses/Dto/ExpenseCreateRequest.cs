@@ -8,4 +8,5 @@ public class ExpenseCreateRequest
     public decimal? Amount { get; set; }
     public int? PaymentAccountId { get; set; }
     public int? SubAccountId { get; set; }
+    public string? OccurrenceType { get; set; }
 }

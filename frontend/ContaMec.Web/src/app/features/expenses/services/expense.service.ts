@@ -60,7 +60,8 @@ export class ExpenseService {
       detail: expense.detail ?? null,
       amount: expense.amount ?? null,
       paymentAccountId: expense.paymentAccountId ?? null,
-      subAccountId: expense.subAccountId ?? null
+      subAccountId: expense.subAccountId ?? null,
+      occurrenceType: expense.occurrenceType ?? null
     };
     return this.http.post<Expense>(this.expensesUrl, payload, { headers: this.getAuthHeaders() });
   }
@@ -72,7 +73,8 @@ export class ExpenseService {
       detail: expense.detail ?? null,
       amount: expense.amount ?? null,
       paymentAccountId: expense.paymentAccountId ?? null,
-      subAccountId: expense.subAccountId ?? null
+      subAccountId: expense.subAccountId ?? null,
+      occurrenceType: expense.occurrenceType ?? null
     };
     return this.http.put<void>(`${this.expensesUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
   }

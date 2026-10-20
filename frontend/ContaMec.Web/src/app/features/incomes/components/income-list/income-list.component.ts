@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Income } from '../../models/income.model';
 
-type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'subAccountName' | 'detail' | 'amount' | 'paymentAccountName';
+type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'subAccountName' | 'occurrenceType' | 'detail' | 'amount' | 'paymentAccountName';
 
 @Component({
   selector: 'app-income-list',
@@ -9,7 +9,7 @@ type SortableColumn = 'id' | 'emissionDate' | 'accountName' | 'subAccountName' |
   styleUrls: ['./income-list.component.scss']
 })
 export class IncomeListComponent implements OnChanges {
-  readonly sortableColumns: SortableColumn[] = ['id', 'emissionDate', 'accountName', 'subAccountName', 'detail', 'amount', 'paymentAccountName'];
+  readonly sortableColumns: SortableColumn[] = ['id', 'emissionDate', 'accountName', 'subAccountName', 'occurrenceType', 'detail', 'amount', 'paymentAccountName'];
   sortColumn: SortableColumn = 'id';
   sortDirection: 'asc' | 'desc' = 'desc';
   /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
@@ -18,6 +18,7 @@ export class IncomeListComponent implements OnChanges {
     { column: 'emissionDate', label: 'Fecha' },
     { column: 'accountName', label: 'Cuenta' },
     { column: 'subAccountName', label: 'Subcuenta' },
+    { column: 'occurrenceType', label: 'Ocurrencia' },
     { column: 'detail', label: 'Detalle' },
     { column: 'amount', label: 'Monto' },
     { column: 'paymentAccountName', label: 'Cuenta de Pago' }
@@ -145,6 +146,8 @@ export class IncomeListComponent implements OnChanges {
         return (income.accountName ?? '').toLocaleLowerCase();
       case 'subAccountName':
         return (income.subAccountName ?? '').toLocaleLowerCase();
+      case 'occurrenceType':
+        return (income.occurrenceType ?? '').toLocaleLowerCase();
       case 'detail':
         return (income.detail ?? '').toLocaleLowerCase();
       case 'amount':

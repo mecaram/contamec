@@ -83,6 +83,16 @@
     <div class="income-form__error" *ngIf="form.controls.paymentAccountId.hasError('required')">
       Debe seleccionar una cuenta de pago.
     </div>
+
+    <div class="income-form__field">
+      <label class="income-form__label" for="income-occurrence-type">Ocurrencia</label>
+      <select id="income-occurrence-type" class="income-form__control" formControlName="occurrenceType">
+        <option [ngValue]="''" disabled>Seleccione ocurrencia</option>
+        <option value="Ordinaria">Ordinaria</option>
+        <option value="Extraordinaria">Extraordinaria</option>
+      </select>
+    </div>
+    <div class="income-form__error" *ngIf="form.controls.occurrenceType.hasError('required')">Debe seleccionar una ocurrencia.</div>
   </div>
   <div class="income-form__actions">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>

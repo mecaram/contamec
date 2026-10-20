@@ -76,7 +76,8 @@ export class IncomeService {
       detail: income.detail ?? null,
       amount: income.amount ?? null,
       paymentAccountId: income.paymentAccountId ?? null,
-      subAccountId: income.subAccountId ?? null
+      subAccountId: income.subAccountId ?? null,
+      occurrenceType: income.occurrenceType ?? null
     };
     return this.http.post<Income>(this.incomesUrl, payload, { headers: this.getAuthHeaders() });
   }
@@ -88,7 +89,8 @@ export class IncomeService {
       detail: income.detail ?? null,
       amount: income.amount ?? null,
       paymentAccountId: income.paymentAccountId ?? null,
-      subAccountId: income.subAccountId ?? null
+      subAccountId: income.subAccountId ?? null,
+      occurrenceType: income.occurrenceType ?? null
     };
     return this.http.put<void>(`${this.incomesUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
   }

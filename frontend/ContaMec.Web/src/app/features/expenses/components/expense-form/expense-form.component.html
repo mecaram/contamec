@@ -69,6 +69,16 @@
       </select>
     </div>
     <div class="expense-form__error" *ngIf="form.controls.paymentAccountId.hasError('required')">Debe seleccionar una cuenta de pago.</div>
+
+    <div class="expense-form__field">
+      <label class="expense-form__label" for="expense-occurrence-type">Ocurrencia</label>
+      <select id="expense-occurrence-type" class="expense-form__control" formControlName="occurrenceType">
+        <option [ngValue]="''" disabled>Seleccione ocurrencia</option>
+        <option value="Ordinaria">Ordinaria</option>
+        <option value="Extraordinaria">Extraordinaria</option>
+      </select>
+    </div>
+    <div class="expense-form__error" *ngIf="form.controls.occurrenceType.hasError('required')">Debe seleccionar una ocurrencia.</div>
   </div>
   <div class="expense-form__actions">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>

@@ -10,6 +10,7 @@ export interface Expense {
   paymentAccountName?: string | null;
   subAccountId?: number | null;
   subAccountName?: string | null;
+  occurrenceType?: string | null;
   createdByUserId?: number | null;
   createdAt?: string | null;
 }

@@ -13,6 +13,7 @@ public class IncomeResponse
     public string? PaymentAccountName { get; set; }
     public int? SubAccountId { get; set; }
     public string? SubAccountName { get; set; }
+    public string? OccurrenceType { get; set; }
     public int? CreatedByUserId { get; set; }
     public DateTime? CreatedAt { get; set; }
 }

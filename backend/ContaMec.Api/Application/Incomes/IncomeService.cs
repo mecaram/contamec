@@ -74,6 +74,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         var subAccountRequires = await GetAccountSubAccountRequiresAsync(request.AccountId!.Value, applicationId);
         await EnsurePaymentAccountBelongsToApplicationAsync(request.PaymentAccountId!.Value, applicationId);
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, null);
+        var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
         var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
@@ -86,6 +87,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             Amount = request.Amount,
             PaymentAccountId = request.PaymentAccountId!.Value,
             SubAccountId = subAccountId,
+            OccurrenceType = occurrenceType,
             CreatedAt = ArgentinaClock.Now,
             CreatedByUserId = createdByUserId,
             ClosureId = openClosureId.Value,
@@ -124,6 +126,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             throw new ArgumentException("Solo se puede modificar un ingreso con cierre abierto (IsClosed = 0).");
 
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, income.SubAccountId);
+        var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
 
         income.EmissionDate = request.EmissionDate;
         income.AccountId = request.AccountId!.Value;
@@ -131,6 +134,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         income.Amount = request.Amount;
         income.PaymentAccountId = request.PaymentAccountId!.Value;
         income.SubAccountId = subAccountId;
+        income.OccurrenceType = occurrenceType;
 
         await _dbContext.SaveChangesAsync();
         return true;
@@ -208,9 +212,23 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             PaymentAccountName = income.PaymentAccount != null ? income.PaymentAccount.Name : null,
             SubAccountId = income.SubAccountId,
             SubAccountName = income.SubAccount != null ? income.SubAccount.Name : null,
+            OccurrenceType = income.OccurrenceType == OccurrenceType.Ordinaria ? nameof(OccurrenceType.Ordinaria)
+                : income.OccurrenceType == OccurrenceType.Extraordinaria ? nameof(OccurrenceType.Extraordinaria)
+                : null,
             CreatedByUserId = income.CreatedByUserId,
             CreatedAt = income.CreatedAt
         };
+    }
+
+    // Etiquetas del enum OccurrenceTypes de la base: Ordinaria, Extraordinaria.
+    private static OccurrenceType ParseOccurrenceType(string? occurrenceType)
+    {
+        if (string.IsNullOrWhiteSpace(occurrenceType))
+            throw new ArgumentException("Debe seleccionar una ocurrencia.");
+        if (Enum.TryParse<OccurrenceType>(occurrenceType.Trim(), ignoreCase: true, out var value) && Enum.IsDefined(value))
+            return value;
+
+        throw new ArgumentException("OccurrenceType debe ser Ordinaria o Extraordinaria.");
     }
 
     private static void ValidateIncome(int? accountId, decimal? amount, string? detail, int? paymentAccountId)
