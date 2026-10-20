@@ -17,12 +17,14 @@ public class PaymentAccountsController(IPaymentAccountService paymentAccountServ
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "id")] int? id,
-        [FromQuery(Name = "name")] string? name)
+        [FromQuery(Name = "name")] string? name,
+        [FromQuery(Name = "onlyActive")] bool onlyActive = false)
     {
         var request = new PaymentAccountSearchRequest
         {
             Id = id,
-            Name = name
+            Name = name,
+            OnlyActive = onlyActive
         };
 
         if (!User.TryGetApplicationId(out var applicationId))

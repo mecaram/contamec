@@ -289,7 +289,7 @@ export class IncomesComponent implements OnInit {
 
   // La API ya filtra por la aplicación del token; acá solo se ordena por nombre.
   private loadPaymentAccounts(): void {
-    this.paymentAccountService.search({}).subscribe({
+    this.paymentAccountService.search({ onlyActive: true }).subscribe({
       next: (accounts) => {
         this.paymentAccountOptions = (accounts ?? [])
           .map((a) => ({ id: a.id, label: a.name?.trim() || `#${a.id}` }))

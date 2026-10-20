@@ -17,6 +17,7 @@ export class PaymentAccountService {
     let params = new HttpParams();
     if (filters.id !== null && filters.id !== undefined) params = params.set('id', String(filters.id));
     if (filters.name) params = params.set('name', filters.name);
+    if (filters.onlyActive) params = params.set('onlyActive', 'true');
     return this.http.get<PaymentAccount[]>(this.paymentAccountsUrl, { params, headers: this.getAuthHeaders() });
   }
 

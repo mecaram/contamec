@@ -21,6 +21,10 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
         if (request.Id.HasValue)
             query = query.Where(a => a.Id == request.Id.Value);
 
+        // Sin dato cargado, la cuenta de pago se considera activa.
+        if (request.OnlyActive)
+            query = query.Where(a => a.Active ?? true);
+
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
             var name = request.Name.Trim();
