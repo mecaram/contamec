@@ -51,6 +51,7 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
         var account = new PaymentAccount
         {
             Name = request.Name?.Trim() ?? string.Empty,
+            Active = request.Active,
             ApplicationId = applicationId
         };
 
@@ -71,6 +72,7 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
             return false;
 
         account.Name = request.Name?.Trim() ?? string.Empty;
+        account.Active = request.Active;
         await _dbContext.SaveChangesAsync();
         return true;
     }
@@ -96,7 +98,8 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
         return account => new PaymentAccountResponse
         {
             Id = account.Id,
-            Name = account.Name
+            Name = account.Name,
+            Active = account.Active
         };
     }
 

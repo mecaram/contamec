@@ -19,6 +19,13 @@
   gap: 0.35rem;
 }
 
+.payment-account-form__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #1e293b;
+}
+
 .payment-account-form__label {
   font-size: 0.85rem;
   font-weight: 600;

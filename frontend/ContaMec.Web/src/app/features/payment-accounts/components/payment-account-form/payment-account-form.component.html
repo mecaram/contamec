@@ -8,6 +8,11 @@
     </div>
     <div class="payment-account-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
     <div class="payment-account-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 50 caracteres.</div>
+
+    <label class="payment-account-form__checkbox">
+      <input type="checkbox" formControlName="active" />
+      Activo
+    </label>
   </div>
   <div class="payment-account-form__actions">
     <button mat-button type="button" (click)="cancel()">Cancelar</button>

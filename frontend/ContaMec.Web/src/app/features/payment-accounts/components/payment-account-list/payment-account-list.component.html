@@ -28,6 +28,7 @@
       <tr>
         <th class="payment-account-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
         <th class="payment-account-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th class="payment-account-list__sortable payment-account-list__center" (click)="setSort('active')">Activo <span>{{ sortIndicator('active') }}</span></th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -35,6 +36,7 @@
       <tr *ngFor="let row of pagedPaymentAccounts">
         <td data-label="ID">{{ row.id }}</td>
         <td data-label="Nombre">{{ row.name || '-' }}</td>
+        <td data-label="Activo" class="payment-account-list__center">{{ formatYesNo(row.active) }}</td>
         <td class="payment-account-list__actions">
           <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar cuenta de pago">
             <mat-icon>edit</mat-icon>
@@ -47,7 +49,7 @@
     </tbody>
     <tfoot>
       <tr class="payment-account-list__footer">
-        <td colspan="3">Total registros: {{ totalRecords }}</td>
+        <td colspan="4">Total registros: {{ totalRecords }}</td>
       </tr>
     </tfoot>
   </table>

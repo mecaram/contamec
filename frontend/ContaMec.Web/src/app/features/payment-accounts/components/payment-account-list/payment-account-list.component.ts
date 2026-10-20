@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { PaymentAccount } from '../../models/payment-account.model';
 
-type SortableColumn = 'id' | 'name';
+type SortableColumn = 'id' | 'name' | 'active';
 
 @Component({
   selector: 'app-payment-account-list',
@@ -14,7 +14,8 @@ export class PaymentAccountListComponent implements OnChanges {
   /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
   readonly sortOptions: { column: SortableColumn; label: string }[] = [
     { column: 'id', label: 'ID' },
-    { column: 'name', label: 'Nombre' }
+    { column: 'name', label: 'Nombre' },
+    { column: 'active', label: 'Activo' }
   ];
   currentPage = 1;
   readonly pageSize = 10;
@@ -107,6 +108,11 @@ export class PaymentAccountListComponent implements OnChanges {
     return this.sortDirection === 'asc' ? '▲' : '▼';
   }
 
+  formatYesNo(value: boolean | null | undefined): string {
+    if (value === null || value === undefined) return '-';
+    return value ? 'Sí' : 'No';
+  }
+
   goToPreviousPage(): void {
     if (!this.canGoPrevious) return;
     this.currentPage -= 1;
@@ -123,6 +129,8 @@ export class PaymentAccountListComponent implements OnChanges {
         return paymentAccount.id ?? 0;
       case 'name':
         return (paymentAccount.name ?? '').toLocaleLowerCase();
+      case 'active':
+        return this.formatYesNo(paymentAccount.active).toLocaleLowerCase();
       default:
         return 0;
     }

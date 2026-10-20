@@ -14,7 +14,8 @@ export class PaymentAccountFormComponent implements OnChanges {
   @Output() saveForm = new EventEmitter<PaymentAccount>();
 
   readonly form = this.fb.group({
-    name: ['' as string, [Validators.required, Validators.maxLength(50)]]
+    name: ['' as string, [Validators.required, Validators.maxLength(50)]],
+    active: [true]
   });
 
   constructor(private readonly fb: FormBuilder) {}
@@ -22,7 +23,8 @@ export class PaymentAccountFormComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.paymentAccount || changes.mode) {
       this.form.reset({
-        name: this.paymentAccount?.name ?? ''
+        name: this.paymentAccount?.name ?? '',
+        active: this.paymentAccount?.active ?? true
       });
     }
   }
@@ -39,7 +41,8 @@ export class PaymentAccountFormComponent implements OnChanges {
     const raw = this.form.getRawValue();
     const payload: PaymentAccount = {
       id: this.paymentAccount?.id ?? 0,
-      name: raw.name?.trim() || ''
+      name: raw.name?.trim() || '',
+      active: !!raw.active
     };
     this.saveForm.emit(payload);
   }

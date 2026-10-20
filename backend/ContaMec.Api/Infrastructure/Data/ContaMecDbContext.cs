@@ -109,6 +109,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.Name).HasColumnName("Name").HasMaxLength(50).IsUnicode(false);
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.Active).HasColumnName("Active");
 
             entity.Property(e => e.ApplicationId).HasColumnName("ApplicationId");
 

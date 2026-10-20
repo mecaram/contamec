@@ -22,14 +22,16 @@ export class PaymentAccountService {
 
   create(account: PaymentAccount): Observable<PaymentAccount> {
     const payload = {
-      name: account.name ?? null
+      name: account.name ?? null,
+      active: account.active ?? true
     };
     return this.http.post<PaymentAccount>(this.paymentAccountsUrl, payload, { headers: this.getAuthHeaders() });
   }
 
   update(id: number, account: PaymentAccount): Observable<void> {
     const payload = {
-      name: account.name ?? null
+      name: account.name ?? null,
+      active: account.active ?? true
     };
     return this.http.put<void>(`${this.paymentAccountsUrl}/${id}`, payload, { headers: this.getAuthHeaders() });
   }

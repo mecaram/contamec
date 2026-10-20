@@ -8,6 +8,7 @@ public class PaymentAccount
     public string Name { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public int? ApplicationId { get; set; }
+    public bool? Active { get; set; }
 
     public Application? Application { get; set; }
 

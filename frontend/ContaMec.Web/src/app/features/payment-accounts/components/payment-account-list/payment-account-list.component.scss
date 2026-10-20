@@ -39,6 +39,17 @@ th {
   color: #475569;
 }
 
+.payment-account-list__center {
+  text-align: center;
+}
+
+// Reserva a la izquierda el mismo ancho que el indicador de orden para que el título quede centrado.
+th.payment-account-list__center::before {
+  content: '';
+  display: inline-block;
+  width: 1rem;
+}
+
 .payment-account-list__actions {
   white-space: nowrap;
 }
