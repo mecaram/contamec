@@ -36,6 +36,12 @@ const routes: Routes = [
       import('./features/accounts/accounts.module').then((m) => m.AccountsModule)
   },
   {
+    path: 'subcuentas',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/sub-accounts/sub-accounts.module').then((m) => m.SubAccountsModule)
+  },
+  {
     path: 'cuentas-pago',
     canActivate: [AuthGuard],
     loadChildren: () =>

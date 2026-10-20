@@ -1,0 +1,41 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="sub-account-form__title">{{ title }}</h2>
+  <div class="sub-account-form">
+    <div class="sub-account-form__field">
+      <label class="sub-account-form__label" for="sub-account-name">Nombre</label>
+      <input id="sub-account-name" class="sub-account-form__control" formControlName="name" maxlength="50" />
+      <div class="sub-account-form__hint">{{ form.controls.name.value?.length || 0 }}/50</div>
+    </div>
+    <div class="sub-account-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
+    <div class="sub-account-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 50 caracteres.</div>
+
+    <div class="sub-account-form__field">
+      <label class="sub-account-form__label" for="sub-account-account">Cuenta</label>
+      <select id="sub-account-account" class="sub-account-form__control" formControlName="accountId">
+        <option [ngValue]="null" disabled>Seleccione cuenta</option>
+        <option *ngFor="let account of formAccountOptions" [ngValue]="account.id">{{ account.name || '-' }}</option>
+      </select>
+    </div>
+    <div class="sub-account-form__error" *ngIf="form.controls.accountId.hasError('required')">Debe seleccionar una cuenta.</div>
+
+    <div class="sub-account-form__field">
+      <label class="sub-account-form__label" for="sub-account-behavior-type">Comportamiento</label>
+      <select id="sub-account-behavior-type" class="sub-account-form__control" formControlName="behaviorType">
+        <option [ngValue]="''" disabled>Seleccione comportamiento</option>
+        <option value="Fijo">Fijo</option>
+        <option value="Variable">Variable</option>
+        <option value="Mixto">Mixto</option>
+      </select>
+    </div>
+    <div class="sub-account-form__error" *ngIf="form.controls.behaviorType.hasError('required')">El comportamiento es obligatorio.</div>
+
+    <label class="sub-account-form__checkbox">
+      <input type="checkbox" formControlName="active" />
+      Activo
+    </label>
+  </div>
+  <div class="sub-account-form__actions">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>

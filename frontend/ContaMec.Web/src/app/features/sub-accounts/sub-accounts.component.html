@@ -1,0 +1,87 @@
+<div class="sub-accounts-page">
+  <header class="sub-accounts-page__header">
+    <div>
+      <h1 class="sub-accounts-page__title">Subcuentas</h1>
+      <p class="sub-accounts-page__subtitle">Consulte, cree y administre las subcuentas.</p>
+    </div>
+    <div class="sub-accounts-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="sub-accounts-filters mat-elevation-z1">
+    <form [formGroup]="filterForm" class="sub-accounts-filters__form">
+      <div class="sub-accounts-field">
+        <label class="sub-accounts-field__label" for="filter-id">ID</label>
+        <input id="filter-id" class="sub-accounts-field__control" type="number" formControlName="id" (change)="search()" />
+      </div>
+      <div class="sub-accounts-field">
+        <label class="sub-accounts-field__label" for="filter-name">Nombre</label>
+        <input id="filter-name" class="sub-accounts-field__control" formControlName="name" (change)="search()" />
+      </div>
+      <div class="sub-accounts-field">
+        <label class="sub-accounts-field__label" for="filter-account">Cuenta</label>
+        <select id="filter-account" class="sub-accounts-field__control" formControlName="accountId" (change)="search()">
+          <option [ngValue]="null">Todas</option>
+          <option *ngFor="let account of accountOptions" [ngValue]="account.id">{{ account.name || '-' }}</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="sub-accounts-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="sub-accounts-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="sub-accounts-page__new-action">
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nueva subcuenta
+    </button>
+  </div>
+
+  <section class="sub-accounts-form-panel mat-elevation-z1" *ngIf="formVisible">
+    <app-sub-account-form
+      [mode]="formMode"
+      [subAccount]="editingSubAccount"
+      [accountOptions]="accountOptions"
+      (cancelForm)="cancelForm()"
+      (saveForm)="submitForm($event)"
+    ></app-sub-account-form>
+  </section>
+
+  <app-sub-account-list
+    *ngIf="!formVisible"
+    [subAccounts]="subAccounts"
+    [sortResetToken]="sortResetToken"
+    [loading]="loading"
+    (edit)="openEdit($event)"
+    (remove)="deleteSubAccount($event)"
+  ></app-sub-account-list>
+
+  <div class="sub-accounts-toast" *ngIf="notification" [ngClass]="'sub-accounts-toast--' + notification.type">
+    <span>{{ notification.message }}</span>
+    <button type="button" class="sub-accounts-toast__close" (click)="closeNotification()" aria-label="Cerrar mensaje">×</button>
+  </div>
+
+  <div class="sub-accounts-dialog-backdrop" *ngIf="deleteTarget">
+    <section class="sub-accounts-dialog" role="dialog" aria-modal="true">
+      <h3 class="sub-accounts-dialog__title">Confirmar eliminación</h3>
+      <p class="sub-accounts-dialog__text">Está a punto de eliminar la subcuenta #{{ deleteTarget.id }}. Verifique la información:</p>
+      <div class="sub-accounts-dialog__summary">
+        <div><strong>Nombre:</strong> {{ deleteTarget.name || '-' }}</div>
+        <div><strong>Cuenta:</strong> {{ deleteTarget.accountName || '-' }}</div>
+      </div>
+      <div class="sub-accounts-dialog__actions">
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </section>
+  </div>
+</div>

@@ -61,6 +61,7 @@ export class DashboardComponent implements OnInit {
       tone: 'files',
       items: [
         { name: 'Cuentas', icon: 'account_balance', route: '/cuentas' },
+        { name: 'Subcuentas', icon: 'account_tree', route: '/subcuentas' },
         { name: 'Cuentas de pago', icon: 'credit_card', route: '/cuentas-pago' },
         { name: 'Usuarios', icon: 'people', route: '/usuarios' },
         { name: 'Aplicaciones', icon: 'business', route: '/aplicaciones', superAdminOnly: true }
