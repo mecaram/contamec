@@ -2,6 +2,7 @@ using ContaMec.Api.Application.Applications.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
@@ -51,7 +52,7 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
     public async Task<ApplicationResponse> CreateAsync(ApplicationCreateRequest request)
     {
         var application = await AddAsync(request);
-        await _dbContext.SaveChangesAsync();
+        await SaveChangesCheckingDuplicateDocumentAsync();
 
         var created = await GetByIdAsync(application.Id);
         return created ?? throw new InvalidOperationException("No se pudo leer la aplicación recién creada.");
@@ -63,6 +64,8 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         await ValidateApplicationAsync(request.Name, null);
         ValidateEmail(request.Email);
         ValidateWhatsApp(request.WhatsApp);
+        var (documentType, documentNumber) = ParseDocument(request.DocumentType, request.DocumentNumber);
+        await EnsureDocumentNumberIsFreeAsync(documentNumber, null);
 
         var application = new ApplicationEntity
         {
@@ -72,6 +75,8 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
             Email = Normalize(request.Email),
             Address = Normalize(request.Address),
             Locality = Normalize(request.Locality),
+            DocumentType = documentType,
+            DocumentNumber = documentNumber,
             Guid = System.Guid.NewGuid().ToString(),
             CreatedAt = ArgentinaClock.Now
         };
@@ -94,6 +99,8 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         await ValidateApplicationAsync(request.Name, id);
         ValidateEmail(request.Email);
         ValidateWhatsApp(request.WhatsApp);
+        var (documentType, documentNumber) = ParseDocument(request.DocumentType, request.DocumentNumber);
+        await EnsureDocumentNumberIsFreeAsync(documentNumber, id);
 
         var application = await _dbContext.Applications.FirstOrDefaultAsync(a => a.Id == id);
         if (application is null)
@@ -109,10 +116,12 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         application.Email = Normalize(request.Email);
         application.Address = Normalize(request.Address);
         application.Locality = Normalize(request.Locality);
+        application.DocumentType = documentType;
+        application.DocumentNumber = documentNumber;
         // Las aplicaciones creadas antes de agregar la columna no tienen Guid.
         application.Guid ??= System.Guid.NewGuid().ToString();
 
-        await _dbContext.SaveChangesAsync();
+        await SaveChangesCheckingDuplicateDocumentAsync();
         return true;
     }
 
@@ -148,6 +157,12 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         {
             Id = application.Id,
             Name = application.Name,
+            // Etiquetas del enum DocumentTypes de la base.
+            DocumentType = application.DocumentType == DocumentType.CUIL ? nameof(DocumentType.CUIL)
+                : application.DocumentType == DocumentType.CUIT ? nameof(DocumentType.CUIT)
+                : application.DocumentType == DocumentType.DNI ? nameof(DocumentType.DNI)
+                : null,
+            DocumentNumber = application.DocumentNumber,
             Active = application.Active,
             WhatsApp = application.WhatsApp,
             Email = application.Email,
@@ -170,6 +185,52 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
     }
 
     // Celular de Argentina en formato de WhatsApp: 549 + código de área y número (10 dígitos, sin 0 ni 15).
+    private const string DuplicateDocumentMessage = "Ya existe una empresa registrada con ese número de documento.";
+
+    // Solo por número: el CUIT y el CUIL de una misma persona comparten los 11 dígitos.
+    private async Task EnsureDocumentNumberIsFreeAsync(string? documentNumber, int? currentId)
+    {
+        if (documentNumber is not null
+            && await _dbContext.Applications.AnyAsync(a => a.DocumentNumber == documentNumber && (!currentId.HasValue || a.Id != currentId.Value)))
+            throw new ArgumentException(DuplicateDocumentMessage);
+    }
+
+    /// <summary>El índice único Applications_DocumentNumber_key frena los duplicados simultáneos que la validación previa no ve.</summary>
+    private async Task SaveChangesCheckingDuplicateDocumentAsync()
+    {
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: "Applications_DocumentNumber_key" })
+        {
+            throw new ArgumentException(DuplicateDocumentMessage);
+        }
+    }
+
+    // Opcional, pero tipo y número van juntos. Etiquetas del enum DocumentTypes de la base: CUIL, CUIT, DNI.
+    private static (DocumentType? Type, string? Number) ParseDocument(string? documentType, string? documentNumber)
+    {
+        var type = documentType?.Trim();
+        var number = documentNumber?.Trim();
+        if (string.IsNullOrEmpty(type) && string.IsNullOrEmpty(number))
+            return (null, null);
+        if (string.IsNullOrEmpty(type))
+            throw new ArgumentException("Debe seleccionar el tipo de documento.");
+        if (string.IsNullOrEmpty(number))
+            throw new ArgumentException("Debe ingresar el número de documento.");
+        if (!Enum.TryParse<DocumentType>(type, ignoreCase: true, out var value) || !Enum.IsDefined(value))
+            throw new ArgumentException("El tipo de documento debe ser CUIL, CUIT o DNI.");
+        if (!Regex.IsMatch(number, @"^\d+$"))
+            throw new ArgumentException("El número de documento debe tener solo números.");
+        if (value == DocumentType.DNI && number.Length is < 7 or > 8)
+            throw new ArgumentException("El DNI debe tener 7 u 8 dígitos.");
+        if (value != DocumentType.DNI && number.Length != 11)
+            throw new ArgumentException($"El {value} debe tener 11 dígitos.");
+
+        return (value, number);
+    }
+
     private static void ValidateWhatsApp(string? whatsApp)
     {
         if (string.IsNullOrWhiteSpace(whatsApp))

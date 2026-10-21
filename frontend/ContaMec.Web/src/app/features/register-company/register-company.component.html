@@ -38,6 +38,34 @@
 
           <div class="field-row">
             <div class="field">
+              <label class="field__label" for="register-document-type">Tipo de documento *</label>
+              <select id="register-document-type" class="field__input" formControlName="documentType" (change)="onDocumentTypeChange()">
+                <option value="" disabled>Seleccione el tipo</option>
+                <option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option>
+              </select>
+              <div class="field__error" *ngIf="showError('documentType', 'required')">El tipo de documento es obligatorio.</div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="register-document-number">Número de documento *</label>
+              <input
+                #documentNumberInput
+                id="register-document-number"
+                class="field__input"
+                type="text"
+                inputmode="numeric"
+                maxlength="11"
+                formControlName="documentNumber"
+                placeholder="Solo números, sin guiones"
+                (input)="onDocumentNumberInput(documentNumberInput)"
+              />
+              <div class="field__error" *ngIf="showError('documentNumber', 'required')">El número de documento es obligatorio.</div>
+              <div class="field__error" *ngIf="showError('documentNumber', 'digits')">Ingrese solo números.</div>
+              <div class="field__error" *ngIf="showError('documentNumber', 'documentLength')">{{ documentNumberLengthMessage }}</div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
               <label class="field__label" for="register-whatsapp">WhatsApp</label>
               <div class="field__phone">
                 <span class="field__phone-prefix">+54 9</span>

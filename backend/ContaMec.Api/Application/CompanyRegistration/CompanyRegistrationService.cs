@@ -6,6 +6,7 @@ using ContaMec.Api.Application.Notifications;
 using ContaMec.Api.Application.Users;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Net;
 // Alias: "Application" choca con el namespace ContaMec.Api.Application.
 using ApplicationEntity = ContaMec.Api.Domain.Entities.Application;
@@ -28,6 +29,12 @@ public class CompanyRegistrationService(
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        // En el registro público el documento es obligatorio; el formato lo valida el alta de la empresa.
+        if (string.IsNullOrWhiteSpace(request.DocumentType))
+            throw new ArgumentException("Debe seleccionar el tipo de documento.");
+        if (string.IsNullOrWhiteSpace(request.DocumentNumber))
+            throw new ArgumentException("Debe ingresar el número de documento.");
+
         var application = await applicationService.AddAsync(new ApplicationCreateRequest
         {
             Name = request.Name,
@@ -35,7 +42,9 @@ public class CompanyRegistrationService(
             WhatsApp = request.WhatsApp,
             Email = request.Email,
             Address = request.Address,
-            Locality = request.Locality
+            Locality = request.Locality,
+            DocumentType = request.DocumentType,
+            DocumentNumber = request.DocumentNumber
         });
 
         var administratorRoleId = await _dbContext.UserRoles
@@ -51,7 +60,15 @@ public class CompanyRegistrationService(
         user.Application = application;
 
         // Un único SaveChanges corre en una transacción: si falla cualquier insert no queda empresa, cierre ni usuario sueltos.
-        await userService.SaveChangesCheckingDuplicateNameAsync();
+        try
+        {
+            await userService.SaveChangesCheckingDuplicateNameAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation, ConstraintName: "Applications_DocumentNumber_key" })
+        {
+            // Dos solicitudes simultáneas con el mismo documento: la validación previa no alcanza a verlo.
+            throw new ArgumentException("Ya existe una empresa registrada con ese número de documento.");
+        }
 
         // Después de confirmar: un aviso fallido no debe deshacer ni demorar indefinidamente el registro.
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));

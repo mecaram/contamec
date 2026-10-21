@@ -1,6 +1,8 @@
 export interface Application {
   id: number;
   name?: string | null;
+  documentType?: string | null;
+  documentNumber?: string | null;
   active: boolean;
   whatsApp?: string | null;
   email?: string | null;

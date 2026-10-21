@@ -7,6 +7,8 @@ namespace ContaMec.Api.Application.CompanyRegistration.Dto;
 public class CompanyRegistrationRequest
 {
     public string? Name { get; set; }
+    public string? DocumentType { get; set; }
+    public string? DocumentNumber { get; set; }
     public string? WhatsApp { get; set; }
     public string? Email { get; set; }
     public string? Address { get; set; }

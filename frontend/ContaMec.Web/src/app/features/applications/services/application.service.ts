@@ -36,6 +36,8 @@ export class ApplicationService {
   private buildPayload(application: Application) {
     return {
       name: application.name ?? null,
+      documentType: application.documentType ?? null,
+      documentNumber: application.documentNumber ?? null,
       active: application.active,
       whatsApp: application.whatsApp ?? null,
       email: application.email ?? null,

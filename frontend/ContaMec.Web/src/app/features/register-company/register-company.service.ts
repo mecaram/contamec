@@ -5,6 +5,8 @@ import { environment } from '../../../environments/environment';
 
 export interface CompanyRegistrationRequest {
   name: string;
+  documentType: string;
+  documentNumber: string;
   whatsApp: string | null;
   email: string | null;
   address: string | null;

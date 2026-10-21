@@ -4,6 +4,7 @@ import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@ang
 import { Router } from '@angular/router';
 import { passwordPolicyValidator, passwordRules, PasswordRule } from '../../auth/password-policy';
 import { argentinaMobileValidator, ARGENTINA_MOBILE_PREFIX, onlyDigits } from '../../shared/argentina-mobile';
+import { documentNumberLengthMessage, documentNumberValidator, DOCUMENT_TYPES, keepDigits } from '../../shared/document';
 import { RegisterCompanyService } from './register-company.service';
 
 function passwordsMatchValidator(group: AbstractControl): ValidationErrors | null {
@@ -22,6 +23,8 @@ export class RegisterCompanyComponent {
   readonly form = this.fb.group(
     {
       name: ['', [Validators.required, Validators.maxLength(100)]],
+      documentType: ['', [Validators.required]],
+      documentNumber: ['', [Validators.required, documentNumberValidator]],
       whatsApp: ['', [argentinaMobileValidator]],
       email: ['', [Validators.email]],
       address: [''],
@@ -38,6 +41,8 @@ export class RegisterCompanyComponent {
     confirmPassword: false
   };
 
+  readonly documentTypes = DOCUMENT_TYPES;
+
   submitting = false;
   registered = false;
   errorMessage: string | null = null;
@@ -47,6 +52,20 @@ export class RegisterCompanyComponent {
     private readonly registerCompanyService: RegisterCompanyService,
     private readonly router: Router
   ) {}
+
+  /** Al cambiar el tipo cambia la cantidad de dígitos esperada. */
+  onDocumentTypeChange(): void {
+    this.form.controls.documentNumber.updateValueAndValidity();
+  }
+
+  /** Solo números: se descarta cualquier otro carácter mientras se escribe o se pega. */
+  onDocumentNumberInput(input: HTMLInputElement): void {
+    this.form.controls.documentNumber.setValue(keepDigits(input));
+  }
+
+  get documentNumberLengthMessage(): string {
+    return documentNumberLengthMessage(this.form.controls.documentType.value);
+  }
 
   get passwordRules(): PasswordRule[] {
     return passwordRules(this.form.controls.password.value);
@@ -85,6 +104,8 @@ export class RegisterCompanyComponent {
     this.registerCompanyService
       .register({
         name: raw.name.trim(),
+        documentType: raw.documentType,
+        documentNumber: raw.documentNumber,
         whatsApp: whatsApp ? ARGENTINA_MOBILE_PREFIX + whatsApp : null,
         email: raw.email?.trim() || null,
         address: raw.address?.trim() || null,

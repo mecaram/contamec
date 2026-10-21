@@ -110,6 +110,7 @@ if (csb.KeepAlive == 0)
 dataSourceBuilder.MapEnum<AccountType>("AccountTypes", new NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<ApplicationType>("ApplicationTypes", new NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<BehaviorType>("BehaviorTypes", new NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<DocumentType>("DocumentTypes", new NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<OccurrenceType>("OccurrenceTypes", new NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<RateType>("RateTypes", new NpgsqlNullNameTranslator());
 var dataSource = dataSourceBuilder.Build();

@@ -26,6 +26,8 @@
       <tr>
         <th class="application-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
         <th class="application-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th class="application-list__sortable" (click)="setSort('documentType')">Tipo doc. <span>{{ sortIndicator('documentType') }}</span></th>
+        <th class="application-list__sortable" (click)="setSort('documentNumber')">N° documento <span>{{ sortIndicator('documentNumber') }}</span></th>
         <th>Email</th>
         <th>WhatsApp</th>
         <th>Localidad</th>
@@ -38,6 +40,8 @@
       <tr *ngFor="let row of pagedApplications">
         <td data-label="ID">{{ row.id }}</td>
         <td data-label="Nombre">{{ row.name || '-' }}</td>
+        <td data-label="Tipo doc.">{{ row.documentType || '-' }}</td>
+        <td data-label="N° documento">{{ row.documentNumber || '-' }}</td>
         <td data-label="Email">{{ row.email || '-' }}</td>
         <td data-label="WhatsApp">
           <a
@@ -65,7 +69,7 @@
     </tbody>
     <tfoot>
       <tr class="application-list__footer">
-        <td colspan="8">Total registros: {{ totalRecords }}</td>
+        <td colspan="10">Total registros: {{ totalRecords }}</td>
       </tr>
     </tfoot>
   </table>

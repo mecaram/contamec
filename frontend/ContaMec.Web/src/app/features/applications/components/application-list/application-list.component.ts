@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Application } from '../../models/application.model';
 
-type SortableColumn = 'id' | 'name' | 'createdAt' | 'active';
+type SortableColumn = 'id' | 'name' | 'documentType' | 'documentNumber' | 'createdAt' | 'active';
 
 @Component({
   selector: 'app-application-list',
@@ -15,6 +15,8 @@ export class ApplicationListComponent implements OnChanges {
   readonly sortOptions: { column: SortableColumn; label: string }[] = [
     { column: 'id', label: 'ID' },
     { column: 'name', label: 'Nombre' },
+    { column: 'documentType', label: 'Tipo doc.' },
+    { column: 'documentNumber', label: 'N° documento' },
     { column: 'createdAt', label: 'Fecha de alta' },
     { column: 'active', label: 'Activa' }
   ];
@@ -130,6 +132,10 @@ export class ApplicationListComponent implements OnChanges {
         return application.id ?? 0;
       case 'name':
         return (application.name ?? '').toLocaleLowerCase();
+      case 'documentType':
+        return application.documentType ?? '';
+      case 'documentNumber':
+        return application.documentNumber ?? '';
       case 'createdAt':
         return application.createdAt ? new Date(application.createdAt).getTime() : 0;
       case 'active':

@@ -31,6 +31,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
         modelBuilder.HasPostgresEnum<AccountType>("public", "AccountTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<ApplicationType>("public", "ApplicationTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<BehaviorType>("public", "BehaviorTypes", new NpgsqlNullNameTranslator());
+        modelBuilder.HasPostgresEnum<DocumentType>("public", "DocumentTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<OccurrenceType>("public", "OccurrenceTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<RateType>("public", "RateTypes", new NpgsqlNullNameTranslator());
 
@@ -50,6 +51,8 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Address).HasColumnName("Address");
             entity.Property(e => e.Locality).HasColumnName("Locality");
             entity.Property(e => e.Guid).HasColumnName("Guid");
+            entity.Property(e => e.DocumentType).HasColumnName("DocumentType");
+            entity.Property(e => e.DocumentNumber).HasColumnName("DocumentNumber");
         });
 
         modelBuilder.Entity<Closure>(entity =>

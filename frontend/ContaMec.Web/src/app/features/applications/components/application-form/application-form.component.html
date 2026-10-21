@@ -11,6 +11,34 @@
 
     <div class="application-form__row">
       <div class="application-form__field">
+        <label class="application-form__label" for="application-document-type">Tipo de documento</label>
+        <select id="application-document-type" class="application-form__control" formControlName="documentType" (change)="onDocumentChange()">
+          <option value="">Sin documento</option>
+          <option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option>
+        </select>
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentType.hasError('required')">Seleccione el tipo de documento.</div>
+      </div>
+      <div class="application-form__field">
+        <label class="application-form__label" for="application-document-number">Número de documento</label>
+        <input
+          #documentNumberInput
+          id="application-document-number"
+          class="application-form__control"
+          type="text"
+          inputmode="numeric"
+          maxlength="11"
+          formControlName="documentNumber"
+          placeholder="Solo números, sin guiones"
+          (input)="onDocumentNumberInput(documentNumberInput)"
+        />
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentNumber.hasError('required')">Ingrese el número de documento.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentNumber.hasError('digits')">Ingrese solo números.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentNumber.hasError('documentLength')">{{ documentNumberLengthMessage }}</div>
+      </div>
+    </div>
+
+    <div class="application-form__row">
+      <div class="application-form__field">
         <label class="application-form__label" for="application-whatsapp">WhatsApp</label>
         <div class="application-form__phone">
           <span class="application-form__phone-prefix">+54 9</span>

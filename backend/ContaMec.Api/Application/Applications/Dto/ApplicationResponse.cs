@@ -4,6 +4,8 @@ public class ApplicationResponse
 {
     public int Id { get; set; }
     public string? Name { get; set; }
+    public string? DocumentType { get; set; }
+    public string? DocumentNumber { get; set; }
     public bool Active { get; set; }
     public string? WhatsApp { get; set; }
     public string? Email { get; set; }
