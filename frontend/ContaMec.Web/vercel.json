@@ -5,7 +5,7 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!.*\\.(?:js|css|map|json|ico|png|jpg|jpeg|gif|svg|webp|woff|woff2|ttf|eot|txt)$).*)",
       "destination": "/index.html"
     }
   ]
