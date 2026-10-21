@@ -388,6 +388,11 @@ export class IncomesComponent implements OnInit {
     }, 4000);
   }
 
+  /** Apertura del cierre abierto: la fecha de emisión no puede ser anterior. */
+  get openClosureDate(): string | null {
+    return this.closureOptions.find((c) => this.isOpenClosure(c))?.openDate ?? null;
+  }
+
   private isOpenClosure(closure: ClosureLookup): boolean {
     const value = closure.isClosed as unknown;
     return value === 0 || value === false || value === '0';

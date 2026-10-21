@@ -7,11 +7,18 @@
         id="expense-emission-date"
         class="expense-form__control"
         type="date"
+        [attr.min]="minEmissionIsoDate"
+        [attr.max]="todayIsoDate"
         [value]="form.controls.emissionDate.value ? toIsoDate(form.controls.emissionDate.value!) : ''"
         (change)="form.controls.emissionDate.setValue($any($event.target).value ? toDate($any($event.target).value) : null)"
       />
     </div>
     <div class="expense-form__error" *ngIf="form.controls.emissionDate.hasError('required')">La fecha es obligatoria.</div>
+    <div class="expense-form__error" *ngIf="form.controls.emissionDate.hasError('range')">
+      {{ minEmissionIsoDate
+        ? 'La fecha debe estar entre el ' + formatIsoDate(minEmissionIsoDate) + ' (apertura del cierre) y el ' + formatIsoDate(todayIsoDate) + '.'
+        : 'La fecha no puede ser posterior a hoy.' }}
+    </div>
 
     <div class="expense-form__field">
       <label class="expense-form__label" for="expense-account-id">Cuenta</label>

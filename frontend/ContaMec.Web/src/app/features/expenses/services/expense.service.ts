@@ -8,6 +8,7 @@ import { Expense } from '../models/expense.model';
 export interface ClosureLookup {
   id: number;
   isClosed?: boolean | number | null;
+  openDate?: string | null;
 }
 
 export interface ExpenseAccountOption {

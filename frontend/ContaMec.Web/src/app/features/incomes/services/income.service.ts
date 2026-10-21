@@ -8,6 +8,7 @@ import { IncomeSearch } from '../models/income-search.model';
 export interface ClosureLookup {
   id: number;
   isClosed?: boolean | number | null;
+  openDate?: string | null;
 }
 
 export interface IncomeAccountOption {

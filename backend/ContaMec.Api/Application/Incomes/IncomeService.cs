@@ -78,6 +78,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         var openClosureId = await GetOpenClosureIdAsync(applicationId);
         if (!openClosureId.HasValue)
             throw new ArgumentException("No existe un cierre abierto (IsClosed = 0).");
+        await EnsureEmissionDateInClosureAsync(request.EmissionDate, openClosureId.Value);
 
         var income = new Income
         {
@@ -124,6 +125,7 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             return false;
         if (!await CanModifyIncomeAsync(income.ClosureId))
             throw new ArgumentException("Solo se puede modificar un ingreso con cierre abierto (IsClosed = 0).");
+        await EnsureEmissionDateInClosureAsync(request.EmissionDate, income.ClosureId);
 
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, income.SubAccountId);
         var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
@@ -229,6 +231,26 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             return value;
 
         throw new ArgumentException("OccurrenceType debe ser Ordinaria o Extraordinaria.");
+    }
+
+    // La fecha de emisión va desde la apertura del cierre hasta hoy (por día, en hora de Argentina).
+    private async Task EnsureEmissionDateInClosureAsync(DateTime? emissionDate, int closureId)
+    {
+        if (!emissionDate.HasValue)
+            throw new ArgumentException("La fecha de emisión es obligatoria.");
+
+        var openDate = await _dbContext.Closures
+            .Where(c => c.Id == closureId)
+            .Select(c => c.OpenDate)
+            .FirstOrDefaultAsync();
+        var from = openDate?.Date;
+        var today = ArgentinaClock.Now.Date;
+        var date = emissionDate.Value.Date;
+
+        if (from.HasValue && (date < from.Value || date > today))
+            throw new ArgumentException($"La fecha de emisión debe estar entre el {from.Value:dd/MM/yyyy} (apertura del cierre) y el {today:dd/MM/yyyy}.");
+        if (date > today)
+            throw new ArgumentException("La fecha de emisión no puede ser posterior a hoy.");
     }
 
     private static void ValidateIncome(int? accountId, decimal? amount, string? detail, int? paymentAccountId)

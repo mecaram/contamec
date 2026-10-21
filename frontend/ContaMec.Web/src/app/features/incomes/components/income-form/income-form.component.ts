@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { SubAccountService } from '../../../sub-accounts/services/sub-account.service';
 import { Income } from '../../models/income.model';
@@ -16,6 +16,8 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() paymentAccountOptions: Array<{ id: number; label: string }> = [];
   /** En el alta se propone esta cuenta de pago (la del último ingreso registrado), si sigue disponible. */
   @Input() defaultPaymentAccountId: number | null = null;
+  /** Apertura del cierre abierto: la fecha de emisión va desde ese día hasta hoy. */
+  @Input() minEmissionDate: string | null = null;
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<Income>();
   amountDisplay = '';
@@ -25,7 +27,7 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   private accountChanges: Subscription | null = null;
 
   readonly form = this.fb.group({
-    emissionDate: [null as Date | null, [Validators.required]],
+    emissionDate: [null as Date | null, [Validators.required, (control: AbstractControl) => this.emissionDateRangeValidator(control)]],
     accountId: [null as number | null, [Validators.required, Validators.min(1)]],
     detail: ['' as string, [Validators.maxLength(80)]],
     amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
@@ -71,6 +73,9 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
     } else if (changes.accountOptions) {
       // Las cuentas llegan después de abrir el formulario: recién ahí se sabe si requiere subcuentas.
       this.refreshSubAccounts();
+    }
+    if (changes.minEmissionDate) {
+      this.form.controls.emissionDate.updateValueAndValidity();
     }
     if (changes.income || changes.mode || changes.defaultPaymentAccountId || changes.paymentAccountOptions) {
       this.applyDefaultPaymentAccount();
@@ -136,6 +141,28 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  /** Fechas en formato yyyy-MM-dd para los límites del calendario y los mensajes. */
+  get minEmissionIsoDate(): string | null {
+    return this.minEmissionDate ? this.minEmissionDate.substring(0, 10) : null;
+  }
+
+  get todayIsoDate(): string {
+    return this.toIsoDate(new Date());
+  }
+
+  formatIsoDate(value: string | null): string {
+    if (!value) return '';
+    const [year, month, day] = value.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  private emissionDateRangeValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const date = this.toIsoDate(control.value as Date);
+    const min = this.minEmissionIsoDate;
+    return (min && date < min) || date > this.todayIsoDate ? { range: true } : null;
+  }
+
   get title(): string {
     return this.mode === 'create' ? 'Nuevo ingreso' : 'Editar ingreso';
   }
@@ -185,7 +212,9 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   toDate(value: string): Date {
-    return new Date(value);
+    // "yyyy-MM-dd" se interpreta en UTC: se arma en hora local para no correrse un día.
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    return dateOnly ? new Date(+dateOnly[1], +dateOnly[2] - 1, +dateOnly[3]) : new Date(value);
   }
 
   private startOfDay(date: Date): Date {
