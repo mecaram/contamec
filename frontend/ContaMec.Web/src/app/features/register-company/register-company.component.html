@@ -3,7 +3,7 @@
     <header class="register-card__header">
       <div class="register-card__logo" aria-hidden="true">CM</div>
       <div>
-        <h1 class="register-card__title">Registrar empresa</h1>
+        <h1 class="register-card__title">Solicitar demo gratis</h1>
         <p class="register-card__tagline">Alta de una nueva empresa y su usuario administrador en ContaMEC.</p>
       </div>
     </header>
@@ -30,9 +30,9 @@
           <h2 class="register-section__title">Datos de la empresa</h2>
 
           <div class="field">
-            <label class="field__label" for="register-name">Nombre de la empresa *</label>
+            <label class="field__label" for="register-name">Nombre completo/empresa *</label>
             <input id="register-name" class="field__input" formControlName="name" maxlength="100" autocomplete="organization" />
-            <div class="field__error" *ngIf="showError('name', 'required')">El nombre de la empresa es obligatorio.</div>
+            <div class="field__error" *ngIf="showError('name', 'required')">El nombre completo o de la empresa es obligatorio.</div>
             <div class="field__error" *ngIf="showError('name', 'maxlength')">Máximo 100 caracteres.</div>
           </div>
 
@@ -129,8 +129,8 @@
         <div class="register-actions">
           <button type="button" class="btn btn--secondary" (click)="backToLogin()" [disabled]="submitting">Cancelar</button>
           <button type="submit" class="btn btn--primary" [disabled]="submitting">
-            <span *ngIf="!submitting">Registrar Empresa</span>
-            <span *ngIf="submitting" aria-live="polite">Registrando…</span>
+            <span *ngIf="!submitting">Solicitar demo gratis</span>
+            <span *ngIf="submitting" aria-live="polite">Enviando solicitud…</span>
           </button>
         </div>
       </form>
