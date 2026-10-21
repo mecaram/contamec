@@ -1,5 +1,6 @@
 export interface Closure {
   id: number;
+  closureNumber?: number | null;
   openDate?: string | null;
   previousBalance?: number | null;
   incomes?: number | null;

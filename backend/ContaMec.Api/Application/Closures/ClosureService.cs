@@ -47,7 +47,8 @@ SELECT c.""Id"",
        CASE
            WHEN c.""isClosed"" THEN c.""Result""
            ELSE COALESCE(p.""PreviousBalance"", 0) + COALESCE(i.""Incomes"", 0) - COALESCE(e.""Expenses"", 0)
-       END AS ""Result""
+       END AS ""Result"",
+       c.""ClosureNumber""
 FROM ""{closureTableName}"" c
 LEFT JOIN LATERAL (
     SELECT prev.""Result"" AS ""PreviousBalance""
@@ -98,7 +99,8 @@ ORDER BY c.""Id"" DESC";
                     InAccount = reader.IsDBNull(5) ? 0 : reader.GetDecimal(5),
                     CloseDate = reader.IsDBNull(6) ? null : DbDateTime.FromDb(reader.GetDateTime(6)),
                     IsClosed = reader.IsDBNull(7) ? null : reader.GetBoolean(7),
-                    Result = reader.IsDBNull(8) ? null : reader.GetDecimal(8)
+                    Result = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
+                    ClosureNumber = reader.IsDBNull(9) ? null : Convert.ToInt32(reader.GetValue(9))
                 });
             }
         }

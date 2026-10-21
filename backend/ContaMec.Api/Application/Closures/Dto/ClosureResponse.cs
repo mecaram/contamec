@@ -3,6 +3,7 @@ namespace ContaMec.Api.Application.Closures.Dto;
 public class ClosureResponse
 {
     public int Id { get; set; }
+    public int? ClosureNumber { get; set; }
     public DateTime? OpenDate { get; set; }
     public decimal? PreviousBalance { get; set; }
     public decimal Incomes { get; set; }

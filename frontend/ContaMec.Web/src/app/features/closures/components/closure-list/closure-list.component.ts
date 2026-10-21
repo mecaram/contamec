@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Closure } from '../../models/closure.model';
 
-type SortableColumn = 'id' | 'openDate' | 'previousBalance' | 'incomes' | 'expenses' | 'result';
+type SortableColumn = 'id' | 'closureNumber' | 'openDate' | 'previousBalance' | 'incomes' | 'expenses' | 'result';
 
 @Component({
   selector: 'app-closure-list',
@@ -14,6 +14,7 @@ export class ClosureListComponent implements OnChanges {
   /** En el celular no se ve el encabezado de la tabla: se ordena desde este selector. */
   readonly sortOptions: { column: SortableColumn; label: string }[] = [
     { column: 'id', label: 'ID' },
+    { column: 'closureNumber', label: 'N° Cierre' },
     { column: 'openDate', label: 'Apertura' },
     { column: 'previousBalance', label: 'Saldo Inicial' },
     { column: 'incomes', label: 'Ingresos' },
@@ -174,6 +175,8 @@ export class ClosureListComponent implements OnChanges {
     switch (column) {
       case 'id':
         return row.id ?? 0;
+      case 'closureNumber':
+        return row.closureNumber ?? 0;
       case 'openDate':
         return this.toTimestamp(row.openDate);
       case 'previousBalance':

@@ -9,6 +9,7 @@ export interface ClosureLookup {
   id: number;
   isClosed?: boolean | number | null;
   openDate?: string | null;
+  closureNumber?: number | null;
 }
 
 export interface ExpenseAccountOption {

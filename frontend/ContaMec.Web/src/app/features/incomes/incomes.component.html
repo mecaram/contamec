@@ -19,7 +19,7 @@
         <select id="filter-closure" class="incomes-field__control" formControlName="closureId" (change)="search()">
           <option [ngValue]="null">Todos</option>
           <option *ngFor="let closure of closureOptions" [ngValue]="closure.id">
-            Cierre #{{ closure.id }}
+            Cierre N° {{ closure.closureNumber ?? ('#' + closure.id) }}
           </option>
         </select>
       </div>

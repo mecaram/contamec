@@ -28,7 +28,7 @@
 
       <ng-container *ngIf="activeClosure">
         <p class="dashboard__indicators-period">
-          Cierre {{ activeClosure.isClosed ? 'inactivo' : 'activo' }} #{{ activeClosure.id }}
+          Cierre {{ activeClosure.isClosed ? 'inactivo' : 'activo' }} N° {{ activeClosure.closureNumber ?? ('#' + activeClosure.id) }}
           <ng-container *ngIf="activeClosure.openDate">, abierto el {{ activeClosure.openDate | date: 'dd/MM/yyyy' }}</ng-container>
         </p>
 

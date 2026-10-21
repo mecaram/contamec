@@ -72,8 +72,8 @@
       <div class="closures-modal__meta closures-modal__meta--split">
         <div class="closures-modal__meta-col">
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
-            <span class="closures-modal__meta-label">ID:</span>
-            <span class="closures-modal__meta-value">{{ detailTarget.id }}</span>
+            <span class="closures-modal__meta-label">N° Cierre:</span>
+            <span class="closures-modal__meta-value">{{ detailTarget.closureNumber ?? ('#' + detailTarget.id) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
             <span class="closures-modal__meta-label">Fecha apertura:</span>
@@ -131,8 +131,8 @@
       <div class="closures-modal__meta closures-modal__meta--split">
         <div class="closures-modal__meta-col">
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
-            <span class="closures-modal__meta-label">ID:</span>
-            <span class="closures-modal__meta-value">{{ closeTarget.id }}</span>
+            <span class="closures-modal__meta-label">N° Cierre:</span>
+            <span class="closures-modal__meta-value">{{ closeTarget.closureNumber ?? ('#' + closeTarget.id) }}</span>
           </div>
           <div class="closures-modal__meta-row closures-modal__meta-row--detail">
             <span class="closures-modal__meta-label">Fecha apertura:</span>
@@ -205,7 +205,7 @@
       <div class="closures-modal__meta">
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Cierre:</span>
-          <span class="closures-modal__meta-value">#{{ closeConfirmTarget.id }}</span>
+          <span class="closures-modal__meta-value">N° {{ closeConfirmTarget.closureNumber ?? ('#' + closeConfirmTarget.id) }}</span>
         </div>
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Diferencia:</span>
@@ -238,7 +238,7 @@
       <div class="closures-modal__meta closures-modal__meta--detail">
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Cierre:</span>
-          <span class="closures-modal__meta-value">#{{ incomeDetailTarget.id }}</span>
+          <span class="closures-modal__meta-value">N° {{ incomeDetailTarget.closureNumber ?? ('#' + incomeDetailTarget.id) }}</span>
         </div>
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Fecha apertura:</span>
@@ -303,7 +303,7 @@
       <div class="closures-modal__meta closures-modal__meta--detail">
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Cierre:</span>
-          <span class="closures-modal__meta-value">#{{ expenseDetailTarget.id }}</span>
+          <span class="closures-modal__meta-value">N° {{ expenseDetailTarget.closureNumber ?? ('#' + expenseDetailTarget.id) }}</span>
         </div>
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Fecha apertura:</span>
@@ -368,7 +368,7 @@
       <div class="closures-modal__meta">
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Cierre:</span>
-          <span class="closures-modal__meta-value">#{{ balanceValuesTarget.id }}</span>
+          <span class="closures-modal__meta-value">N° {{ balanceValuesTarget.closureNumber ?? ('#' + balanceValuesTarget.id) }}</span>
         </div>
         <div class="closures-modal__meta-row closures-modal__meta-row--detail">
           <span class="closures-modal__meta-label">Fecha apertura:</span>

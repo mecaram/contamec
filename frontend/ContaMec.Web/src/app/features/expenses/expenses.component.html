@@ -18,7 +18,7 @@
         <label class="expenses-field__label" for="filter-closure">Cierre</label>
         <select id="filter-closure" class="expenses-field__control" formControlName="closureId" (change)="search()">
           <option [ngValue]="null">Todos</option>
-          <option *ngFor="let closure of closureOptions" [ngValue]="closure.id">Cierre #{{ closure.id }}</option>
+          <option *ngFor="let closure of closureOptions" [ngValue]="closure.id">Cierre N° {{ closure.closureNumber ?? ('#' + closure.id) }}</option>
         </select>
       </div>
 
