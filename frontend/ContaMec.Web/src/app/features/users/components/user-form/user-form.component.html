@@ -8,6 +8,7 @@
     </div>
     <div class="user-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
     <div class="user-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 80 caracteres.</div>
+    <div class="user-form__error" *ngIf="form.controls.name.hasError('pattern')">El nombre de usuario no puede contener espacios.</div>
 
     <div class="user-form__field">
       <label class="user-form__label" for="user-password">Contraseña</label>

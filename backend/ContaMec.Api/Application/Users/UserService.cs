@@ -189,6 +189,8 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             throw new ArgumentException("Name es obligatorio.");
         if (name.Trim().Length > 80)
             throw new ArgumentException("Name no puede superar 80 caracteres.");
+        if (name.Any(char.IsWhiteSpace))
+            throw new ArgumentException("El nombre de usuario no puede contener espacios.");
 
         if (currentUserId is null && string.IsNullOrWhiteSpace(password))
             throw new ArgumentException("Password es obligatorio.");

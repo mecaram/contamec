@@ -28,7 +28,7 @@ export class UserFormComponent implements OnChanges {
 
   readonly form = this.fb.group(
     {
-      name: ['' as string, [Validators.required, Validators.maxLength(80)]],
+      name: ['' as string, [Validators.required, Validators.maxLength(80), Validators.pattern(/^\S*$/)]],
       password: ['' as string, passwordPolicyValidator],
       confirmPassword: ['' as string],
       isActive: [true],

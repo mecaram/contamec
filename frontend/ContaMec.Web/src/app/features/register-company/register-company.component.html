@@ -82,6 +82,7 @@
             <input id="register-username" class="field__input" formControlName="username" maxlength="80" autocomplete="username" />
             <div class="field__error" *ngIf="showError('username', 'required')">El nombre de usuario es obligatorio.</div>
             <div class="field__error" *ngIf="showError('username', 'maxlength')">Máximo 80 caracteres.</div>
+            <div class="field__error" *ngIf="showError('username', 'pattern')">El nombre de usuario no puede contener espacios.</div>
           </div>
 
           <div class="field-row">

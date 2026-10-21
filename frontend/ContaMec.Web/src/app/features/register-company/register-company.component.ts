@@ -26,7 +26,7 @@ export class RegisterCompanyComponent {
       email: ['', [Validators.email]],
       address: [''],
       locality: [''],
-      username: ['', [Validators.required, Validators.maxLength(80)]],
+      username: ['', [Validators.required, Validators.maxLength(80), Validators.pattern(/^\S*$/)]],
       password: ['', [Validators.required, passwordPolicyValidator]],
       confirmPassword: ['', [Validators.required]]
     },
