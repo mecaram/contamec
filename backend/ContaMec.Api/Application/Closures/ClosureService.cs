@@ -374,8 +374,10 @@ WHERE ""Id"" = @closureId";
             {
                 insertCommand.Transaction = transaction;
                 insertCommand.CommandText = $@"
-INSERT INTO ""{closureTableName}"" (""OpenDate"", ""CloseDate"", ""isClosed"", ""Result"", ""ApplicationId"")
-VALUES (@openDate, NULL, FALSE, NULL, @applicationId)
+INSERT INTO ""{closureTableName}"" (""OpenDate"", ""CloseDate"", ""isClosed"", ""Result"", ""ApplicationId"", ""ClosureNumber"")
+SELECT @openDate, NULL, FALSE, NULL, @applicationId, COALESCE(MAX(c.""ClosureNumber""), 0) + 1
+FROM ""{closureTableName}"" c
+WHERE c.""ApplicationId"" = @applicationId
 RETURNING ""Id"";";
                 AddNullableParameter(insertCommand, "@openDate", DbType.DateTime, DbDateTime.ToDb(now));
                 AddNullableParameter(insertCommand, "@applicationId", DbType.Int32, applicationId);

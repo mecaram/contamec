@@ -12,6 +12,8 @@ public class Closure
     public decimal? Result { get; set; }
     public DateTime CreatedAt { get; set; }
     public int? ApplicationId { get; set; }
+    /// <summary>Número correlativo del cierre dentro de la aplicación: 1 el inicial, y +1 en cada cierre nuevo.</summary>
+    public int? ClosureNumber { get; set; }
 
     public Application? Application { get; set; }
 

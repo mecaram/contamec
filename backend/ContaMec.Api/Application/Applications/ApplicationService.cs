@@ -82,6 +82,7 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         {
             OpenDate = ArgentinaClock.Now,
             IsClosed = false,
+            ClosureNumber = 1,
             Application = application
         });
         return application;

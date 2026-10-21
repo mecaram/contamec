@@ -62,6 +62,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.CloseDate).HasColumnName("CloseDate").HasColumnType("timestamp with time zone");
             entity.Property(e => e.IsClosed).HasColumnName("isClosed");
             entity.Property(e => e.Result).HasColumnName("Result").HasColumnType("numeric");
+            entity.Property(e => e.ClosureNumber).HasColumnName("ClosureNumber");
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
 
             entity.HasMany(e => e.Balances)
