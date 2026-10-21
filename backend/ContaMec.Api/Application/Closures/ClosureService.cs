@@ -75,12 +75,14 @@ LEFT JOIN LATERAL (
 ) b ON TRUE
 WHERE c.""ApplicationId"" = @applicationId
   AND (@id IS NULL OR c.""Id"" = @id)
+  AND (@closureNumber IS NULL OR c.""ClosureNumber"" = @closureNumber)
   AND (@isClosed IS NULL OR c.""isClosed"" = @isClosed)
   AND (@openDateFrom IS NULL OR c.""OpenDate"" >= @openDateFrom)
   AND (@openDateToExclusive IS NULL OR c.""OpenDate"" < @openDateToExclusive)
 ORDER BY c.""Id"" DESC";
 
             AddNullableParameter(command, "@id", DbType.Int32, request.Id);
+            AddNullableParameter(command, "@closureNumber", DbType.Int32, request.ClosureNumber);
             AddNullableParameter(command, "@applicationId", DbType.Int32, applicationId);
             AddNullableParameter(command, "@isClosed", DbType.Boolean, request.IsClosed);
             AddNullableParameter(command, "@openDateFrom", DbType.DateTime, DbDateTime.ToDb(request.OpenDateFrom));

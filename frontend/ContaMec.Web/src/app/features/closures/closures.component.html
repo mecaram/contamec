@@ -15,8 +15,8 @@
   <section class="closures-filters mat-elevation-z1">
     <form [formGroup]="filterForm" class="closures-filters__form">
       <div class="closures-field">
-        <label class="closures-field__label" for="filter-id">ID</label>
-        <input id="filter-id" class="closures-field__control" type="number" formControlName="id" (change)="search()" />
+        <label class="closures-field__label" for="filter-closure-number">N° Cierre</label>
+        <input id="filter-closure-number" class="closures-field__control" type="number" formControlName="closureNumber" (change)="search()" />
       </div>
       <div class="closures-field">
         <label class="closures-field__label" for="filter-is-closed">Estado</label>

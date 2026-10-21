@@ -17,6 +17,7 @@ public class ClosuresController(IClosureService closureService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "id")] int? id,
+        [FromQuery(Name = "closureNumber")] int? closureNumber,
         [FromQuery(Name = "isClosed")] bool? isClosed,
         [FromQuery(Name = "openDateFrom")] DateTime? openDateFrom,
         [FromQuery(Name = "openDateTo")] DateTime? openDateTo)
@@ -32,6 +33,7 @@ public class ClosuresController(IClosureService closureService) : ControllerBase
         var request = new ClosureSearchRequest
         {
             Id = id,
+            ClosureNumber = closureNumber,
             IsClosed = isClosed,
             OpenDateFrom = openDateFrom,
             OpenDateTo = openDateTo

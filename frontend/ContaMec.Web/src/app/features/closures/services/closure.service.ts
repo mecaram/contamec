@@ -49,7 +49,7 @@ export class ClosureService {
 
   search(filters: ClosureSearch): Observable<Closure[]> {
     let params = new HttpParams();
-    if (filters.id !== null && filters.id !== undefined) params = params.set('id', String(filters.id));
+    if (filters.closureNumber !== null && filters.closureNumber !== undefined) params = params.set('closureNumber', String(filters.closureNumber));
     if (filters.isClosed !== null && filters.isClosed !== undefined) params = params.set('isClosed', String(filters.isClosed));
     if (filters.openDateFrom) params = params.set('openDateFrom', filters.openDateFrom);
     if (filters.openDateTo) params = params.set('openDateTo', filters.openDateTo);

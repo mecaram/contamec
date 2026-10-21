@@ -42,7 +42,7 @@ export class ClosuresComponent implements OnInit {
   closeError: string | null = null;
 
   readonly filterForm = this.fb.group({
-    id: [null as number | null],
+    closureNumber: [null as number | null],
     isClosed: [''],
     openDateFrom: [''],
     openDateTo: ['']
@@ -80,7 +80,7 @@ export class ClosuresComponent implements OnInit {
 
   clearFilters(): void {
     this.filterForm.reset({
-      id: null,
+      closureNumber: null,
       isClosed: '',
       openDateFrom: null,
       openDateTo: null
@@ -411,7 +411,7 @@ export class ClosuresComponent implements OnInit {
     else if (raw.isClosed === 'false') isClosed = false;
 
     return {
-      id: raw.id,
+      closureNumber: raw.closureNumber,
       isClosed,
       openDateFrom: raw.openDateFrom || null,
       openDateTo: raw.openDateTo || null

@@ -1,5 +1,5 @@
 export interface ClosureSearch {
-  id?: number | null;
+  closureNumber?: number | null;
   isClosed?: boolean | null;
   openDateFrom?: string | null;
   openDateTo?: string | null;
