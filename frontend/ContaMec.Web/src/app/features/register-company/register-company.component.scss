@@ -150,6 +150,12 @@ $primary-hover: #1d4ed8;
   border-color: #f87171;
 }
 
+/* La repetición del email es válida por sí sola: el error es del formulario, por eso se marca con una clase. */
+.field__input.field__input--mismatch,
+.field__input.field__input--mismatch:hover:not(:disabled) {
+  border-color: #f87171;
+}
+
 .field__hint {
   margin-top: 0.3rem;
   font-size: 0.75rem;

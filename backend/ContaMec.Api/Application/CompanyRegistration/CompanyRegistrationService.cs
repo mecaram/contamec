@@ -36,6 +36,17 @@ public class CompanyRegistrationService(
             throw new ArgumentException("Debe seleccionar el tipo de documento.");
         if (string.IsNullOrWhiteSpace(request.DocumentNumber))
             throw new ArgumentException("Debe ingresar el número de documento.");
+        // Obligatorio: es el correo al que se avisa la activación de la empresa. El formato lo valida el alta de la empresa.
+        if (string.IsNullOrWhiteSpace(request.Email))
+            throw new ArgumentException("Debe ingresar el email.");
+        // Opcional para no romper clientes anteriores al campo; si viene, debe coincidir (sin distinguir mayúsculas).
+        if (request.ConfirmEmail is not null
+            && !string.Equals(request.Email.Trim(), request.ConfirmEmail.Trim(), StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("El email y su repetición no coinciden.");
+        // Igual que el email; el login tampoco distingue mayúsculas en el usuario.
+        if (request.ConfirmUsername is not null
+            && !string.Equals(request.Username?.Trim(), request.ConfirmUsername.Trim(), StringComparison.OrdinalIgnoreCase))
+            throw new ArgumentException("El usuario y su repetición no coinciden.");
 
         var application = await applicationService.AddAsync(new ApplicationCreateRequest
         {

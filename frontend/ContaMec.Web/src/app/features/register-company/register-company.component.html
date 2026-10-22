@@ -66,6 +66,32 @@
 
           <div class="field-row">
             <div class="field">
+              <label class="field__label" for="register-email">Correo *</label>
+              <input id="register-email" class="field__input" type="email" formControlName="email" autocomplete="email" />
+              <div class="field__hint">Le enviaremos el aviso cuando la empresa quede habilitada.</div>
+              <div class="field__error" *ngIf="showError('email', 'required')">El correo es obligatorio.</div>
+              <div class="field__error" *ngIf="showError('email', 'email')">El correo no tiene un formato válido.</div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="register-confirm-email">Repetir correo *</label>
+              <input
+                id="register-confirm-email"
+                class="field__input"
+                type="email"
+                formControlName="confirmEmail"
+                [class.field__input--mismatch]="showEmailMismatch"
+                autocomplete="off"
+                (paste)="preventPaste($event)"
+                (drop)="$event.preventDefault()"
+              />
+              <div class="field__hint">Escríbalo nuevamente para confirmar que es correcto.</div>
+              <div class="field__error" *ngIf="showError('confirmEmail', 'required')">Repita el correo.</div>
+              <div class="field__error" *ngIf="showEmailMismatch">El correo y su repetición no coinciden.</div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
               <label class="field__label" for="register-whatsapp">WhatsApp</label>
               <div class="field__phone">
                 <span class="field__phone-prefix">+54 9</span>
@@ -83,11 +109,8 @@
               <div class="field__error" *ngIf="showError('whatsApp', 'mobileFifteen')">Falta el código de área; no ingrese el 15.</div>
               <div class="field__error" *ngIf="showError('whatsApp', 'mobileLength')">Debe tener 10 dígitos (código de área + número, sin el 15).</div>
             </div>
-            <div class="field">
-              <label class="field__label" for="register-email">Email</label>
-              <input id="register-email" class="field__input" type="email" formControlName="email" autocomplete="email" />
-              <div class="field__error" *ngIf="showError('email', 'email')">El email no tiene un formato válido.</div>
-            </div>
+            <!-- Mantiene WhatsApp a media columna, como el resto de los campos. -->
+            <div class="field" aria-hidden="true"></div>
           </div>
 
           <div class="field-row">
@@ -105,12 +128,31 @@
         <section class="register-section">
           <h2 class="register-section__title">Datos del usuario administrador</h2>
 
-          <div class="field">
-            <label class="field__label" for="register-username">Nombre de usuario *</label>
-            <input id="register-username" class="field__input" formControlName="username" maxlength="80" autocomplete="username" />
-            <div class="field__error" *ngIf="showError('username', 'required')">El nombre de usuario es obligatorio.</div>
-            <div class="field__error" *ngIf="showError('username', 'maxlength')">Máximo 80 caracteres.</div>
-            <div class="field__error" *ngIf="showError('username', 'pattern')">El nombre de usuario no puede contener espacios.</div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label" for="register-username">Usuario *</label>
+              <input id="register-username" class="field__input" formControlName="username" maxlength="80" autocomplete="username" />
+              <div class="field__hint">Con este usuario va a iniciar sesión.</div>
+              <div class="field__error" *ngIf="showError('username', 'required')">El usuario es obligatorio.</div>
+              <div class="field__error" *ngIf="showError('username', 'maxlength')">Máximo 80 caracteres.</div>
+              <div class="field__error" *ngIf="showError('username', 'pattern')">El usuario no puede contener espacios.</div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="register-confirm-username">Repetir usuario *</label>
+              <input
+                id="register-confirm-username"
+                class="field__input"
+                formControlName="confirmUsername"
+                maxlength="80"
+                autocomplete="off"
+                [class.field__input--mismatch]="showUsernameMismatch"
+                (paste)="preventPaste($event)"
+                (drop)="$event.preventDefault()"
+              />
+              <div class="field__hint">Escríbalo nuevamente para confirmar que es correcto.</div>
+              <div class="field__error" *ngIf="showError('confirmUsername', 'required')">Repita el usuario.</div>
+              <div class="field__error" *ngIf="showUsernameMismatch">El usuario y su repetición no coinciden.</div>
+            </div>
           </div>
 
           <div class="field-row">

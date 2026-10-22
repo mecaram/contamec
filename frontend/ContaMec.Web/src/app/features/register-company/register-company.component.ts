@@ -13,6 +13,19 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
   return password && password !== confirmPassword ? { mismatch: true } : null;
 }
 
+/** Igual que el backend: sin espacios en los extremos y sin distinguir mayúsculas. */
+function repeatedValueValidator(field: string, confirmField: string, error: string) {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const value = (group.get(field)?.value ?? '').trim().toLowerCase();
+    const confirmValue = (group.get(confirmField)?.value ?? '').trim().toLowerCase();
+    return value && confirmValue && value !== confirmValue ? { [error]: true } : null;
+  };
+}
+
+const emailsMatchValidator = repeatedValueValidator('email', 'confirmEmail', 'emailMismatch');
+// El login no distingue mayúsculas en el usuario.
+const usernamesMatchValidator = repeatedValueValidator('username', 'confirmUsername', 'usernameMismatch');
+
 @Component({
   selector: 'app-register-company',
   templateUrl: './register-company.component.html',
@@ -26,14 +39,16 @@ export class RegisterCompanyComponent {
       documentType: ['', [Validators.required]],
       documentNumber: ['', [Validators.required, documentNumberValidator]],
       whatsApp: ['', [argentinaMobileValidator]],
-      email: ['', [Validators.email]],
+      email: ['', [Validators.required, Validators.email]],
+      confirmEmail: ['', [Validators.required]],
       address: [''],
       locality: [''],
       username: ['', [Validators.required, Validators.maxLength(80), Validators.pattern(/^\S*$/)]],
+      confirmUsername: ['', [Validators.required]],
       password: ['', [Validators.required, passwordPolicyValidator]],
       confirmPassword: ['', [Validators.required]]
     },
-    { validators: passwordsMatchValidator }
+    { validators: [passwordsMatchValidator, emailsMatchValidator, usernamesMatchValidator] }
   );
 
   readonly visible: Record<'password' | 'confirmPassword', boolean> = {
@@ -69,6 +84,19 @@ export class RegisterCompanyComponent {
 
   get passwordRules(): PasswordRule[] {
     return passwordRules(this.form.controls.password.value);
+  }
+
+  get showEmailMismatch(): boolean {
+    return this.form.hasError('emailMismatch') && !!this.form.controls.confirmEmail.touched;
+  }
+
+  get showUsernameMismatch(): boolean {
+    return this.form.hasError('usernameMismatch') && !!this.form.controls.confirmUsername.touched;
+  }
+
+  /** La repetición se escribe a mano: pegar el valor copiado no detectaría un error de tipeo. */
+  preventPaste(event: ClipboardEvent): void {
+    event.preventDefault();
   }
 
   get showMismatch(): boolean {
@@ -107,10 +135,12 @@ export class RegisterCompanyComponent {
         documentType: raw.documentType,
         documentNumber: raw.documentNumber,
         whatsApp: whatsApp ? ARGENTINA_MOBILE_PREFIX + whatsApp : null,
-        email: raw.email?.trim() || null,
+        email: raw.email.trim(),
+        confirmEmail: raw.confirmEmail.trim(),
         address: raw.address?.trim() || null,
         locality: raw.locality?.trim() || null,
         username: raw.username.trim(),
+        confirmUsername: raw.confirmUsername.trim(),
         // Igual que el formulario de usuarios: la contraseña se guarda sin espacios en los extremos.
         password: raw.password.trim(),
         confirmPassword: raw.confirmPassword.trim()

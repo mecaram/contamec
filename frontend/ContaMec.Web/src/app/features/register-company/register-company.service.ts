@@ -8,10 +8,12 @@ export interface CompanyRegistrationRequest {
   documentType: string;
   documentNumber: string;
   whatsApp: string | null;
-  email: string | null;
+  email: string;
+  confirmEmail: string;
   address: string | null;
   locality: string | null;
   username: string;
+  confirmUsername: string;
   password: string;
   confirmPassword: string;
 }
