@@ -26,6 +26,8 @@ export class ExpensesComponent implements OnInit {
   formVisible = false;
   formMode: 'create' | 'edit' = 'create';
   editingExpense: Expense | null = null;
+  /** Egreso cuyos datos se proponen en el alta (Copiar). */
+  copySource: Expense | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Expense | null = null;
   sortResetToken = 0;
@@ -181,6 +183,7 @@ export class ExpensesComponent implements OnInit {
   openCreate(): void {
     this.formMode = 'create';
     this.editingExpense = null;
+    this.copySource = null;
     this.lastPaymentAccountId = null;
     this.formVisible = true;
     this.expensesService.getLastPaymentAccount().subscribe({
@@ -192,12 +195,23 @@ export class ExpensesComponent implements OnInit {
   openEdit(expense: Expense): void {
     this.formMode = 'edit';
     this.editingExpense = expense;
+    this.copySource = null;
+    this.formVisible = true;
+  }
+
+  /** Alta con los datos del egreso; la fecha es la de hoy, y el usuario y la fecha de creación los pone el backend. */
+  openCopy(expense: Expense): void {
+    this.formMode = 'create';
+    this.editingExpense = null;
+    this.copySource = expense;
+    this.lastPaymentAccountId = null;
     this.formVisible = true;
   }
 
   cancelForm(): void {
     this.formVisible = false;
     this.editingExpense = null;
+    this.copySource = null;
   }
 
   submitForm(payload: Expense): void {
@@ -206,6 +220,7 @@ export class ExpensesComponent implements OnInit {
         next: () => {
           this.notify('Egreso creado correctamente.');
           this.formVisible = false;
+          this.copySource = null;
           this.search();
         },
         error: () => this.notify('No se pudo crear el egreso.', 'error')

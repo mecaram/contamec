@@ -26,6 +26,8 @@ export class IncomesComponent implements OnInit {
   formVisible = false;
   formMode: 'create' | 'edit' = 'create';
   editingIncome: Income | null = null;
+  /** Ingreso cuyos datos se proponen en el alta (Copiar). */
+  copySource: Income | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Income | null = null;
   sortResetToken = 0;
@@ -186,6 +188,7 @@ export class IncomesComponent implements OnInit {
   openCreate(): void {
     this.formMode = 'create';
     this.editingIncome = null;
+    this.copySource = null;
     this.lastPaymentAccountId = null;
     this.formVisible = true;
     this.incomesService.getLastPaymentAccount().subscribe({
@@ -197,12 +200,23 @@ export class IncomesComponent implements OnInit {
   openEdit(income: Income): void {
     this.formMode = 'edit';
     this.editingIncome = income;
+    this.copySource = null;
+    this.formVisible = true;
+  }
+
+  /** Alta con los datos del ingreso; la fecha es la de hoy, y el usuario y la fecha de creación los pone el backend. */
+  openCopy(income: Income): void {
+    this.formMode = 'create';
+    this.editingIncome = null;
+    this.copySource = income;
+    this.lastPaymentAccountId = null;
     this.formVisible = true;
   }
 
   cancelForm(): void {
     this.formVisible = false;
     this.editingIncome = null;
+    this.copySource = null;
   }
 
   submitForm(payload: Income): void {
@@ -211,6 +225,7 @@ export class IncomesComponent implements OnInit {
         next: () => {
           this.notify('Ingreso creado correctamente.');
           this.formVisible = false;
+          this.copySource = null;
           this.search();
         },
         error: () => this.notify('No se pudo crear el ingreso.')

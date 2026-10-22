@@ -12,6 +12,8 @@ import { Expense } from '../../models/expense.model';
 export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() expense: Expense | null = null;
+  /** Solo en el alta: datos que se proponen copiados de otro egreso (salvo la fecha, que es la de hoy). */
+  @Input() copyFrom: Expense | null = null;
   @Input() accountOptions: Array<{ id: number; label: string; subAccountRequires?: boolean }> = [];
   @Input() paymentAccountOptions: Array<{ id: number; label: string }> = [];
   /** En el alta se propone esta cuenta de pago (la del último egreso registrado), si sigue disponible. */
@@ -55,30 +57,51 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.expense || changes.mode) {
+    if (changes.expense || changes.mode || changes.copyFrom) {
       const defaultEmissionDate = this.mode === 'create' && !this.expense ? this.startOfDay(new Date()) : null;
+      // Al copiar, los datos salen del egreso de origen; la fecha de emisión es la de hoy.
+      const source = this.expense ?? this.copySource;
       this.form.reset({
         emissionDate: this.expense?.emissionDate ? this.toDate(this.expense.emissionDate) : defaultEmissionDate,
-        accountId: this.expense?.accountId ?? null,
-        detail: this.expense?.detail ?? '',
-        amount: this.expense?.amount ?? null,
+        accountId: source?.accountId ?? null,
+        detail: source?.detail ?? '',
+        amount: source?.amount ?? null,
         // Los egresos anteriores pueden no tener cuenta de pago: el combo queda vacío y hay que elegir una.
-        paymentAccountId: this.expense?.paymentAccountId ?? null,
-        subAccountId: this.expense?.subAccountId ?? null,
+        paymentAccountId: source?.paymentAccountId ?? null,
+        subAccountId: source?.subAccountId ?? null,
         // Alta: Ordinaria por defecto. Los egresos anteriores sin dato quedan sin seleccionar y hay que elegir una.
-        occurrenceType: this.expense ? this.expense.occurrenceType ?? '' : 'Ordinaria'
+        occurrenceType: source ? source.occurrenceType ?? '' : 'Ordinaria'
       }, { emitEvent: false });
       this.amountDisplay = this.formatAmount(this.form.controls.amount.value);
+      this.discardInactiveCopiedOptions();
       this.refreshSubAccounts();
-    } else if (changes.accountOptions) {
+    } else if (changes.accountOptions || changes.paymentAccountOptions) {
       // Las cuentas llegan después de abrir el formulario: recién ahí se sabe si requiere subcuentas.
-      this.refreshSubAccounts();
+      this.discardInactiveCopiedOptions();
+      if (changes.accountOptions) this.refreshSubAccounts();
     }
     if (changes.minEmissionDate) {
       this.form.controls.emissionDate.updateValueAndValidity();
     }
     if (changes.expense || changes.mode || changes.defaultPaymentAccountId || changes.paymentAccountOptions) {
       this.applyDefaultPaymentAccount();
+    }
+  }
+
+  private get copySource(): Expense | null {
+    return this.mode === 'create' && !this.expense ? this.copyFrom : null;
+  }
+
+  /** Al copiar, una cuenta o cuenta de pago que ya no está activa queda vacía para elegir otra. */
+  private discardInactiveCopiedOptions(): void {
+    if (!this.copySource) return;
+    const account = this.form.controls.accountId;
+    if (account.value !== null && this.accountOptions.length > 0 && !this.accountOptions.some((a) => a.id === account.value)) {
+      account.setValue(null, { emitEvent: false });
+    }
+    const payment = this.form.controls.paymentAccountId;
+    if (payment.value !== null && this.paymentAccountOptions.length > 0 && !this.paymentAccountOptions.some((p) => p.id === payment.value)) {
+      payment.setValue(null, { emitEvent: false });
     }
   }
 
@@ -114,6 +137,8 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
 
     const subAccount = this.form.controls.subAccountId;
     const accountId = this.form.controls.accountId.value;
+    // Con las cuentas todavía sin cargar no se sabe si requiere subcuenta: se conserva la del egreso hasta que lleguen.
+    if (accountId && this.accountOptions.length === 0) return;
     if (!accountId || !this.selectedAccountRequiresSubAccounts) {
       subAccount.clearValidators();
       subAccount.setValue(null, { emitEvent: false });
@@ -133,6 +158,10 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
           .filter((s) => (s.active ?? true) || s.id === currentId)
           .map((s) => ({ id: s.id, label: s.name?.trim() || `#${s.id}` }))
           .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
+        // Al copiar, una subcuenta que ya no está activa queda vacía para elegir otra.
+        if (subAccount.value !== null && !this.subAccountOptions.some((s) => s.id === subAccount.value)) {
+          subAccount.setValue(null, { emitEvent: false });
+        }
       },
       error: () => {
         this.subAccountsLoading = false;
@@ -164,7 +193,8 @@ export class ExpenseFormComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   get title(): string {
-    return this.mode === 'create' ? 'Nuevo egreso' : 'Editar egreso';
+    if (this.mode === 'edit') return 'Editar egreso';
+    return this.copySource ? `Nuevo egreso (copia del #${this.copySource.id})` : 'Nuevo egreso';
   }
 
   save(): void {

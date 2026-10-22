@@ -119,6 +119,7 @@
     <app-income-form
       [mode]="formMode"
       [income]="editingIncome"
+      [copyFrom]="copySource"
       [accountOptions]="accountOptions"
       [paymentAccountOptions]="paymentAccountOptions"
       [defaultPaymentAccountId]="lastPaymentAccountId"
@@ -136,6 +137,7 @@
     [loading]="loading"
     (edit)="openEdit($event)"
     (remove)="deleteIncome($event)"
+    (copy)="openCopy($event)"
   ></app-income-list>
 
   <div class="incomes-toast" *ngIf="notification" [ngClass]="'incomes-toast--' + notification.type">

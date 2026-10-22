@@ -52,11 +52,19 @@
             <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar ingreso">
               <mat-icon>edit</mat-icon>
             </button>
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar ingreso" title="Copiar como nuevo ingreso">
+              <mat-icon>content_copy</mat-icon>
+            </button>
             <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar ingreso">
               <mat-icon>delete</mat-icon>
             </button>
           </ng-container>
-          <ng-template #blockedActions>-</ng-template>
+          <!-- Con el cierre cerrado no se edita ni elimina, pero se puede copiar al cierre abierto. -->
+          <ng-template #blockedActions>
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar ingreso" title="Copiar como nuevo ingreso">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </ng-template>
         </td>
       </tr>
     </tbody>

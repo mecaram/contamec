@@ -32,6 +32,7 @@ export class ExpenseListComponent implements OnChanges {
   @Input() loading = false;
   @Output() edit = new EventEmitter<Expense>();
   @Output() remove = new EventEmitter<Expense>();
+  @Output() copy = new EventEmitter<Expense>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -91,6 +92,10 @@ export class ExpenseListComponent implements OnChanges {
 
   onDelete(expense: Expense): void {
     this.remove.emit(expense);
+  }
+
+  onCopy(expense: Expense): void {
+    this.copy.emit(expense);
   }
 
   setSort(column: SortableColumn): void {

@@ -12,6 +12,8 @@ import { Income } from '../../models/income.model';
 export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() income: Income | null = null;
+  /** Solo en el alta: datos que se proponen copiados de otro ingreso (salvo la fecha, que es la de hoy). */
+  @Input() copyFrom: Income | null = null;
   @Input() accountOptions: Array<{ id: number; label: string; subAccountRequires?: boolean }> = [];
   @Input() paymentAccountOptions: Array<{ id: number; label: string }> = [];
   /** En el alta se propone esta cuenta de pago (la del último ingreso registrado), si sigue disponible. */
@@ -55,30 +57,51 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.income || changes.mode) {
+    if (changes.income || changes.mode || changes.copyFrom) {
       const defaultEmissionDate = this.mode === 'create' && !this.income ? this.startOfDay(new Date()) : null;
+      // Al copiar, los datos salen del ingreso de origen; la fecha de emisión es la de hoy.
+      const source = this.income ?? this.copySource;
       this.form.reset({
         emissionDate: this.income?.emissionDate ? this.toDate(this.income.emissionDate) : defaultEmissionDate,
-        accountId: this.income?.accountId ?? null,
-        detail: this.income?.detail ?? '',
-        amount: this.income?.amount ?? null,
+        accountId: source?.accountId ?? null,
+        detail: source?.detail ?? '',
+        amount: source?.amount ?? null,
         // Los ingresos anteriores pueden no tener cuenta de pago: el combo queda vacío y hay que elegir una.
-        paymentAccountId: this.income?.paymentAccountId ?? null,
-        subAccountId: this.income?.subAccountId ?? null,
+        paymentAccountId: source?.paymentAccountId ?? null,
+        subAccountId: source?.subAccountId ?? null,
         // Alta: Ordinaria por defecto. Los ingresos anteriores sin dato quedan sin seleccionar y hay que elegir una.
-        occurrenceType: this.income ? this.income.occurrenceType ?? '' : 'Ordinaria'
+        occurrenceType: source ? source.occurrenceType ?? '' : 'Ordinaria'
       }, { emitEvent: false });
       this.amountDisplay = this.formatAmount(this.form.controls.amount.value);
+      this.discardInactiveCopiedOptions();
       this.refreshSubAccounts();
-    } else if (changes.accountOptions) {
+    } else if (changes.accountOptions || changes.paymentAccountOptions) {
       // Las cuentas llegan después de abrir el formulario: recién ahí se sabe si requiere subcuentas.
-      this.refreshSubAccounts();
+      this.discardInactiveCopiedOptions();
+      if (changes.accountOptions) this.refreshSubAccounts();
     }
     if (changes.minEmissionDate) {
       this.form.controls.emissionDate.updateValueAndValidity();
     }
     if (changes.income || changes.mode || changes.defaultPaymentAccountId || changes.paymentAccountOptions) {
       this.applyDefaultPaymentAccount();
+    }
+  }
+
+  private get copySource(): Income | null {
+    return this.mode === 'create' && !this.income ? this.copyFrom : null;
+  }
+
+  /** Al copiar, una cuenta o cuenta de pago que ya no está activa queda vacía para elegir otra. */
+  private discardInactiveCopiedOptions(): void {
+    if (!this.copySource) return;
+    const account = this.form.controls.accountId;
+    if (account.value !== null && this.accountOptions.length > 0 && !this.accountOptions.some((a) => a.id === account.value)) {
+      account.setValue(null, { emitEvent: false });
+    }
+    const payment = this.form.controls.paymentAccountId;
+    if (payment.value !== null && this.paymentAccountOptions.length > 0 && !this.paymentAccountOptions.some((p) => p.id === payment.value)) {
+      payment.setValue(null, { emitEvent: false });
     }
   }
 
@@ -114,6 +137,8 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
 
     const subAccount = this.form.controls.subAccountId;
     const accountId = this.form.controls.accountId.value;
+    // Con las cuentas todavía sin cargar no se sabe si requiere subcuenta: se conserva la del ingreso hasta que lleguen.
+    if (accountId && this.accountOptions.length === 0) return;
     if (!accountId || !this.selectedAccountRequiresSubAccounts) {
       subAccount.clearValidators();
       subAccount.setValue(null, { emitEvent: false });
@@ -133,6 +158,10 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
           .filter((s) => (s.active ?? true) || s.id === currentId)
           .map((s) => ({ id: s.id, label: s.name?.trim() || `#${s.id}` }))
           .sort((a, b) => a.label.localeCompare(b.label, 'es', { sensitivity: 'base' }));
+        // Al copiar, una subcuenta que ya no está activa queda vacía para elegir otra.
+        if (subAccount.value !== null && !this.subAccountOptions.some((s) => s.id === subAccount.value)) {
+          subAccount.setValue(null, { emitEvent: false });
+        }
       },
       error: () => {
         this.subAccountsLoading = false;
@@ -164,7 +193,8 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   get title(): string {
-    return this.mode === 'create' ? 'Nuevo ingreso' : 'Editar ingreso';
+    if (this.mode === 'edit') return 'Editar ingreso';
+    return this.copySource ? `Nuevo ingreso (copia del #${this.copySource.id})` : 'Nuevo ingreso';
   }
 
   save(): void {

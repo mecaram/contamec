@@ -50,11 +50,19 @@
             <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar egreso">
               <mat-icon>edit</mat-icon>
             </button>
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" title="Copiar como nuevo egreso">
+              <mat-icon>content_copy</mat-icon>
+            </button>
             <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar egreso">
               <mat-icon>delete</mat-icon>
             </button>
           </ng-container>
-          <ng-template #blockedActions>-</ng-template>
+          <!-- Con el cierre cerrado no se edita ni elimina, pero se puede copiar al cierre abierto. -->
+          <ng-template #blockedActions>
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" title="Copiar como nuevo egreso">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </ng-template>
         </td>
       </tr>
     </tbody>

@@ -32,6 +32,7 @@ export class IncomeListComponent implements OnChanges {
   @Input() loading = false;
   @Output() edit = new EventEmitter<Income>();
   @Output() remove = new EventEmitter<Income>();
+  @Output() copy = new EventEmitter<Income>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -92,6 +93,10 @@ export class IncomeListComponent implements OnChanges {
 
   onDelete(income: Income): void {
     this.remove.emit(income);
+  }
+
+  onCopy(income: Income): void {
+    this.copy.emit(income);
   }
 
   setSort(column: SortableColumn): void {

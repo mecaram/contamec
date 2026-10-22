@@ -113,6 +113,7 @@
     <app-expense-form
       [mode]="formMode"
       [expense]="editingExpense"
+      [copyFrom]="copySource"
       [accountOptions]="accountOptions"
       [paymentAccountOptions]="paymentAccountOptions"
       [defaultPaymentAccountId]="lastPaymentAccountId"
@@ -130,6 +131,7 @@
     [loading]="loading"
     (edit)="openEdit($event)"
     (remove)="deleteExpense($event)"
+    (copy)="openCopy($event)"
   ></app-expense-list>
 
   <div class="expenses-toast" *ngIf="notification" [ngClass]="'expenses-toast--' + notification.type">
