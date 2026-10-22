@@ -9,4 +9,7 @@ public class NotificationSettings
 
     /// <summary>Correo de los desarrolladores que recibe los avisos del sistema. Vacío, los avisos no se envían.</summary>
     public string? Email { get; set; }
+
+    /// <summary>Pantalla de ingreso del frontend, para los enlaces de los correos a las empresas.</summary>
+    public string LoginUrl { get; set; } = "https://contamec.vercel.app";
 }

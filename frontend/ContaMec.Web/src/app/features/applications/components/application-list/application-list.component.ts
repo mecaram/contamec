@@ -28,6 +28,7 @@ export class ApplicationListComponent implements OnChanges {
   @Input() loading = false;
   @Output() edit = new EventEmitter<Application>();
   @Output() remove = new EventEmitter<Application>();
+  @Output() activate = new EventEmitter<Application>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -83,6 +84,10 @@ export class ApplicationListComponent implements OnChanges {
 
   onDelete(application: Application): void {
     this.remove.emit(application);
+  }
+
+  onActivate(application: Application): void {
+    this.activate.emit(application);
   }
 
   setSort(column: SortableColumn): void {

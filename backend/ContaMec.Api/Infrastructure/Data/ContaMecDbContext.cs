@@ -18,6 +18,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
     public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
     // Calificado: "Application" choca con el namespace ContaMec.Api.Application.
     public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
+    public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -32,6 +33,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
         modelBuilder.HasPostgresEnum<ApplicationType>("public", "ApplicationTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<BehaviorType>("public", "BehaviorTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<DocumentType>("public", "DocumentTypes", new NpgsqlNullNameTranslator());
+        modelBuilder.HasPostgresEnum<TemplateType>("public", "TemplateTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<OccurrenceType>("public", "OccurrenceTypes", new NpgsqlNullNameTranslator());
         modelBuilder.HasPostgresEnum<RateType>("public", "RateTypes", new NpgsqlNullNameTranslator());
 
@@ -47,12 +49,25 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.WhatsApp).HasColumnName("WhatsApp");
             entity.Property(e => e.Type).HasColumnName("Type");
             entity.Property(e => e.ApplicationTypeDate).HasColumnName("ApplicationTypeDate").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.ApplicationExpirationDate).HasColumnName("ApplicationExpirationDate").HasColumnType("timestamp with time zone");
             entity.Property(e => e.Email).HasColumnName("Email");
             entity.Property(e => e.Address).HasColumnName("Address");
             entity.Property(e => e.Locality).HasColumnName("Locality");
             entity.Property(e => e.Guid).HasColumnName("Guid");
             entity.Property(e => e.DocumentType).HasColumnName("DocumentType");
             entity.Property(e => e.DocumentNumber).HasColumnName("DocumentNumber");
+        });
+
+        modelBuilder.Entity<EmailTemplate>(entity =>
+        {
+            entity.ToTable("EmailTemplates");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id");
+            entity.Property(e => e.Name).HasColumnName("Name");
+            entity.Property(e => e.Subject).HasColumnName("Subject");
+            entity.Property(e => e.Body).HasColumnName("Body");
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
         });
 
         modelBuilder.Entity<Closure>(entity =>

@@ -15,10 +15,21 @@ public class ResendEmailNotifier(
 
     public async Task NotifyAsync(string subject, string htmlBody, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(_notifications.Email) || string.IsNullOrWhiteSpace(_resend.ApiKey))
+        if (string.IsNullOrWhiteSpace(_notifications.Email))
         {
-            logger.LogWarning("Aviso por correo no enviado: falta configurar Notifications:Email o Resend:ApiKey.");
+            logger.LogWarning("Aviso por correo no enviado: falta configurar Notifications:Email.");
             return;
+        }
+
+        await SendAsync(_notifications.Email, subject, htmlBody, cancellationToken);
+    }
+
+    public async Task<bool> SendAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(to) || string.IsNullOrWhiteSpace(_resend.ApiKey))
+        {
+            logger.LogWarning("Correo no enviado: falta el destinatario o configurar Resend:ApiKey.");
+            return false;
         }
 
         var from = string.IsNullOrWhiteSpace(_resend.FromName)
@@ -30,7 +41,7 @@ public class ResendEmailNotifier(
             Content = JsonContent.Create(new
             {
                 from,
-                to = new[] { _notifications.Email.Trim() },
+                to = new[] { to.Trim() },
                 subject,
                 html = htmlBody
             })
@@ -44,12 +55,15 @@ public class ResendEmailNotifier(
             {
                 // Resend explica el rechazo en el cuerpo (p. ej. remitente no verificado o destinatario no permitido).
                 var detail = await response.Content.ReadAsStringAsync(cancellationToken);
-                logger.LogWarning("Resend rechazó el aviso por correo: {StatusCode} {Detail}", (int)response.StatusCode, detail);
+                logger.LogWarning("Resend rechazó el correo a {Email}: {StatusCode} {Detail}", to, (int)response.StatusCode, detail);
+                return false;
             }
+            return true;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            logger.LogWarning(ex, "No se pudo enviar el aviso por correo a {Email}.", _notifications.Email);
+            logger.LogWarning(ex, "No se pudo enviar el correo a {Email}.", to);
+            return false;
         }
     }
 }

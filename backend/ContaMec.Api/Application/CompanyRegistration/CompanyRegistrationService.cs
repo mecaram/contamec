@@ -4,6 +4,7 @@ using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.CompanyRegistration.Dto;
 using ContaMec.Api.Application.Notifications;
 using ContaMec.Api.Application.Users;
+using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -21,7 +22,8 @@ public class CompanyRegistrationService(
     ContaMecDbContext dbContext,
     IApplicationService applicationService,
     IUserService userService,
-    IEmailNotifier emailNotifier) : ICompanyRegistrationService
+    IEmailNotifier emailNotifier,
+    IEmailTemplateService emailTemplates) : ICompanyRegistrationService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
 
@@ -72,11 +74,29 @@ public class CompanyRegistrationService(
 
         // Después de confirmar: un aviso fallido no debe deshacer ni demorar indefinidamente el registro.
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-        await emailNotifier.NotifyAsync(
-            $"ContaMec - Nueva empresa registrada: {application.Name}",
-            BuildNewCompanyEmail(application, user.Name),
-            timeout.Token);
+        var email = await emailTemplates.RenderAsync(TemplateType.PedidoDemo, BuildNewCompanyValues(application, user.Name), timeout.Token)
+            ?? new RenderedEmail($"ContaMec - Nueva empresa registrada: {application.Name}", BuildNewCompanyEmail(application, user.Name));
+        await emailNotifier.NotifyAsync(email.Subject, email.Body, timeout.Token);
     }
+
+    /// <summary>Valores de los marcadores de la plantilla PedidoDemo.</summary>
+    private static Dictionary<string, string?> BuildNewCompanyValues(ApplicationEntity application, string username)
+    {
+        static string OrNotInformed(string? value) => string.IsNullOrWhiteSpace(value) ? "No informado" : value;
+
+        return new Dictionary<string, string?>
+        {
+            ["Empresa"] = application.Name,
+            ["Direccion"] = OrNotInformed(application.Address),
+            ["Localidad"] = OrNotInformed(application.Locality),
+            ["WhatsApp"] = OrNotInformed(string.IsNullOrWhiteSpace(application.WhatsApp) ? null : "+" + application.WhatsApp),
+            ["Email"] = OrNotInformed(application.Email),
+            ["Usuario"] = username,
+            ["FechaRegistro"] = $"{application.CreatedAt:dd/MM/yyyy HH:mm}"
+        };
+    }
+
+    /// <summary>Texto por defecto si no hay plantilla PedidoDemo en EmailTemplates.</summary>
 
     private static string BuildNewCompanyEmail(ApplicationEntity application, string username)
     {

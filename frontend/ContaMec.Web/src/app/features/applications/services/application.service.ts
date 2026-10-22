@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Application } from '../models/application.model';
+import { Application, ApplicationActivation } from '../models/application.model';
 import { ApplicationSearch } from '../models/application-search.model';
 
 @Injectable()
@@ -27,6 +27,10 @@ export class ApplicationService {
 
   update(id: number, application: Application): Observable<void> {
     return this.http.put<void>(`${this.applicationsUrl}/${id}`, this.buildPayload(application), { headers: this.getAuthHeaders() });
+  }
+
+  activate(id: number): Observable<ApplicationActivation> {
+    return this.http.post<ApplicationActivation>(`${this.applicationsUrl}/${id}/activate`, null, { headers: this.getAuthHeaders() });
   }
 
   delete(id: number): Observable<void> {

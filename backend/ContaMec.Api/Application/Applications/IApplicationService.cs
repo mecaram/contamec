@@ -13,4 +13,7 @@ public interface IApplicationService
     Task<ApplicationEntity> AddAsync(ApplicationCreateRequest request);
     Task<bool> UpdateAsync(int id, ApplicationUpdateRequest request, int currentApplicationId);
     Task<bool> DeleteAsync(int id, int currentApplicationId);
+
+    /// <summary>Activa una aplicación inactiva y todos sus usuarios, le inicia una demo de 7 días y avisa por correo a la empresa. Null si no existe.</summary>
+    Task<ApplicationActivationResponse?> ActivateAsync(int id);
 }

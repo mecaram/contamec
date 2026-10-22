@@ -11,3 +11,8 @@ export interface Application {
   guid?: string | null;
   createdAt?: string | null;
 }
+
+export interface ApplicationActivation {
+  email?: string | null;
+  emailSent: boolean;
+}

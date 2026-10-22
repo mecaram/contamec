@@ -16,6 +16,7 @@ public class Application
     public string? Guid { get; set; }
     public ApplicationType? Type { get; set; }
     public DateTime? ApplicationTypeDate { get; set; }
+    public DateTime? ApplicationExpirationDate { get; set; }
     public DocumentType? DocumentType { get; set; }
     public string? DocumentNumber { get; set; }
 

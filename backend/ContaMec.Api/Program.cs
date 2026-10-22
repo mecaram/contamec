@@ -113,6 +113,7 @@ dataSourceBuilder.MapEnum<BehaviorType>("BehaviorTypes", new NpgsqlNullNameTrans
 dataSourceBuilder.MapEnum<DocumentType>("DocumentTypes", new NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<OccurrenceType>("OccurrenceTypes", new NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<RateType>("RateTypes", new NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<TemplateType>("TemplateTypes", new NpgsqlNullNameTranslator());
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddDbContext<ContaMecDbContext>(options => options.UseNpgsql(dataSource));
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -127,6 +128,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
 builder.Services.AddHttpClient<IEmailNotifier, ResendEmailNotifier>();
+builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

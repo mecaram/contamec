@@ -1,19 +1,27 @@
 using ContaMec.Api.Application.Applications.Dto;
+using ContaMec.Api.Application.Notifications;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
+using System.Net;
 using System.Text.RegularExpressions;
 // Alias: "Application" choca con el namespace ContaMec.Api.Application.
 using ApplicationEntity = ContaMec.Api.Domain.Entities.Application;
 
 namespace ContaMec.Api.Application.Applications;
 
-public class ApplicationService(ContaMecDbContext dbContext) : IApplicationService
+public class ApplicationService(
+    ContaMecDbContext dbContext,
+    IEmailNotifier emailNotifier,
+    IEmailTemplateService emailTemplates,
+    IOptions<NotificationSettings> notificationOptions) : IApplicationService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
+    private readonly NotificationSettings _notifications = notificationOptions.Value;
 
     public async Task<List<ApplicationResponse>> SearchAsync(ApplicationSearchRequest request)
     {
@@ -149,6 +157,115 @@ public class ApplicationService(ContaMecDbContext dbContext) : IApplicationServi
         _dbContext.Applications.Remove(application);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    private const int DemoDays = 7;
+
+    public async Task<ApplicationActivationResponse?> ActivateAsync(int id)
+    {
+        var application = await _dbContext.Applications
+            .Include(a => a.Users)
+            .FirstOrDefaultAsync(a => a.Id == id);
+        if (application is null)
+            return null;
+
+        if (application.Active)
+            throw new ArgumentException("La aplicación ya está activa.");
+
+        var now = ArgentinaClock.Now;
+        application.Active = true;
+        application.Type = ApplicationType.Demo;
+        application.ApplicationTypeDate = now;
+        application.ApplicationExpirationDate = now.AddDays(DemoDays);
+        application.Guid ??= System.Guid.NewGuid().ToString();
+        foreach (var user in application.Users)
+            user.IsActive = true;
+
+        // Un único SaveChanges: la aplicación y sus usuarios se activan juntos o no se activa nada.
+        await _dbContext.SaveChangesAsync();
+
+        var response = new ApplicationActivationResponse { Email = application.Email };
+        if (application.Email is null)
+            return response;
+
+        // Después de confirmar: un aviso fallido no debe deshacer ni demorar indefinidamente la activación.
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var email = await emailTemplates.RenderAsync(TemplateType.PedidoDemoAprobado, BuildActivationValues(application), timeout.Token)
+            ?? new RenderedEmail($"ContaMec - Tu demo gratis está activa por {DemoDays} días", BuildActivationEmail(application));
+        response.EmailSent = await emailNotifier.SendAsync(application.Email, email.Subject, email.Body, timeout.Token);
+        return response;
+    }
+
+    /// <summary>Valores de los marcadores de la plantilla PedidoDemoAprobado.</summary>
+    private Dictionary<string, string?> BuildActivationValues(ApplicationEntity application)
+    {
+        return new Dictionary<string, string?>
+        {
+            ["Empresa"] = application.Name,
+            ["Usuario"] = JoinUsernames(application),
+            ["DiasDemo"] = DemoDays.ToString(),
+            ["FechaInicio"] = $"{application.ApplicationTypeDate:dd/MM/yyyy HH:mm}",
+            ["FechaVencimiento"] = $"{application.ApplicationExpirationDate:dd/MM/yyyy HH:mm}",
+            ["LoginUrl"] = _notifications.LoginUrl,
+            ["WhatsAppSoporte"] = FormatSupportWhatsApp(),
+            ["WhatsAppSoporteNumero"] = _notifications.WhatsApp
+        };
+    }
+
+    private static string JoinUsernames(ApplicationEntity application) =>
+        string.Join(", ", application.Users.Select(u => u.Name).OrderBy(n => n));
+
+    // Mismo formato que el listado de aplicaciones: +54 9 + código de área y número.
+    private string? FormatSupportWhatsApp() =>
+        _notifications.WhatsApp is { Length: 13 } digits && digits.StartsWith("549")
+            ? $"+54 9 {digits[3..7]} {digits[7..]}"
+            : _notifications.WhatsApp;
+
+    /// <summary>Texto por defecto si no hay plantilla PedidoDemoAprobado en EmailTemplates.</summary>
+    private string BuildActivationEmail(ApplicationEntity application)
+    {
+        static string Row(string label, string? value) =>
+            $"""
+             <tr>
+               <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#64748b;width:40%">{label}</td>
+               <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#0f172a;font-weight:600">{(string.IsNullOrWhiteSpace(value) ? "-" : WebUtility.HtmlEncode(value))}</td>
+             </tr>
+             """;
+
+        var name = WebUtility.HtmlEncode(application.Name);
+        var usernames = JoinUsernames(application);
+        var loginUrl = WebUtility.HtmlEncode(_notifications.LoginUrl);
+        var whatsApp = FormatSupportWhatsApp();
+        var contact = string.IsNullOrWhiteSpace(whatsApp)
+            ? ""
+            : $"""
+              <p style="margin:20px 0 0">Si tenés dudas o querés seguir usando ContaMec cuando termine la demo, escribinos por WhatsApp al <a href="https://wa.me/{_notifications.WhatsApp}" style="color:#0c4a6e;font-weight:600">{whatsApp}</a>.</p>
+              """;
+
+        return $"""
+            <div style="font-family:Segoe UI,Arial,sans-serif;max-width:600px;margin:0 auto;color:#0f172a">
+              <div style="background:#0c4a6e;color:#fff;padding:20px 24px;border-radius:8px 8px 0 0">
+                <div style="font-size:20px;font-weight:700">ContaMec</div>
+                <div style="font-size:15px;opacity:.85">Tu cuenta ya está activa</div>
+              </div>
+              <div style="border:1px solid #e2e8f0;border-top:0;padding:24px;border-radius:0 0 8px 8px">
+                <p style="margin:0 0 12px">Hola, <strong>{name}</strong>:</p>
+                <p style="margin:0 0 16px">¡Bienvenido a ContaMec! Ya habilitamos tu cuenta y desde este momento podés usar el sistema durante <strong>{DemoDays} días</strong> en modo <strong>Demo</strong>, sin costo.</p>
+                <table style="width:100%;border-collapse:collapse;font-size:14px">
+                  {Row("Empresa", application.Name)}
+                  {Row("Usuario", usernames)}
+                  {Row("Inicio de la demo", $"{application.ApplicationTypeDate:dd/MM/yyyy HH:mm} hs")}
+                  {Row("Vence el", $"{application.ApplicationExpirationDate:dd/MM/yyyy HH:mm} hs")}
+                </table>
+                <p style="margin:24px 0;text-align:center">
+                  <a href="{loginUrl}" style="display:inline-block;background:#0c4a6e;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600">Ingresar a ContaMec</a>
+                </p>
+                <p style="margin:0">Ingresá con el usuario y la contraseña que elegiste al solicitar la demo.</p>
+                {contact}
+                <p style="margin:20px 0 0;font-size:12px;color:#94a3b8">Este es un correo automático de ContaMec; no respondas a este mensaje.</p>
+              </div>
+            </div>
+            """;
     }
 
     private static Expression<Func<ApplicationEntity, ApplicationResponse>> MapToResponse()

@@ -63,6 +63,7 @@
     [loading]="loading"
     (edit)="openEdit($event)"
     (remove)="deleteApplication($event)"
+    (activate)="activateApplication($event)"
   ></app-application-list>
 
   <div class="applications-toast" *ngIf="notification" [ngClass]="'applications-toast--' + notification.type">
@@ -81,6 +82,23 @@
       <div class="applications-dialog__actions">
         <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
         <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="applications-dialog-backdrop" *ngIf="activateTarget">
+    <section class="applications-dialog" role="dialog" aria-modal="true">
+      <h3 class="applications-dialog__title">Confirmar activación</h3>
+      <p class="applications-dialog__text">Está a punto de activar la aplicación #{{ activateTarget.id }} y todos sus usuarios. Verifique la información:</p>
+      <div class="applications-dialog__summary">
+        <div><strong>Nombre:</strong> {{ activateTarget.name || '-' }}</div>
+        <div><strong>Documento:</strong> {{ activateTarget.documentType ? activateTarget.documentType + ' ' + activateTarget.documentNumber : '-' }}</div>
+        <div><strong>Email:</strong> {{ activateTarget.email || '-' }}</div>
+      </div>
+      <p class="applications-dialog__text">Quedará como <strong>Demo</strong> por 7 días a partir de hoy y se le enviará un aviso por correo.</p>
+      <div class="applications-dialog__actions">
+        <button mat-button type="button" (click)="cancelActivate()">Cancelar</button>
+        <button mat-flat-button color="primary" type="button" (click)="confirmActivate()">Activar</button>
       </div>
     </section>
   </div>

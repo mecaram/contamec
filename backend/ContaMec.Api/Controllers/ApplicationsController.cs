@@ -82,6 +82,23 @@ public class ApplicationsController(IApplicationService applicationService) : Co
         }
     }
 
+    [HttpPost("{id:int}/activate")]
+    [ProducesResponseType(typeof(ApplicationActivationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Activate(int id)
+    {
+        try
+        {
+            var result = await applicationService.ActivateAsync(id);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

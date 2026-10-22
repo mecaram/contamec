@@ -19,6 +19,7 @@ export class ApplicationsComponent implements OnInit {
   editingApplication: Application | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Application | null = null;
+  activateTarget: Application | null = null;
   sortResetToken = 0;
   private notificationTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -134,6 +135,36 @@ export class ApplicationsComponent implements OnInit {
 
   cancelDelete(): void {
     this.deleteTarget = null;
+  }
+
+  activateApplication(application: Application): void {
+    this.activateTarget = application;
+  }
+
+  confirmActivate(): void {
+    if (!this.activateTarget) return;
+    const target = this.activateTarget;
+    this.applicationService.activate(target.id).subscribe({
+      next: (result) => {
+        this.activateTarget = null;
+        if (!result?.email) {
+          this.notify('Aplicación y usuarios activados. La empresa no tiene email para avisarle.');
+        } else if (result.emailSent) {
+          this.notify(`Aplicación y usuarios activados. Se envió el aviso a ${result.email}.`);
+        } else {
+          this.notify(`Aplicación y usuarios activados, pero no se pudo enviar el aviso a ${result.email}.`, 'error');
+        }
+        this.search();
+      },
+      error: (error) => {
+        this.activateTarget = null;
+        this.notify(error?.error?.message ?? 'No se pudo activar la aplicación.', 'error');
+      }
+    });
+  }
+
+  cancelActivate(): void {
+    this.activateTarget = null;
   }
 
   closeNotification(): void {
