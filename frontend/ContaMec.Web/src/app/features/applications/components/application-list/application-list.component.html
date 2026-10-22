@@ -28,7 +28,7 @@
         <th class="application-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
         <th class="application-list__sortable" (click)="setSort('documentType')">Tipo doc. <span>{{ sortIndicator('documentType') }}</span></th>
         <th class="application-list__sortable" (click)="setSort('documentNumber')">N° documento <span>{{ sortIndicator('documentNumber') }}</span></th>
-        <th>Email</th>
+        <th>Correo</th>
         <th>WhatsApp</th>
         <th>Localidad</th>
         <th class="application-list__sortable" (click)="setSort('createdAt')">Fecha de alta <span>{{ sortIndicator('createdAt') }}</span></th>
@@ -42,7 +42,7 @@
         <td data-label="Nombre">{{ row.name || '-' }}</td>
         <td data-label="Tipo doc.">{{ row.documentType || '-' }}</td>
         <td data-label="N° documento">{{ row.documentNumber || '-' }}</td>
-        <td data-label="Email">{{ row.email || '-' }}</td>
+        <td data-label="Correo">{{ row.email || '-' }}</td>
         <td data-label="WhatsApp">
           <a
             *ngIf="row.whatsApp; else noWhatsApp"

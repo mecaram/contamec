@@ -23,7 +23,7 @@ const demoRequestPlaceholders: TemplatePlaceholder[] = [
   { key: 'Direccion', label: 'Dirección', sample: 'Av. Costanera 1234' },
   { key: 'Localidad', label: 'Localidad', sample: 'Dolores' },
   { key: 'WhatsApp', label: 'WhatsApp', sample: '+5492245123456' },
-  { key: 'Email', label: 'Email', sample: 'contacto@eltornillo.com.ar' },
+  { key: 'Email', label: 'Correo', sample: 'contacto@eltornillo.com.ar' },
   { ...username, label: 'Usuario administrador' },
   { key: 'FechaRegistro', label: 'Fecha de registro', sample: '22/10/2026 09:03' }
 ];

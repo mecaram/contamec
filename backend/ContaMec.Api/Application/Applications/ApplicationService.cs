@@ -298,7 +298,7 @@ public class ApplicationService(
     private static void ValidateEmail(string? email)
     {
         if (!string.IsNullOrWhiteSpace(email) && !new EmailAddressAttribute().IsValid(email.Trim()))
-            throw new ArgumentException("Email no tiene un formato válido.");
+            throw new ArgumentException("El correo no tiene un formato válido.");
     }
 
     // Celular de Argentina en formato de WhatsApp: 549 + código de área y número (10 dígitos, sin 0 ni 15).

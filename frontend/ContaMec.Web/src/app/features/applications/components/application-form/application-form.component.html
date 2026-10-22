@@ -57,9 +57,9 @@
         <div class="application-form__error application-form__error--inline" *ngIf="form.controls.whatsApp.hasError('mobileLength')">Debe tener 10 dígitos (código de área + número, sin el 15).</div>
       </div>
       <div class="application-form__field">
-        <label class="application-form__label" for="application-email">Email</label>
+        <label class="application-form__label" for="application-email">Correo</label>
         <input id="application-email" class="application-form__control" type="email" formControlName="email" />
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.email.hasError('email')">El email no tiene un formato válido.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.email.hasError('email')">El correo no tiene un formato válido.</div>
       </div>
     </div>
 

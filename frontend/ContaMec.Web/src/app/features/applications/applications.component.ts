@@ -148,7 +148,7 @@ export class ApplicationsComponent implements OnInit {
       next: (result) => {
         this.activateTarget = null;
         if (!result?.email) {
-          this.notify('Aplicación y usuarios activados. La empresa no tiene email para avisarle.');
+          this.notify('Aplicación y usuarios activados. La empresa no tiene correo para avisarle.');
         } else if (result.emailSent) {
           this.notify(`Aplicación y usuarios activados. Se envió el aviso a ${result.email}.`);
         } else {
