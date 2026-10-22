@@ -1,0 +1,84 @@
+<div class="email-templates-page">
+  <header class="email-templates-page__header">
+    <div>
+      <h1 class="email-templates-page__title">Plantillas de correo</h1>
+      <p class="email-templates-page__subtitle">Consulte, cree y administre los correos que envía el sistema.</p>
+    </div>
+    <div class="email-templates-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="email-templates-filters mat-elevation-z1" *ngIf="!formVisible">
+    <form [formGroup]="filterForm" class="email-templates-filters__form">
+      <div class="email-templates-field">
+        <label class="email-templates-field__label" for="filter-id">ID</label>
+        <input id="filter-id" class="email-templates-field__control" type="number" formControlName="id" (change)="search()" />
+      </div>
+      <div class="email-templates-field">
+        <label class="email-templates-field__label" for="filter-name">Nombre</label>
+        <select id="filter-name" class="email-templates-field__control" formControlName="name" (change)="search()">
+          <option value="">Todas</option>
+          <option *ngFor="let type of templateTypes" [value]="type.value">{{ type.label }}</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="email-templates-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="email-templates-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="email-templates-page__new-action" *ngIf="!formVisible">
+    <button mat-flat-button color="primary" type="button" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nueva plantilla
+    </button>
+  </div>
+
+  <section class="email-templates-form-panel mat-elevation-z1" *ngIf="formVisible">
+    <app-email-template-form
+      [mode]="formMode"
+      [template]="editingTemplate"
+      [usedNames]="usedNames"
+      (cancelForm)="cancelForm()"
+      (saveForm)="submitForm($event)"
+    ></app-email-template-form>
+  </section>
+
+  <app-email-template-list
+    *ngIf="!formVisible"
+    [templates]="templates"
+    [sortResetToken]="sortResetToken"
+    [loading]="loading"
+    (edit)="openEdit($event)"
+    (remove)="deleteTemplate($event)"
+  ></app-email-template-list>
+
+  <div class="email-templates-toast" *ngIf="notification" [ngClass]="'email-templates-toast--' + notification.type">
+    <span>{{ notification.message }}</span>
+    <button type="button" class="email-templates-toast__close" (click)="closeNotification()" aria-label="Cerrar mensaje">×</button>
+  </div>
+
+  <div class="email-templates-dialog-backdrop" *ngIf="deleteTarget">
+    <section class="email-templates-dialog" role="dialog" aria-modal="true">
+      <h3 class="email-templates-dialog__title">Confirmar eliminación</h3>
+      <p class="email-templates-dialog__text">Está a punto de eliminar la plantilla #{{ deleteTarget.id }}. Verifique la información:</p>
+      <div class="email-templates-dialog__summary">
+        <div><strong>Nombre:</strong> {{ nameLabel(deleteTarget.name) }}</div>
+        <div><strong>Asunto:</strong> {{ deleteTarget.subject || '-' }}</div>
+      </div>
+      <p class="email-templates-dialog__text">Sin esta plantilla, el sistema enviará el texto por defecto del programa.</p>
+      <div class="email-templates-dialog__actions">
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+      </div>
+    </section>
+  </div>
+</div>

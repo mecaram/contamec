@@ -1,6 +1,7 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using ContaMec.Api.Application.Accounts;
+using ContaMec.Api.Application.EmailTemplates;
 using ContaMec.Api.Application.Applications;
 using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Closures;
@@ -129,6 +130,7 @@ builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
 builder.Services.AddHttpClient<IEmailNotifier, ResendEmailNotifier>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+builder.Services.AddScoped<IEmailTemplateAdminService, EmailTemplateAdminService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

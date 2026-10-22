@@ -60,6 +60,12 @@ const routes: Routes = [
       import('./features/applications/applications.module').then((m) => m.ApplicationsModule)
   },
   {
+    path: 'plantillas-correo',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/email-templates/email-templates.module').then((m) => m.EmailTemplatesModule)
+  },
+  {
     path: 'cambiar-clave',
     canActivate: [AuthGuard],
     loadChildren: () =>

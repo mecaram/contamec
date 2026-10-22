@@ -1,0 +1,112 @@
+<form [formGroup]="form" (ngSubmit)="save()">
+  <h2 class="template-form__title">{{ title }}</h2>
+  <div class="template-form">
+    <div class="template-form__field">
+      <label class="template-form__label" for="template-name">Nombre</label>
+      <select id="template-name" class="template-form__control" formControlName="name">
+        <option [ngValue]="''" disabled>Seleccione la plantilla</option>
+        <option *ngFor="let type of templateTypes" [value]="type.value" [disabled]="isNameDisabled(type.value)">
+          {{ type.label }}{{ isNameDisabled(type.value) ? ' (ya existe)' : '' }}
+        </option>
+      </select>
+      <div class="template-form__usage" *ngIf="selectedType">
+        <mat-icon>info</mat-icon>
+        <span>{{ selectedType.usage || 'El sistema todavía no envía este correo; podés dejarlo preparado.' }}</span>
+      </div>
+    </div>
+    <div class="template-form__error" *ngIf="form.controls.name.touched && form.controls.name.hasError('required')">El nombre es obligatorio.</div>
+    <div class="template-form__error" *ngIf="nameTaken">Ya existe una plantilla con ese nombre.</div>
+
+    <div class="template-form__placeholders" *ngIf="placeholders.length > 0">
+      <span class="template-form__label">Datos para insertar</span>
+      <p class="template-form__help">
+        Ubicá el cursor en el asunto o en el cuerpo y tocá un dato: se inserta un marcador como <code ngNonBindable>{{Empresa}}</code>,
+        que al enviar se reemplaza por el valor real.
+      </p>
+      <div class="template-form__chips">
+        <button
+          *ngFor="let placeholder of placeholders"
+          type="button"
+          class="template-form__chip"
+          (mousedown)="$event.preventDefault()"
+          (click)="insertPlaceholder(placeholder)"
+          [title]="'Insertar ' + token(placeholder.key)"
+        >
+          {{ placeholder.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="template-form__field">
+      <label class="template-form__label" for="template-subject">Asunto</label>
+      <input
+        #subjectInput
+        id="template-subject"
+        class="template-form__control"
+        formControlName="subject"
+        [maxlength]="subjectMaxLength"
+        (focus)="rememberField('subject')"
+      />
+      <div class="template-form__hint">{{ form.controls.subject.value?.length || 0 }}/{{ subjectMaxLength }}</div>
+    </div>
+    <div class="template-form__error" *ngIf="form.controls.subject.touched && form.controls.subject.hasError('required')">El asunto es obligatorio.</div>
+
+    <div class="template-form__field">
+      <div class="template-form__body-header">
+        <label class="template-form__label" for="template-body">Cuerpo (HTML)</label>
+        <div class="template-form__tabs" role="tablist">
+          <button type="button" role="tab" class="template-form__tab" [class.is-active]="bodyTab === 'code'" (click)="bodyTab = 'code'">
+            <mat-icon>code</mat-icon> Código
+          </button>
+          <button type="button" role="tab" class="template-form__tab" [class.is-active]="bodyTab === 'preview'" (click)="bodyTab = 'preview'">
+            <mat-icon>visibility</mat-icon> Vista previa
+          </button>
+        </div>
+      </div>
+
+      <div class="template-form__editor">
+        <div class="template-form__pane" [class.is-hidden-narrow]="bodyTab !== 'code'">
+          <div class="template-form__toolbar">
+            <button type="button" (mousedown)="$event.preventDefault()" (click)="wrapBody('<strong>', '</strong>')" title="Negrita"><b>B</b></button>
+            <button type="button" (mousedown)="$event.preventDefault()" (click)="wrapBody('<em>', '</em>')" title="Cursiva"><i>I</i></button>
+            <button type="button" (mousedown)="$event.preventDefault()" (click)="wrapBody('<p style=&quot;margin:0 0 12px&quot;>', '</p>')" title="Párrafo">¶</button>
+            <button type="button" (mousedown)="$event.preventDefault()" (click)="wrapBody('<br />', '')" title="Salto de línea">↵</button>
+            <button type="button" (mousedown)="$event.preventDefault()" (click)="insertLink()" title="Enlace">
+              <mat-icon>link</mat-icon>
+            </button>
+          </div>
+          <textarea
+            #bodyInput
+            id="template-body"
+            class="template-form__code"
+            formControlName="body"
+            spellcheck="false"
+            (focus)="rememberField('body')"
+            (keydown)="onBodyKeydown($event)"
+          ></textarea>
+        </div>
+
+        <div class="template-form__pane template-form__preview" [class.is-hidden-narrow]="bodyTab !== 'preview'">
+          <div class="template-form__preview-subject">
+            <span class="template-form__preview-label">Asunto:</span> {{ previewSubject || '(sin asunto)' }}
+          </div>
+          <iframe class="template-form__preview-frame" title="Vista previa del correo" sandbox="" [srcdoc]="previewBody"></iframe>
+          <div class="template-form__preview-note">Vista previa con datos de ejemplo.</div>
+        </div>
+      </div>
+    </div>
+    <div class="template-form__error" *ngIf="form.controls.body.touched && form.controls.body.hasError('required')">El cuerpo es obligatorio.</div>
+    <div class="template-form__warning" *ngIf="unknownPlaceholders.length > 0">
+      <mat-icon>warning</mat-icon>
+      <span>
+        Marcadores que el sistema no completa para esta plantilla:
+        <code *ngFor="let key of unknownPlaceholders">{{ token(key) }}</code>.
+        Se enviarían tal cual.
+      </span>
+    </div>
+  </div>
+  <div class="template-form__actions">
+    <button mat-button type="button" (click)="cancel()">Cancelar</button>
+    <button mat-flat-button color="primary" type="submit">Guardar</button>
+  </div>
+</form>

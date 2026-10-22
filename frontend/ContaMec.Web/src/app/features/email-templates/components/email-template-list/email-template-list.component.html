@@ -1,0 +1,62 @@
+<div class="email-template-list">
+  <div class="email-template-list__loading" *ngIf="loading">Cargando plantillas...</div>
+
+  <div class="email-template-list__empty" *ngIf="!loading && templates.length === 0">No hay plantillas para los filtros seleccionados.</div>
+
+  <div class="email-template-list__mobile-sort" *ngIf="!loading && templates.length > 0">
+    <label class="email-template-list__mobile-sort-label" for="template-mobile-sort">Ordenar por</label>
+    <select id="template-mobile-sort" class="email-template-list__mobile-sort-select" (change)="sortBy($any($event.target).value)">
+      <option *ngFor="let option of sortOptions" [value]="option.column" [selected]="option.column === sortColumn">
+        {{ option.label }}
+      </option>
+    </select>
+    <button
+      mat-icon-button
+      type="button"
+      (click)="toggleSortDirection()"
+      [attr.aria-label]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+      [title]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+    >
+      <mat-icon>{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+    </button>
+  </div>
+
+  <table class="email-template-list__table mat-elevation-z1" *ngIf="!loading && templates.length > 0">
+    <thead>
+      <tr>
+        <th class="email-template-list__sortable" (click)="setSort('id')">ID <span>{{ sortIndicator('id') }}</span></th>
+        <th class="email-template-list__sortable" (click)="setSort('name')">Nombre <span>{{ sortIndicator('name') }}</span></th>
+        <th class="email-template-list__sortable" (click)="setSort('subject')">Asunto <span>{{ sortIndicator('subject') }}</span></th>
+        <th class="email-template-list__sortable" (click)="setSort('createdAt')">Fecha de alta <span>{{ sortIndicator('createdAt') }}</span></th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of pagedTemplates">
+        <td data-label="ID">{{ row.id }}</td>
+        <td data-label="Nombre">{{ nameLabel(row.name) }}</td>
+        <td data-label="Asunto">{{ row.subject || '-' }}</td>
+        <td data-label="Fecha de alta" class="email-template-list__center">{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
+        <td class="email-template-list__actions">
+          <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar plantilla">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar plantilla">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="email-template-list__footer">
+        <td colspan="5">Total registros: {{ totalRecords }}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="email-template-list__pagination" *ngIf="!loading && templates.length > pageSize">
+    <button mat-stroked-button type="button" (click)="goToPreviousPage()" [disabled]="!canGoPrevious">Anterior</button>
+    <span class="email-template-list__pagination-label">{{ pageLabel }}</span>
+    <button mat-stroked-button type="button" (click)="goToNextPage()" [disabled]="!canGoNext">Siguiente</button>
+  </div>
+</div>
