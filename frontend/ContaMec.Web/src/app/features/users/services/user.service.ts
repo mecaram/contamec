@@ -25,13 +25,26 @@ export class UserService {
   constructor(private readonly http: HttpClient) {}
 
   search(filters: UserSearch): Observable<User[]> {
+    return this.http.get<User[]>(this.usersUrl, { params: this.buildSearchParams(filters), headers: this.getAuthHeaders() });
+  }
+
+  /** Listado con los mismos filtros que la búsqueda, armado por el backend en PDF o Excel. */
+  exportList(filters: UserSearch, format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.usersUrl}/export/${format}`, {
+      params: this.buildSearchParams(filters),
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  private buildSearchParams(filters: UserSearch): HttpParams {
     let params = new HttpParams();
     if (filters.id !== null && filters.id !== undefined) params = params.set('id', String(filters.id));
     if (filters.name) params = params.set('name', filters.name);
     if (filters.isActive !== null && filters.isActive !== undefined) params = params.set('isActive', String(filters.isActive));
     if (filters.userRoleId !== null && filters.userRoleId !== undefined) params = params.set('userRoleId', String(filters.userRoleId));
     if (filters.applicationId !== null && filters.applicationId !== undefined) params = params.set('applicationId', String(filters.applicationId));
-    return this.http.get<User[]>(this.usersUrl, { params, headers: this.getAuthHeaders() });
+    return params;
   }
 
   getRoleOptions(): Observable<UserRoleOption[]> {

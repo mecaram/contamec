@@ -89,6 +89,7 @@ app-user-list {
 .users-filters__actions {
   margin-top: 0.4rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
 }
@@ -104,7 +105,15 @@ app-user-list {
 .users-page__new-action {
   margin-bottom: 1rem;
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.users-page__spinner {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 .users-form-panel {

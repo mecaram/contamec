@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.Users.Dto;
 using ContaMec.Api.Domain.Entities;
 
@@ -16,4 +17,5 @@ public interface IUserService
     Task SaveChangesCheckingDuplicateNameAsync();
     Task<bool> UpdateAsync(int id, UserUpdateRequest request, int applicationId, bool isSuperAdministrator);
     Task<bool> DeleteAsync(int id, int applicationId, bool isSuperAdministrator);
+    Task<byte[]> ExportListAsync(UserSearchRequest request, int applicationId, bool isSuperAdministrator, ListExportFormat format);
 }

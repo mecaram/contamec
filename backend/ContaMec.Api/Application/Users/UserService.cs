@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Auth;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.Users.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
@@ -43,6 +44,65 @@ public class UserService(ContaMecDbContext dbContext) : IUserService
             .ThenBy(u => u.Id)
             .Select(MapToResponse())
             .ToListAsync();
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (Nombre ascendente).
+    public async Task<byte[]> ExportListAsync(UserSearchRequest request, int applicationId, bool isSuperAdministrator, ListExportFormat format)
+    {
+        request ??= new UserSearchRequest();
+        var company = await ReportCompany.LoadAsync(_dbContext, applicationId);
+
+        var data = new UserListData
+        {
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters = await DescribeFiltersAsync(request, isSuperAdministrator),
+            Rows = await SearchAsync(request, applicationId, isSuperAdministrator),
+            ShowApplication = isSuperAdministrator
+        };
+
+        return format == ListExportFormat.Excel ? UserListReport.GenerateExcel(data) : UserListReport.GeneratePdf(data);
+    }
+
+    // Rol y Empresa se muestran por nombre, como en los combos del filtro; Empresa solo la ve el SuperAdministrador.
+    private async Task<List<(string Label, string Value)>> DescribeFiltersAsync(UserSearchRequest request, bool isSuperAdministrator)
+    {
+        var role = "Todos";
+        if (request.UserRoleId.HasValue)
+        {
+            var roleName = await _dbContext.UserRoles
+                .AsNoTracking()
+                .Where(r => r.Id == request.UserRoleId.Value)
+                .Select(r => r.Name)
+                .FirstOrDefaultAsync();
+            role = string.IsNullOrWhiteSpace(roleName) ? request.UserRoleId.Value.ToString() : roleName.Trim();
+        }
+
+        List<(string Label, string Value)> filters =
+        [
+            ("ID", request.Id?.ToString() ?? "-"),
+            ("Nombre", string.IsNullOrWhiteSpace(request.Name) ? "-" : request.Name.Trim()),
+            ("Estado", request.IsActive switch { true => "Activos", false => "Inactivos", null => "Todos" }),
+            ("Rol", role)
+        ];
+
+        if (isSuperAdministrator)
+        {
+            var application = "Todas";
+            if (request.ApplicationId.HasValue)
+            {
+                var applicationName = await _dbContext.Applications
+                    .AsNoTracking()
+                    .Where(a => a.Id == request.ApplicationId.Value)
+                    .Select(a => a.Name)
+                    .FirstOrDefaultAsync();
+                application = string.IsNullOrWhiteSpace(applicationName) ? request.ApplicationId.Value.ToString() : applicationName.Trim();
+            }
+            filters.Add(("Empresa", application));
+        }
+
+        return filters;
     }
 
     public async Task<UserResponse?> GetByIdAsync(int id, int applicationId, bool isSuperAdministrator)
