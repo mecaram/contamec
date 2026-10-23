@@ -16,7 +16,7 @@
     </div>
   </header>
 
-  <section class="users-filters mat-elevation-z1">
+  <section class="users-filters mat-elevation-z1" *ngIf="!formVisible">
     <form [formGroup]="filterForm" class="users-filters__form">
       <div class="users-field">
         <label class="users-field__label" for="filter-id">ID</label>
@@ -60,7 +60,7 @@
 
   <div class="users-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <div class="users-page__new-action">
+  <div class="users-page__new-action" *ngIf="!formVisible">
     <button mat-flat-button color="primary" type="button" (click)="openCreate()">
       <mat-icon>add</mat-icon>
       Nuevo usuario
