@@ -14,10 +14,23 @@ export class EmailTemplateService {
   constructor(private readonly http: HttpClient) {}
 
   search(filters: EmailTemplateSearch): Observable<EmailTemplate[]> {
+    return this.http.get<EmailTemplate[]>(this.templatesUrl, { params: this.buildSearchParams(filters), headers: this.getAuthHeaders() });
+  }
+
+  /** Listado con los mismos filtros que la búsqueda, armado por el backend en PDF o Excel. */
+  exportList(filters: EmailTemplateSearch, format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.templatesUrl}/export/${format}`, {
+      params: this.buildSearchParams(filters),
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  private buildSearchParams(filters: EmailTemplateSearch): HttpParams {
     let params = new HttpParams();
     if (filters.id !== null && filters.id !== undefined) params = params.set('id', String(filters.id));
     if (filters.name) params = params.set('name', filters.name);
-    return this.http.get<EmailTemplate[]>(this.templatesUrl, { params, headers: this.getAuthHeaders() });
+    return params;
   }
 
   create(template: EmailTemplate): Observable<EmailTemplate> {

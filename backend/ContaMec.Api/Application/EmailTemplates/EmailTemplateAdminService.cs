@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.EmailTemplates.Dto;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,32 @@ public class EmailTemplateAdminService(ContaMecDbContext dbContext) : IEmailTemp
             .ThenBy(t => t.Id)
             .Select(MapToResponse())
             .ToListAsync();
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (ID descendente).
+    // El encabezado lleva los datos de la empresa del usuario que exporta.
+    public async Task<byte[]> ExportListAsync(EmailTemplateSearchRequest request, int? currentApplicationId, ListExportFormat format)
+    {
+        request ??= new EmailTemplateSearchRequest();
+        var rows = await SearchAsync(request);
+        var company = currentApplicationId.HasValue
+            ? await ReportCompany.LoadAsync(_dbContext, currentApplicationId.Value)
+            : new ReportCompany(string.Empty, null, null);
+
+        var data = new EmailTemplateListData
+        {
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters =
+            [
+                ("ID", request.Id?.ToString() ?? "-"),
+                ("Nombre", string.IsNullOrWhiteSpace(request.Name) ? "Todas" : EmailTemplateListReport.NameLabel(request.Name))
+            ],
+            Rows = rows.OrderByDescending(t => t.Id).ToList()
+        };
+
+        return format == ListExportFormat.Excel ? EmailTemplateListReport.GenerateExcel(data) : EmailTemplateListReport.GeneratePdf(data);
     }
 
     public async Task<EmailTemplateResponse?> GetByIdAsync(int id)

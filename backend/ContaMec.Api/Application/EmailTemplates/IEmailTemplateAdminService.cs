@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.EmailTemplates.Dto;
+using ContaMec.Api.Application.Orders;
 
 namespace ContaMec.Api.Application.EmailTemplates;
 
@@ -10,4 +11,5 @@ public interface IEmailTemplateAdminService
     Task<EmailTemplateResponse> CreateAsync(EmailTemplateSaveRequest request);
     Task<bool> UpdateAsync(int id, EmailTemplateSaveRequest request);
     Task<bool> DeleteAsync(int id);
+    Task<byte[]> ExportListAsync(EmailTemplateSearchRequest request, int? currentApplicationId, ListExportFormat format);
 }
