@@ -1,6 +1,7 @@
 using ContaMec.Api.Application.Accounts;
 using ContaMec.Api.Application.Accounts.Dto;
 using ContaMec.Api.Application.Auth;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -117,6 +118,33 @@ public class AccountsController(ContaMecDbContext dbContext, IAccountService acc
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("export/{format}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ExportList(
+        string format,
+        [FromQuery(Name = "id")] int? id,
+        [FromQuery(Name = "name")] string? name,
+        [FromQuery(Name = "type")] string? type)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var (exportFormat, contentType, extension) = format.ToLowerInvariant() switch
+        {
+            "pdf" => (ListExportFormat.Pdf, "application/pdf", "pdf"),
+            "excel" => (ListExportFormat.Excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+            _ => (default(ListExportFormat?), "", "")
+        };
+        if (exportFormat is null)
+            return BadRequest(new { message = "Formato no soportado: use pdf o excel." });
+
+        var request = new AccountSearchRequest { Id = id, Name = name, Type = type };
+        var file = await accountService.ExportListAsync(request, applicationId, exportFormat.Value);
+        return File(file, contentType, AccountListReport.FileName(extension));
     }
 
     [HttpGet("income-options")]

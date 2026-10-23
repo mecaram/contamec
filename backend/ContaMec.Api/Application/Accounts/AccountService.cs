@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Accounts.Dto;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -110,6 +111,38 @@ public class AccountService(ContaMecDbContext dbContext) : IAccountService
         _dbContext.Accounts.Remove(account);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (Nombre ascendente).
+    public async Task<byte[]> ExportListAsync(AccountSearchRequest request, int applicationId, ListExportFormat format)
+    {
+        request ??= new AccountSearchRequest();
+        var company = await ReportCompany.LoadAsync(_dbContext, applicationId);
+
+        var data = new AccountListData
+        {
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters = DescribeFilters(request),
+            Rows = await SearchAsync(request, applicationId)
+        };
+
+        return format == ListExportFormat.Excel ? AccountListReport.GenerateExcel(data) : AccountListReport.GeneratePdf(data);
+    }
+
+    private static List<(string Label, string Value)> DescribeFilters(AccountSearchRequest request)
+    {
+        var type = request.Type?.Trim();
+        return
+        [
+            ("ID", request.Id?.ToString() ?? "-"),
+            ("Nombre", string.IsNullOrWhiteSpace(request.Name) ? "-" : request.Name.Trim()),
+            ("Tipo", string.IsNullOrEmpty(type) ? "Todos"
+                : type.Contains("ingreso", StringComparison.OrdinalIgnoreCase) ? "Ingresos"
+                : type.Contains("egreso", StringComparison.OrdinalIgnoreCase) ? "Egresos"
+                : type)
+        ];
     }
 
     private static Expression<Func<Account, AccountResponse>> MapToResponse()

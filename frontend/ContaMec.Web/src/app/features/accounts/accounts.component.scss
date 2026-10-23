@@ -89,6 +89,7 @@ app-account-list {
 .accounts-filters__actions {
   margin-top: 0.4rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
 }
@@ -104,7 +105,15 @@ app-account-list {
 .accounts-page__new-action {
   margin-bottom: 1rem;
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.accounts-page__spinner {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 .accounts-form-panel {
