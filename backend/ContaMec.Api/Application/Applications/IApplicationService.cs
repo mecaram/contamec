@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Applications.Dto;
+using ContaMec.Api.Application.Orders;
 using ApplicationEntity = ContaMec.Api.Domain.Entities.Application;
 
 namespace ContaMec.Api.Application.Applications;
@@ -16,4 +17,5 @@ public interface IApplicationService
 
     /// <summary>Activa una aplicación inactiva y todos sus usuarios, le inicia una demo de 7 días y avisa por correo a la empresa. Null si no existe.</summary>
     Task<ApplicationActivationResponse?> ActivateAsync(int id);
+    Task<byte[]> ExportListAsync(ApplicationSearchRequest request, int? currentApplicationId, ListExportFormat format);
 }

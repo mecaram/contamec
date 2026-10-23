@@ -14,11 +14,24 @@ export class ApplicationService {
   constructor(private readonly http: HttpClient) {}
 
   search(filters: ApplicationSearch): Observable<Application[]> {
+    return this.http.get<Application[]>(this.applicationsUrl, { params: this.buildSearchParams(filters), headers: this.getAuthHeaders() });
+  }
+
+  /** Listado con los mismos filtros que la búsqueda, armado por el backend en PDF o Excel. */
+  exportList(filters: ApplicationSearch, format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.applicationsUrl}/export/${format}`, {
+      params: this.buildSearchParams(filters),
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  private buildSearchParams(filters: ApplicationSearch): HttpParams {
     let params = new HttpParams();
     if (filters.id !== null && filters.id !== undefined) params = params.set('id', String(filters.id));
     if (filters.name) params = params.set('name', filters.name);
     if (filters.active !== null && filters.active !== undefined) params = params.set('active', String(filters.active));
-    return this.http.get<Application[]>(this.applicationsUrl, { params, headers: this.getAuthHeaders() });
+    return params;
   }
 
   create(application: Application): Observable<Application> {

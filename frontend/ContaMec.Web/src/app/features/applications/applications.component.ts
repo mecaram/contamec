@@ -19,6 +19,8 @@ export class ApplicationsComponent implements OnInit {
   editingApplication: Application | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Application | null = null;
+  /** Exportación del listado en curso. */
+  exporting: 'pdf' | 'excel' | null = null;
   activateTarget: Application | null = null;
   sortResetToken = 0;
   private notificationTimer: ReturnType<typeof setTimeout> | null = null;
@@ -173,6 +175,38 @@ export class ApplicationsComponent implements OnInit {
       this.notificationTimer = null;
     }
     this.notification = null;
+  }
+
+  /** Exporta el listado con los filtros actuales. */
+  exportList(format: 'pdf' | 'excel'): void {
+    if (this.exporting) return;
+
+    this.exporting = format;
+    this.applicationService
+      .exportList(this.buildFilters(), format)
+      .pipe(finalize(() => (this.exporting = null)))
+      .subscribe({
+        next: (blob) => this.saveFile(blob, `Listado_Aplicaciones_${this.fileTimestamp()}.${format === 'pdf' ? 'pdf' : 'xlsx'}`),
+        error: () => this.notify(`No fue posible exportar el listado a ${format === 'pdf' ? 'PDF' : 'Excel'}. Intente nuevamente.`, 'error')
+      });
+  }
+
+  private fileTimestamp(): string {
+    const now = new Date();
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+  }
+
+  private saveFile(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    // Se libera cuando el navegador ya tomó el archivo.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   private buildFilters(): ApplicationSearch {

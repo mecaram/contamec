@@ -1,6 +1,7 @@
 using ContaMec.Api.Application.Applications;
 using ContaMec.Api.Application.Applications.Dto;
 using ContaMec.Api.Application.Auth;
+using ContaMec.Api.Application.Orders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +29,30 @@ public class ApplicationsController(IApplicationService applicationService) : Co
 
         var result = await applicationService.SearchAsync(request);
         return Ok(result);
+    }
+
+    [HttpGet("export/{format}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ExportList(
+        string format,
+        [FromQuery(Name = "id")] int? id,
+        [FromQuery(Name = "name")] string? name,
+        [FromQuery(Name = "active")] bool? active)
+    {
+        var (exportFormat, contentType, extension) = format.ToLowerInvariant() switch
+        {
+            "pdf" => (ListExportFormat.Pdf, "application/pdf", "pdf"),
+            "excel" => (ListExportFormat.Excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+            _ => (default(ListExportFormat?), "", "")
+        };
+        if (exportFormat is null)
+            return BadRequest(new { message = "Formato no soportado: use pdf o excel." });
+
+        int? currentApplicationId = User.TryGetApplicationId(out var applicationId) ? applicationId : null;
+        var request = new ApplicationSearchRequest { Id = id, Name = name, Active = active };
+        var file = await applicationService.ExportListAsync(request, currentApplicationId, exportFormat.Value);
+        return File(file, contentType, ApplicationListReport.FileName(extension));
     }
 
     [HttpGet("{id:int}")]

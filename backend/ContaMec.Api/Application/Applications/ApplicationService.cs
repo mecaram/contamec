@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Applications.Dto;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.Notifications;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
@@ -46,6 +47,32 @@ public class ApplicationService(
             .ThenBy(a => a.Id)
             .Select(MapToResponse())
             .ToListAsync();
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (Nombre ascendente).
+    // El encabezado lleva los datos de la empresa del usuario que exporta.
+    public async Task<byte[]> ExportListAsync(ApplicationSearchRequest request, int? currentApplicationId, ListExportFormat format)
+    {
+        request ??= new ApplicationSearchRequest();
+        var company = currentApplicationId.HasValue
+            ? await ReportCompany.LoadAsync(_dbContext, currentApplicationId.Value)
+            : new ReportCompany(string.Empty, null, null);
+
+        var data = new ApplicationListData
+        {
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters =
+            [
+                ("ID", request.Id?.ToString() ?? "-"),
+                ("Nombre", string.IsNullOrWhiteSpace(request.Name) ? "-" : request.Name.Trim()),
+                ("Estado", request.Active switch { true => "Activas", false => "Inactivas", null => "Todas" })
+            ],
+            Rows = await SearchAsync(request)
+        };
+
+        return format == ListExportFormat.Excel ? ApplicationListReport.GenerateExcel(data) : ApplicationListReport.GeneratePdf(data);
     }
 
     public async Task<ApplicationResponse?> GetByIdAsync(int id)
