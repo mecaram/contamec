@@ -83,6 +83,18 @@
     </section>
 
     <section
+      class="dashboard__section dashboard__indicators"
+      aria-labelledby="dashboard-closures-chart"
+      *ngIf="!indicatorsLoading && !indicatorsError && recentClosures.length > 0"
+    >
+      <h2 class="dashboard__section-title" id="dashboard-closures-chart">Ingresos vs. Egresos por Cierre</h2>
+      <p class="dashboard__indicators-period">
+        {{ recentClosures.length === 1 ? 'Último cierre' : 'Últimos ' + recentClosures.length + ' cierres' }}
+      </p>
+      <app-closures-chart [closures]="recentClosures"></app-closures-chart>
+    </section>
+
+    <section
       class="dashboard__section"
       *ngFor="let category of categories; let i = index"
       [attr.aria-labelledby]="'dashboard-cat-' + i"

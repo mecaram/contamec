@@ -1,0 +1,22 @@
+.closures-chart {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+// Chart.js toma el alto del contenedor (maintainAspectRatio: false).
+.closures-chart__canvas {
+  position: relative;
+  height: 20rem;
+}
+
+@media (max-width: 600px) {
+  .closures-chart {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .closures-chart__canvas {
+    height: 16rem;
+  }
+}

@@ -25,6 +25,10 @@ export class DashboardComponent implements OnInit {
   indicatorsLoading = true;
   indicatorsError: string | null = null;
 
+  /** Últimos cierres, del más viejo al más nuevo, para comparar ingresos y egresos entre cierres. */
+  recentClosures: Closure[] = [];
+  private readonly chartClosureCount = 12;
+
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
@@ -32,9 +36,11 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.closureService.search({ isClosed: false }).subscribe({
+    // El backend devuelve los cierres del más nuevo al más viejo; una sola consulta alimenta los indicadores y el gráfico.
+    this.closureService.search({}).subscribe({
       next: (closures) => {
-        this.activeClosure = closures[0] ?? null;
+        this.activeClosure = closures.find((closure) => !closure.isClosed) ?? null;
+        this.recentClosures = closures.slice(0, this.chartClosureCount).reverse();
         this.indicatorsLoading = false;
       },
       error: () => {
