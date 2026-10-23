@@ -157,6 +157,18 @@
           </a>
         </ng-container>
       </div>
+
+      <div class="dashboard-menu__group dashboard-menu__group--user">
+        <h2 class="dashboard-menu__group-title">Usuario</h2>
+        <a class="dashboard-menu__item" routerLink="/cambiar-clave" (click)="closeMenu()">
+          <span class="dashboard-menu__icon material-icons" aria-hidden="true">lock</span>
+          Cambiar contraseña
+        </a>
+        <button class="dashboard-menu__item" type="button" (click)="closeMenu(); logout()">
+          <span class="dashboard-menu__icon material-icons" aria-hidden="true">logout</span>
+          Cerrar sesión
+        </button>
+      </div>
     </nav>
   </ng-container>
 </div>
