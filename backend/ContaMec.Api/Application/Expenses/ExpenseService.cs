@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.ClosureBalances;
 using ContaMec.Api.Application.Expenses.Dto;
 using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Domain.Entities;
@@ -96,8 +97,13 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
             ApplicationId = applicationId
         };
 
-        _dbContext.Expenses.Add(expense);
-        await _dbContext.SaveChangesAsync();
+        await using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+        {
+            _dbContext.Expenses.Add(expense);
+            await _dbContext.SaveChangesAsync();
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, expense.ClosureId, expense.PaymentAccountId, -(expense.Amount ?? 0m), applicationId);
+            await transaction.CommitAsync();
+        }
 
         var created = await GetByIdAsync(expense.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el egreso recién creado.");
@@ -130,6 +136,8 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
 
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, expense.SubAccountId);
         var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
+        var previousPaymentAccountId = expense.PaymentAccountId;
+        var previousAmount = expense.Amount ?? 0m;
 
         expense.EmissionDate = request.EmissionDate;
         expense.AccountId = request.AccountId!.Value;
@@ -139,7 +147,19 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         expense.SubAccountId = subAccountId;
         expense.OccurrenceType = occurrenceType;
 
+        // Se devuelve el importe anterior a su cuenta de pago y se descuenta el nuevo: con la misma cuenta queda la diferencia.
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         await _dbContext.SaveChangesAsync();
+        if (previousPaymentAccountId == expense.PaymentAccountId)
+        {
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, expense.ClosureId, expense.PaymentAccountId, previousAmount - (expense.Amount ?? 0m), applicationId);
+        }
+        else
+        {
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, expense.ClosureId, previousPaymentAccountId, previousAmount, applicationId);
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, expense.ClosureId, expense.PaymentAccountId, -(expense.Amount ?? 0m), applicationId);
+        }
+        await transaction.CommitAsync();
         return true;
     }
 
@@ -151,8 +171,11 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         if (!await CanModifyExpenseAsync(expense.ClosureId))
             throw new ArgumentException("Solo se puede eliminar un egreso con cierre abierto (IsClosed = 0).");
 
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         _dbContext.Expenses.Remove(expense);
         await _dbContext.SaveChangesAsync();
+        await ClosureBalanceAdjuster.AdjustAsync(_dbContext, expense.ClosureId, expense.PaymentAccountId, expense.Amount ?? 0m, applicationId);
+        await transaction.CommitAsync();
         return true;
     }
 
