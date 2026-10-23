@@ -18,7 +18,9 @@
 
 .incomes-page__header-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 .incomes-page__title {

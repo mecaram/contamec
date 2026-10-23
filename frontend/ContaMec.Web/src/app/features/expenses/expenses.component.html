@@ -9,6 +9,10 @@
         <mat-icon>arrow_back</mat-icon>
         Volver al menú principal
       </button>
+      <button mat-stroked-button color="primary" type="button" (click)="cancelForm()" *ngIf="formVisible">
+        <mat-icon>list</mat-icon>
+        Volver al listado
+      </button>
     </div>
   </header>
 
@@ -102,7 +106,7 @@
 
   <div class="expenses-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <div class="expenses-page__new-action">
+  <div class="expenses-page__new-action" *ngIf="!formVisible">
     <button mat-flat-button color="primary" type="button" (click)="openCreate()">
       <mat-icon>add</mat-icon>
       Nuevo egreso
