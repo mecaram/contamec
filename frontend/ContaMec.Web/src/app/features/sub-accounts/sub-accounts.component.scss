@@ -28,7 +28,9 @@ app-sub-account-list {
 
 .sub-accounts-page__header-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 .sub-accounts-page__title {
