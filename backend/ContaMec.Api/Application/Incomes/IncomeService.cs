@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.ClosureBalances;
 using ContaMec.Api.Application.Incomes.Dto;
 using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Domain.Entities;
@@ -96,8 +97,13 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             ApplicationId = applicationId
         };
 
-        _dbContext.Incomes.Add(income);
-        await _dbContext.SaveChangesAsync();
+        await using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+        {
+            _dbContext.Incomes.Add(income);
+            await _dbContext.SaveChangesAsync();
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, income.Amount ?? 0m, applicationId);
+            await transaction.CommitAsync();
+        }
 
         var created = await GetByIdAsync(income.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el ingreso recién creado.");
@@ -130,6 +136,8 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
 
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, income.SubAccountId);
         var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
+        var previousPaymentAccountId = income.PaymentAccountId;
+        var previousAmount = income.Amount ?? 0m;
 
         income.EmissionDate = request.EmissionDate;
         income.AccountId = request.AccountId!.Value;
@@ -139,7 +147,19 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         income.SubAccountId = subAccountId;
         income.OccurrenceType = occurrenceType;
 
+        // Se quita el importe anterior de su cuenta de pago y se suma el nuevo: con la misma cuenta queda la diferencia.
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         await _dbContext.SaveChangesAsync();
+        if (previousPaymentAccountId == income.PaymentAccountId)
+        {
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, (income.Amount ?? 0m) - previousAmount, applicationId);
+        }
+        else
+        {
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, previousPaymentAccountId, -previousAmount, applicationId);
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, income.Amount ?? 0m, applicationId);
+        }
+        await transaction.CommitAsync();
         return true;
     }
 
@@ -151,8 +171,11 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         if (!await CanModifyIncomeAsync(income.ClosureId))
             throw new ArgumentException("Solo se puede eliminar un ingreso con cierre abierto (IsClosed = 0).");
 
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         _dbContext.Incomes.Remove(income);
         await _dbContext.SaveChangesAsync();
+        await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, -(income.Amount ?? 0m), applicationId);
+        await transaction.CommitAsync();
         return true;
     }
 
