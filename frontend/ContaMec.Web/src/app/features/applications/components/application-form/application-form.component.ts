@@ -1,14 +1,15 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { argentinaMobileValidator, ARGENTINA_MOBILE_PREFIX, onlyDigits } from '../../../../shared/argentina-mobile';
-import {
-  documentNumberLengthMessage,
-  documentNumberValidator,
-  documentPairValidator,
-  DOCUMENT_TYPES,
-  keepDigits
-} from '../../../../shared/document';
+import { documentNumberLengthMessage, documentNumberValidator, DOCUMENT_TYPES, keepDigits } from '../../../../shared/document';
 import { Application } from '../../models/application.model';
+
+/** Igual que Solicitar demo gratis: sin espacios en los extremos y sin distinguir mayúsculas. */
+function emailsMatchValidator(group: AbstractControl): ValidationErrors | null {
+  const email = (group.get('email')?.value ?? '').trim().toLowerCase();
+  const confirmEmail = (group.get('confirmEmail')?.value ?? '').trim().toLowerCase();
+  return email && confirmEmail && email !== confirmEmail ? { emailMismatch: true } : null;
+}
 
 @Component({
   selector: 'app-application-form',
@@ -21,17 +22,21 @@ export class ApplicationFormComponent implements OnChanges {
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<Application>();
 
-  readonly form = this.fb.group({
-    name: ['' as string, [Validators.required, Validators.maxLength(100)]],
-    // Opcionales (las empresas anteriores no los tienen), pero tipo y número van juntos.
-    documentType: ['' as string, [documentPairValidator('documentNumber')]],
-    documentNumber: ['' as string, [documentPairValidator('documentType'), documentNumberValidator]],
-    active: [true],
-    whatsApp: ['', [argentinaMobileValidator]],
-    email: ['', [Validators.email]],
-    address: [''],
-    locality: ['']
-  });
+  // Mismos campos y reglas que Solicitar demo gratis. Las empresas anteriores sin documento lo cargan al editarlas.
+  readonly form = this.fb.group(
+    {
+      name: ['' as string, [Validators.required, Validators.maxLength(100)]],
+      documentType: ['' as string, [Validators.required]],
+      documentNumber: ['' as string, [Validators.required, documentNumberValidator]],
+      active: [true],
+      whatsApp: ['', [argentinaMobileValidator]],
+      email: ['', [Validators.required, Validators.email]],
+      confirmEmail: ['', [Validators.required]],
+      address: [''],
+      locality: ['']
+    },
+    { validators: emailsMatchValidator }
+  );
 
   readonly documentTypes = DOCUMENT_TYPES;
 
@@ -46,21 +51,31 @@ export class ApplicationFormComponent implements OnChanges {
         active: this.application?.active ?? true,
         whatsApp: this.toLocalMobile(this.application?.whatsApp),
         email: this.application?.email ?? '',
+        // Al editar ya está confirmado; si se cambia el correo hay que volver a escribir la repetición.
+        confirmEmail: this.application?.email ?? '',
         address: this.application?.address ?? '',
         locality: this.application?.locality ?? ''
       });
     }
   }
 
-  /** Cada campo del documento depende del otro: se revalidan los dos. */
-  onDocumentChange(): void {
-    this.form.controls.documentType.updateValueAndValidity({ emitEvent: false });
-    this.form.controls.documentNumber.updateValueAndValidity({ emitEvent: false });
+  /** Al cambiar el tipo cambia la cantidad de dígitos esperada. */
+  onDocumentTypeChange(): void {
+    this.form.controls.documentNumber.updateValueAndValidity();
   }
 
+  /** Solo números: se descarta cualquier otro carácter mientras se escribe o se pega. */
   onDocumentNumberInput(input: HTMLInputElement): void {
     this.form.controls.documentNumber.setValue(keepDigits(input));
-    this.onDocumentChange();
+  }
+
+  get showEmailMismatch(): boolean {
+    return this.form.hasError('emailMismatch') && !!this.form.controls.confirmEmail.touched;
+  }
+
+  showError(controlName: string, error: string): boolean {
+    const control = this.form.get(controlName);
+    return !!control && control.touched && control.hasError(error);
   }
 
   get documentNumberLengthMessage(): string {
@@ -81,11 +96,11 @@ export class ApplicationFormComponent implements OnChanges {
     const payload: Application = {
       id: this.application?.id ?? 0,
       name: raw.name?.trim() || '',
-      documentType: raw.documentType || null,
-      documentNumber: raw.documentNumber || null,
+      documentType: raw.documentType,
+      documentNumber: raw.documentNumber,
       active: !!raw.active,
       whatsApp: onlyDigits(raw.whatsApp) ? ARGENTINA_MOBILE_PREFIX + onlyDigits(raw.whatsApp) : null,
-      email: raw.email?.trim() || null,
+      email: raw.email.trim(),
       address: raw.address?.trim() || null,
       locality: raw.locality?.trim() || null
     };

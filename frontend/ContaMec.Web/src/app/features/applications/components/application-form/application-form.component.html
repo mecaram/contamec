@@ -1,25 +1,25 @@
-<form [formGroup]="form" (ngSubmit)="save()">
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
   <h2 class="application-form__title">{{ title }}</h2>
   <div class="application-form">
     <div class="application-form__field">
-      <label class="application-form__label" for="application-name">Nombre</label>
+      <label class="application-form__label" for="application-name">Nombre completo/empresa *</label>
       <input id="application-name" class="application-form__control" formControlName="name" maxlength="100" />
       <div class="application-form__hint">{{ form.controls.name.value?.length || 0 }}/100</div>
+      <div class="application-form__error application-form__error--inline" *ngIf="showError('name', 'required')">El nombre completo o de la empresa es obligatorio.</div>
+      <div class="application-form__error application-form__error--inline" *ngIf="showError('name', 'maxlength')">Máximo 100 caracteres.</div>
     </div>
-    <div class="application-form__error" *ngIf="form.controls.name.hasError('required')">El nombre es obligatorio.</div>
-    <div class="application-form__error" *ngIf="form.controls.name.hasError('maxlength')">Máximo 100 caracteres.</div>
 
     <div class="application-form__row">
       <div class="application-form__field">
-        <label class="application-form__label" for="application-document-type">Tipo de documento</label>
-        <select id="application-document-type" class="application-form__control" formControlName="documentType" (change)="onDocumentChange()">
-          <option value="">Sin documento</option>
+        <label class="application-form__label" for="application-document-type">Tipo de documento *</label>
+        <select id="application-document-type" class="application-form__control" formControlName="documentType" (change)="onDocumentTypeChange()">
+          <option value="" disabled>Seleccione el tipo</option>
           <option *ngFor="let type of documentTypes" [value]="type">{{ type }}</option>
         </select>
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentType.hasError('required')">Seleccione el tipo de documento.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('documentType', 'required')">El tipo de documento es obligatorio.</div>
       </div>
       <div class="application-form__field">
-        <label class="application-form__label" for="application-document-number">Número de documento</label>
+        <label class="application-form__label" for="application-document-number">Número de documento *</label>
         <input
           #documentNumberInput
           id="application-document-number"
@@ -31,9 +31,35 @@
           placeholder="Solo números, sin guiones"
           (input)="onDocumentNumberInput(documentNumberInput)"
         />
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentNumber.hasError('required')">Ingrese el número de documento.</div>
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentNumber.hasError('digits')">Ingrese solo números.</div>
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.documentNumber.hasError('documentLength')">{{ documentNumberLengthMessage }}</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('documentNumber', 'required')">El número de documento es obligatorio.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('documentNumber', 'digits')">Ingrese solo números.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('documentNumber', 'documentLength')">{{ documentNumberLengthMessage }}</div>
+      </div>
+    </div>
+
+    <div class="application-form__row">
+      <div class="application-form__field">
+        <label class="application-form__label" for="application-email">Correo *</label>
+        <input id="application-email" class="application-form__control" type="email" formControlName="email" />
+        <div class="application-form__hint application-form__hint--left">Se le envía el aviso cuando la empresa queda habilitada.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('email', 'required')">El correo es obligatorio.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('email', 'email')">El correo no tiene un formato válido.</div>
+      </div>
+      <div class="application-form__field">
+        <label class="application-form__label" for="application-confirm-email">Repetir correo *</label>
+        <input
+          id="application-confirm-email"
+          class="application-form__control"
+          type="email"
+          formControlName="confirmEmail"
+          autocomplete="off"
+          [class.application-form__control--mismatch]="showEmailMismatch"
+          (paste)="$event.preventDefault()"
+          (drop)="$event.preventDefault()"
+        />
+        <div class="application-form__hint application-form__hint--left">Escríbalo nuevamente para confirmar que es correcto.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('confirmEmail', 'required')">Repita el correo.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showEmailMismatch">El correo y su repetición no coinciden.</div>
       </div>
     </div>
 
@@ -52,15 +78,12 @@
           />
         </div>
         <div class="application-form__hint application-form__hint--left">Código de área y número, sin 0 y sin 15.</div>
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.whatsApp.hasError('mobileLeadingZero')">No ingrese el 0 del código de área.</div>
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.whatsApp.hasError('mobileFifteen')">Falta el código de área; no ingrese el 15.</div>
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.whatsApp.hasError('mobileLength')">Debe tener 10 dígitos (código de área + número, sin el 15).</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('whatsApp', 'mobileLeadingZero')">No ingrese el 0 del código de área.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('whatsApp', 'mobileFifteen')">Falta el código de área; no ingrese el 15.</div>
+        <div class="application-form__error application-form__error--inline" *ngIf="showError('whatsApp', 'mobileLength')">Debe tener 10 dígitos (código de área + número, sin el 15).</div>
       </div>
-      <div class="application-form__field">
-        <label class="application-form__label" for="application-email">Correo</label>
-        <input id="application-email" class="application-form__control" type="email" formControlName="email" />
-        <div class="application-form__error application-form__error--inline" *ngIf="form.controls.email.hasError('email')">El correo no tiene un formato válido.</div>
-      </div>
+      <!-- Mantiene WhatsApp a media columna, como en Solicitar demo gratis. -->
+      <div class="application-form__field" aria-hidden="true"></div>
     </div>
 
     <div class="application-form__row">

@@ -102,6 +102,12 @@
   margin-top: 0;
 }
 
+/* La repetición del correo es válida por sí sola: el error es del formulario, por eso se marca con una clase. */
+.application-form__control.application-form__control--mismatch,
+.application-form__control.application-form__control--mismatch:focus {
+  border-color: #f87171;
+}
+
 .application-form__actions {
   margin-top: 0.9rem;
   display: flex;
