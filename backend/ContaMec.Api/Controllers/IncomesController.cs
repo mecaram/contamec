@@ -148,6 +148,28 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
         }
     }
 
+    [HttpGet("export/{format}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ExportList(string format, [FromQuery] IncomeSearchRequest request)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var (exportFormat, contentType, extension) = format.ToLowerInvariant() switch
+        {
+            "pdf" => (ListExportFormat.Pdf, "application/pdf", "pdf"),
+            "excel" => (ListExportFormat.Excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+            _ => (default(ListExportFormat?), "", "")
+        };
+        if (exportFormat is null)
+            return BadRequest(new { message = "Formato no soportado: use pdf o excel." });
+
+        var file = await incomeService.ExportListAsync(request, applicationId, exportFormat.Value);
+        return File(file, contentType, MovementListReport.FileName(OrderKind.Income, extension));
+    }
+
     [HttpGet("{id:int}/pdf")]
     [Produces("application/pdf")]
     [ProducesResponseType(StatusCodes.Status200OK)]

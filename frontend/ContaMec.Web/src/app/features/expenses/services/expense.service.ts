@@ -27,6 +27,19 @@ export class ExpenseService {
   constructor(private readonly http: HttpClient) {}
 
   search(filters: ExpenseSearch): Observable<Expense[]> {
+    return this.http.get<Expense[]>(this.expensesUrl, { params: this.buildSearchParams(filters), headers: this.getAuthHeaders() });
+  }
+
+  /** Listado con los mismos filtros que la búsqueda, armado por el backend en PDF o Excel. */
+  exportList(filters: ExpenseSearch, format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.expensesUrl}/export/${format}`, {
+      params: this.buildSearchParams(filters),
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  private buildSearchParams(filters: ExpenseSearch): HttpParams {
     let params = new HttpParams();
 
     if (filters.dateFrom) params = params.set('dateFrom', filters.dateFrom);
@@ -38,8 +51,7 @@ export class ExpenseService {
     if (filters.amountFrom !== null && filters.amountFrom !== undefined) params = params.set('amountFrom', String(filters.amountFrom));
     if (filters.amountTo !== null && filters.amountTo !== undefined) params = params.set('amountTo', String(filters.amountTo));
     if (filters.detail) params = params.set('detail', filters.detail);
-
-    return this.http.get<Expense[]>(this.expensesUrl, { params, headers: this.getAuthHeaders() });
+    return params;
   }
 
   getClosures(): Observable<ClosureLookup[]> {
