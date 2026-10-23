@@ -1,0 +1,66 @@
+<div class="amount-calculator">
+  <div class="amount-calculator__field" [class.amount-calculator__field--open]="open">
+    <input
+      #input
+      [id]="inputId"
+      class="amount-calculator__input"
+      type="text"
+      inputmode="decimal"
+      autocomplete="off"
+      [value]="expression"
+      [placeholder]="placeholder"
+      [attr.aria-expanded]="open"
+      (input)="onInput($any($event.target).value)"
+      (focus)="onFocus()"
+      (click)="openPanel()"
+      (keydown)="onKeydown($event)"
+      (blur)="close()"
+    />
+    <button
+      type="button"
+      class="amount-calculator__toggle"
+      tabindex="-1"
+      [attr.aria-label]="open ? 'Cerrar calculadora' : 'Abrir calculadora'"
+      [title]="open ? 'Cerrar calculadora' : 'Abrir calculadora'"
+      (mousedown)="$event.preventDefault()"
+      (click)="toggle()"
+    >
+      <mat-icon>calculate</mat-icon>
+    </button>
+  </div>
+
+  <!-- mousedown sin efecto: el foco queda en el campo y no se cierra al tocar las teclas. -->
+  <div class="amount-calculator__panel mat-elevation-z4" *ngIf="open" (mousedown)="$event.preventDefault()">
+    <div class="amount-calculator__header">
+      <span class="amount-calculator__title">Calculadora</span>
+      <button
+        type="button"
+        class="amount-calculator__close"
+        tabindex="-1"
+        aria-label="Cerrar calculadora"
+        title="Cerrar calculadora"
+        (click)="close()"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <div class="amount-calculator__screen">
+      <div class="amount-calculator__expression">{{ expression || '0' }}</div>
+      <div class="amount-calculator__result" [class.amount-calculator__result--incomplete]="incomplete">{{ resultText }}</div>
+    </div>
+    <div class="amount-calculator__keys">
+      <button
+        *ngFor="let key of keys"
+        type="button"
+        tabindex="-1"
+        class="amount-calculator__key"
+        [ngClass]="'amount-calculator__key--' + key.kind"
+        [attr.aria-label]="key.label"
+        (click)="press(key.value)"
+      >
+        {{ key.text }}
+      </button>
+    </div>
+    <div class="amount-calculator__hint">También puede escribir la cuenta: 1500+230*2, 200+10%</div>
+  </div>
+</div>

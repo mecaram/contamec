@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
+import { AmountCalculatorModule } from '../../shared/amount-calculator/amount-calculator.module';
 import { IncomeFormComponent } from './components/income-form/income-form.component';
 import { IncomeListComponent } from './components/income-list/income-list.component';
 import { IncomesRoutingModule } from './incomes-routing.module';
@@ -25,6 +26,7 @@ import { SubAccountService } from '../sub-accounts/services/sub-account.service'
     MatProgressSpinnerModule,
     MatSelectModule,
     MatTooltipModule,
+    AmountCalculatorModule,
     IncomesRoutingModule
   ],
   providers: [IncomeService, PaymentAccountService, SubAccountService]

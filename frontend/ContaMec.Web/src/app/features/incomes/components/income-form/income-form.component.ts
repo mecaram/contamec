@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormBuilder, ValidationErrors, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { isPhone } from '../../../../shared/amount-calculator/device';
 import { SubAccountService } from '../../../sub-accounts/services/sub-account.service';
 import { Income } from '../../models/income.model';
 
@@ -23,6 +24,8 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<Income>();
   amountDisplay = '';
+  /** En el celular queda la caja de texto: la calculadora es para PC, tablet y notebook. */
+  readonly useCalculator = !isPhone();
   subAccountOptions: Array<{ id: number; label: string }> = [];
   subAccountsLoading = false;
   private subAccountsRequest: Subscription | null = null;
@@ -226,6 +229,11 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
     const parsed = this.parseAmount(value);
     this.form.controls.amount.setValue(parsed);
     this.amountDisplay = value;
+  }
+
+  onCalculatorAmount(amount: number | null): void {
+    this.form.controls.amount.setValue(amount);
+    this.form.controls.amount.markAsTouched();
   }
 
   onAmountBlur(): void {

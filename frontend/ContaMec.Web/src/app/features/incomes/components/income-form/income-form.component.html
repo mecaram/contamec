@@ -60,16 +60,25 @@
 
     <div class="income-form__field">
       <label class="income-form__label" for="income-amount">Monto</label>
-      <input
-        id="income-amount"
-        class="income-form__control"
-        type="text"
-        inputmode="decimal"
-        [value]="amountDisplay"
-        (input)="onAmountInput($any($event.target).value)"
-        (blur)="onAmountBlur()"
-        placeholder="0,00"
-      />
+      <!-- En PC, tablet y notebook el monto se carga con calculadora; en el celular, con la caja de texto. -->
+      <app-amount-calculator
+        *ngIf="useCalculator; else plainAmount"
+        inputId="income-amount"
+        [value]="form.controls.amount.value"
+        (valueChange)="onCalculatorAmount($event)"
+      ></app-amount-calculator>
+      <ng-template #plainAmount>
+        <input
+          id="income-amount"
+          class="income-form__control"
+          type="text"
+          inputmode="decimal"
+          [value]="amountDisplay"
+          (input)="onAmountInput($any($event.target).value)"
+          (blur)="onAmountBlur()"
+          placeholder="0,00"
+        />
+      </ng-template>
     </div>
     <div class="income-form__error" *ngIf="form.controls.amount.hasError('required')">
       El monto es obligatorio.
