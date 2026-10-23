@@ -9,6 +9,10 @@
         <mat-icon>arrow_back</mat-icon>
         Volver al menú principal
       </button>
+      <button mat-stroked-button color="primary" type="button" (click)="cancelForm()" *ngIf="formVisible">
+        <mat-icon>list</mat-icon>
+        Volver al Formulario
+      </button>
     </div>
   </header>
 
