@@ -112,12 +112,17 @@ public static class OrderPdf
                 AddRow(table, "Cuenta de pago", data.PaymentAccountName);
             });
 
-            column.Item().Background("#EFF6FF").Border(1).BorderColor(Accent).Padding(10).Row(row =>
+            column.Item().Background("#EFF6FF").Border(1).BorderColor(Accent).Padding(10).Column(amount =>
             {
-                row.RelativeItem().AlignMiddle().Text("Importe").FontSize(12).Bold();
-                row.RelativeItem().AlignRight().AlignMiddle()
-                    .Text(data.Amount.HasValue ? data.Amount.Value.ToString("C2", Argentina) : "-")
-                    .FontSize(16).Bold().FontColor(Accent);
+                amount.Item().Row(row =>
+                {
+                    row.RelativeItem().AlignMiddle().Text("Importe").FontSize(12).Bold();
+                    row.RelativeItem().AlignRight().AlignMiddle()
+                        .Text(data.Amount.HasValue ? data.Amount.Value.ToString("C2", Argentina) : "-")
+                        .FontSize(16).Bold().FontColor(Accent);
+                });
+                if (data.Amount.HasValue)
+                    amount.Item().PaddingTop(6).Text(AmountInWords.ToPesos(data.Amount.Value)).Italic();
             });
 
             column.Item().Text(text =>
