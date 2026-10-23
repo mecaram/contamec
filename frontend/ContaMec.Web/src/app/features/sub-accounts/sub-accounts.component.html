@@ -9,10 +9,14 @@
         <mat-icon>arrow_back</mat-icon>
         Volver al menú principal
       </button>
+      <button mat-stroked-button color="primary" type="button" (click)="cancelForm()" *ngIf="formVisible">
+        <mat-icon>list</mat-icon>
+        Volver al Formulario
+      </button>
     </div>
   </header>
 
-  <section class="sub-accounts-filters mat-elevation-z1">
+  <section class="sub-accounts-filters mat-elevation-z1" *ngIf="!formVisible">
     <form [formGroup]="filterForm" class="sub-accounts-filters__form">
       <div class="sub-accounts-field">
         <label class="sub-accounts-field__label" for="filter-id">ID</label>
@@ -39,7 +43,7 @@
 
   <div class="sub-accounts-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <div class="sub-accounts-page__new-action">
+  <div class="sub-accounts-page__new-action" *ngIf="!formVisible">
     <button mat-flat-button color="primary" type="button" (click)="openCreate()">
       <mat-icon>add</mat-icon>
       Nueva subcuenta

@@ -18,7 +18,9 @@
 
 .incomes-page__header-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
 }
 
 .incomes-page__title {
@@ -82,6 +84,7 @@
 .incomes-filters__actions {
   margin-top: 0.4rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
 }
@@ -99,7 +102,15 @@
   max-width: 74rem;
   margin: 0 auto 1rem;
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.incomes-page__spinner {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 .incomes-form-panel {

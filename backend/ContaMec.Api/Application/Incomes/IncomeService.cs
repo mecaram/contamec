@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.ClosureBalances;
 using ContaMec.Api.Application.Incomes.Dto;
 using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Domain.Entities;
@@ -96,8 +97,13 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             ApplicationId = applicationId
         };
 
-        _dbContext.Incomes.Add(income);
-        await _dbContext.SaveChangesAsync();
+        await using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+        {
+            _dbContext.Incomes.Add(income);
+            await _dbContext.SaveChangesAsync();
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, income.Amount ?? 0m, applicationId);
+            await transaction.CommitAsync();
+        }
 
         var created = await GetByIdAsync(income.Id, applicationId);
         return created ?? throw new InvalidOperationException("No se pudo leer el ingreso recién creado.");
@@ -130,6 +136,8 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
 
         var subAccountId = await ResolveSubAccountIdAsync(request.AccountId!.Value, subAccountRequires, request.SubAccountId, income.SubAccountId);
         var occurrenceType = ParseOccurrenceType(request.OccurrenceType);
+        var previousPaymentAccountId = income.PaymentAccountId;
+        var previousAmount = income.Amount ?? 0m;
 
         income.EmissionDate = request.EmissionDate;
         income.AccountId = request.AccountId!.Value;
@@ -139,7 +147,19 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         income.SubAccountId = subAccountId;
         income.OccurrenceType = occurrenceType;
 
+        // Se quita el importe anterior de su cuenta de pago y se suma el nuevo: con la misma cuenta queda la diferencia.
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         await _dbContext.SaveChangesAsync();
+        if (previousPaymentAccountId == income.PaymentAccountId)
+        {
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, (income.Amount ?? 0m) - previousAmount, applicationId);
+        }
+        else
+        {
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, previousPaymentAccountId, -previousAmount, applicationId);
+            await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, income.Amount ?? 0m, applicationId);
+        }
+        await transaction.CommitAsync();
         return true;
     }
 
@@ -151,8 +171,11 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         if (!await CanModifyIncomeAsync(income.ClosureId))
             throw new ArgumentException("Solo se puede eliminar un ingreso con cierre abierto (IsClosed = 0).");
 
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         _dbContext.Incomes.Remove(income);
         await _dbContext.SaveChangesAsync();
+        await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, -(income.Amount ?? 0m), applicationId);
+        await transaction.CommitAsync();
         return true;
     }
 
@@ -205,6 +228,82 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
             CreatedByUserName = data.CreatedByUserName,
             CreatedAt = data.CreatedAt
         });
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (N.º descendente).
+    public async Task<byte[]> ExportListAsync(IncomeSearchRequest request, int applicationId, ListExportFormat format)
+    {
+        request ??= new IncomeSearchRequest();
+        var rows = (await SearchAsync(request, applicationId)).OrderByDescending(i => i.Id).ToList();
+        var company = await ReportCompany.LoadAsync(_dbContext, applicationId);
+
+        var data = new MovementListData
+        {
+            Kind = OrderKind.Income,
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters = await DescribeFiltersAsync(request, applicationId),
+            Rows = rows.Select(i => new MovementListRow
+            {
+                Id = i.Id,
+                EmissionDate = i.EmissionDate,
+                AccountName = i.AccountName,
+                SubAccountName = i.SubAccountName,
+                OccurrenceType = i.OccurrenceType,
+                Detail = i.Detail,
+                Amount = i.Amount,
+                PaymentAccountName = i.PaymentAccountName
+            }).ToList()
+        };
+
+        return format == ListExportFormat.Excel ? MovementListReport.GenerateExcel(data) : MovementListReport.GeneratePdf(data);
+    }
+
+    // Los filtros con los nombres que ve el usuario; los de otra aplicación no se resuelven.
+    private async Task<List<(string Label, string Value)>> DescribeFiltersAsync(IncomeSearchRequest request, int applicationId)
+    {
+        var argentina = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+        string Date(DateTime? value) => value.HasValue ? value.Value.ToString("dd/MM/yyyy", argentina) : "-";
+        string Amount(decimal? value) => value.HasValue ? value.Value.ToString("C2", argentina) : "-";
+
+        var closure = request.ClosureId.HasValue
+            ? await _dbContext.Closures.AsNoTracking()
+                .Where(c => c.Id == request.ClosureId.Value && c.ApplicationId == applicationId)
+                .Select(c => c.ClosureNumber)
+                .FirstOrDefaultAsync()
+            : null;
+        var account = request.AccountId.HasValue
+            ? await _dbContext.Accounts.AsNoTracking()
+                .Where(a => a.Id == request.AccountId.Value && a.ApplicationId == applicationId)
+                .Select(a => a.Name)
+                .FirstOrDefaultAsync()
+            : null;
+        var subAccount = request.SubAccountId.HasValue
+            ? await _dbContext.SubAccounts.AsNoTracking()
+                .Where(s => s.Id == request.SubAccountId.Value && s.Account != null && s.Account.ApplicationId == applicationId)
+                .Select(s => s.Name)
+                .FirstOrDefaultAsync()
+            : null;
+        var paymentAccount = request.PaymentAccountId.HasValue
+            ? await _dbContext.PaymentAccounts.AsNoTracking()
+                .Where(p => p.Id == request.PaymentAccountId.Value && p.ApplicationId == applicationId)
+                .Select(p => p.Name)
+                .FirstOrDefaultAsync()
+            : null;
+
+        return
+        [
+            ("Cierre", request.ClosureId.HasValue ? $"N.º {closure?.ToString() ?? "#" + request.ClosureId}" : "Todos"),
+            ("Fecha desde", Date(request.DateFrom)),
+            ("Fecha hasta", Date(request.DateTo)),
+            ("Cuenta", request.AccountId.HasValue ? account ?? $"#{request.AccountId}" : "Todas"),
+            ("Subcuenta", request.SubAccountId.HasValue ? subAccount ?? $"#{request.SubAccountId}" : "Todas"),
+            ("Cuenta de pago", request.PaymentAccountId.HasValue ? paymentAccount ?? $"#{request.PaymentAccountId}" : "Todas"),
+            ("Monto desde", Amount(request.AmountFrom)),
+            ("Monto hasta", Amount(request.AmountTo)),
+            ("Detalle", string.IsNullOrWhiteSpace(request.Detail) ? "-" : request.Detail.Trim())
+        ];
     }
 
     // Una cuenta de otra aplicación se trata como inexistente. Devuelve si la cuenta requiere subcuentas.

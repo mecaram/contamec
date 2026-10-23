@@ -34,6 +34,8 @@ export class IncomesComponent implements OnInit {
   savedDialog: { id: number; mode: 'create' | 'edit'; downloading: boolean; error: boolean } | null = null;
   /** Ingresos cuya Orden de Ingreso se está descargando desde el listado. */
   downloadingIds: number[] = [];
+  /** Exportación del listado en curso. */
+  exporting: 'pdf' | 'excel' | null = null;
   readonly orderPdfErrorMessage = 'No fue posible generar la Orden de Ingreso. Intente nuevamente.';
   sortResetToken = 0;
   private notificationTimer: ReturnType<typeof setTimeout> | null = null;
@@ -296,7 +298,7 @@ export class IncomesComponent implements OnInit {
       .pipe(finalize(() => (dialog.downloading = false)))
       .subscribe({
         next: (blob) => {
-          this.saveOrderPdf(blob, dialog.id);
+          this.saveFile(blob, `Orden_Ingreso_${this.formatOrderNumber(dialog.id)}.pdf`);
           if (this.savedDialog === dialog) this.savedDialog = null;
         },
         error: () => (dialog.error = true)
@@ -316,7 +318,7 @@ export class IncomesComponent implements OnInit {
       .downloadOrderPdf(income.id)
       .pipe(finalize(() => (this.downloadingIds = this.downloadingIds.filter((id) => id !== income.id))))
       .subscribe({
-        next: (blob) => this.saveOrderPdf(blob, income.id),
+        next: (blob) => this.saveFile(blob, `Orden_Ingreso_${this.formatOrderNumber(income.id)}.pdf`),
         error: () => this.notify(this.orderPdfErrorMessage, 'error')
       });
   }
@@ -326,11 +328,31 @@ export class IncomesComponent implements OnInit {
     return String(id).padStart(8, '0');
   }
 
-  private saveOrderPdf(blob: Blob, id: number): void {
+  /** Exporta el listado con los filtros actuales. */
+  exportList(format: 'pdf' | 'excel'): void {
+    if (this.exporting) return;
+
+    this.exporting = format;
+    this.incomesService
+      .exportList(this.buildFilters(), format)
+      .pipe(finalize(() => (this.exporting = null)))
+      .subscribe({
+        next: (blob) => this.saveFile(blob, `Listado_Ingresos_${this.fileTimestamp()}.${format === 'pdf' ? 'pdf' : 'xlsx'}`),
+        error: () => this.notify(`No fue posible exportar el listado a ${format === 'pdf' ? 'PDF' : 'Excel'}. Intente nuevamente.`, 'error')
+      });
+  }
+
+  private fileTimestamp(): string {
+    const now = new Date();
+    const pad = (value: number) => String(value).padStart(2, '0');
+    return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+  }
+
+  private saveFile(blob: Blob, fileName: string): void {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Orden_Ingreso_${this.formatOrderNumber(id)}.pdf`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     link.remove();
