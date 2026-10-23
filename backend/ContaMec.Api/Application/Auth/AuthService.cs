@@ -28,13 +28,17 @@ public class AuthService(
             .Include(u => u.UserRole)
             .FirstOrDefaultAsync(u => u.Name.ToLower() == request.Username.ToLower(), cancellationToken);
 
-        if (user is null || !user.IsActive)
+        if (user is null)
             return null;
 
         if (!VerifyPassword(request.Password, user.PasswordHash))
             return null;
 
-        // La aplicación se valida después de la contraseña para no revelar datos a quien no conoce las credenciales.
+        // Usuario, aplicación y plan se validan después de la contraseña para no revelar datos a quien no conoce las credenciales.
+        if (!user.IsActive)
+            throw new LoginRejectedException(
+                "No es posible iniciar sesión porque su usuario no se encuentra activo. Comuníquese con el administrador del sistema.");
+
         var application = user.Application;
         if (application is null)
             throw new LoginRejectedException(
@@ -44,12 +48,16 @@ public class AuthService(
             throw new LoginRejectedException(
                 "No es posible iniciar sesión porque la aplicación asociada a su empresa no se encuentra activa. Comuníquese con el administrador del sistema.");
 
+        var roleName = user.UserRole?.Name ?? string.Empty;
+        if (IsPlanExpired(application, roleName))
+            throw new LoginRejectedException(
+                $"No es posible iniciar sesión porque el plan de su empresa venció el {application.ApplicationExpirationDate:dd/MM/yyyy}. Comuníquese con el administrador del sistema.");
+
         var previousLoginAt = user.LastLoginAt;
         user.LastLoginAt = ArgentinaClock.Now;
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         var name = user.Name ?? string.Empty;
-        var roleName = user.UserRole?.Name ?? string.Empty;
         var token = CreateJwt(user.Id, name, application.Id, roleName);
         return new LoginResponse
         {
@@ -64,7 +72,7 @@ public class AuthService(
 
     public async Task<RefreshTokenResponse?> RefreshAsync(int userId, CancellationToken cancellationToken = default)
     {
-        // Se vuelve a leer el usuario: si lo desactivaron (a él o a su empresa) durante la sesión, no se renueva.
+        // Se vuelve a leer el usuario: si lo desactivaron (a él o a su empresa) o venció el plan durante la sesión, no se renueva.
         var user = await _dbContext.Users
             .AsNoTracking()
             .Include(u => u.Application)
@@ -74,7 +82,11 @@ public class AuthService(
         if (user is null || !user.IsActive || user.Application is null || !user.Application.Active)
             return null;
 
-        var token = CreateJwt(user.Id, user.Name ?? string.Empty, user.Application.Id, user.UserRole?.Name ?? string.Empty);
+        var roleName = user.UserRole?.Name ?? string.Empty;
+        if (IsPlanExpired(user.Application, roleName))
+            return null;
+
+        var token = CreateJwt(user.Id, user.Name ?? string.Empty, user.Application.Id, roleName);
         return new RefreshTokenResponse { Token = token };
     }
 
@@ -103,6 +115,16 @@ public class AuthService(
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    /// <summary>
+    /// El plan sirve hasta el día de ApplicationExpirationDate inclusive, sin importar la hora (fecha de Argentina);
+    /// sin fecha no vence.
+    /// El SuperAdministrador no se bloquea: es quien renueva los planes de las empresas.
+    /// </summary>
+    private static bool IsPlanExpired(Domain.Entities.Application application, string roleName) =>
+        roleName != UserRoleNames.SuperAdministrator
+        && application.ApplicationExpirationDate is { } expiresAt
+        && ArgentinaClock.Now.Date > expiresAt.Date;
 
     private bool VerifyPassword(string password, string storedHash)
     {
