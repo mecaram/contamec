@@ -1,8 +1,6 @@
 @import '~@angular/material/theming';
 
-// Colores de ingresos y egresos: los usan los indicadores y las tarjetas de Proceso Diario.
-$income-color: #0284c7;
-$expense-color: #ea580c;
+@import 'dashboard-colors';
 
 .dashboard {
   min-height: 100vh;
@@ -352,7 +350,7 @@ $expense-color: #ea580c;
   color: $expense-color;
 }
 
-// Menú lateral: solo se muestra en el celular (showMenu).
+// Botón del menú lateral (app-dashboard-menu): solo se muestra en el celular (showMenu).
 .dashboard__menu-button {
   align-self: flex-start;
   // Queda pegado al grupo de indicadores en lugar de usar todo el espacio entre secciones.
@@ -368,133 +366,4 @@ $expense-color: #ea580c;
   background: #fff;
   color: #37474f;
   cursor: pointer;
-}
-
-.dashboard-menu__backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.45);
-}
-
-.dashboard-menu {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1001;
-  width: min(18rem, 85vw);
-  overflow-y: auto;
-  background: #fff;
-  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.18);
-  transform: translateX(-100%);
-  visibility: hidden;
-  transition: transform 0.25s ease, visibility 0s linear 0.25s;
-}
-
-.dashboard-menu--open {
-  transform: translateX(0);
-  visibility: visible;
-  transition: transform 0.25s ease;
-}
-
-.dashboard-menu__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 0.75rem 0.75rem 1.25rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.dashboard-menu__title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: mat-color($mat-blue-grey, 900);
-}
-
-.dashboard-menu__close {
-  display: inline-flex;
-  padding: 0.5rem;
-  border: none;
-  background: transparent;
-  color: #37474f;
-  cursor: pointer;
-}
-
-.dashboard-menu__group {
-  padding: 0.75rem 0;
-}
-
-.dashboard-menu__group-title {
-  margin: 0;
-  padding: 0.25rem 1.25rem 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: rgba(0, 0, 0, 0.72);
-}
-
-.dashboard-menu__item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  border: none;
-  background: none;
-  font-family: inherit;
-  cursor: pointer;
-  gap: 0.85rem;
-  padding: 0.75rem 1.25rem;
-  font-size: 1rem;
-  color: rgba(0, 0, 0, 0.82);
-  text-decoration: none;
-
-  &:active,
-  &:focus-visible {
-    background: #f1f5f9;
-  }
-}
-
-.dashboard-menu__icon {
-  color: #2563eb;
-}
-
-.dashboard-menu__group--daily {
-  .dashboard-menu__group-title {
-    color: #5b21b6;
-  }
-
-  .dashboard-menu__icon {
-    color: #7c3aed;
-  }
-}
-
-.dashboard-menu__group--files {
-  .dashboard-menu__group-title {
-    color: #075985;
-  }
-
-  .dashboard-menu__icon {
-    color: #0284c7;
-  }
-}
-
-.dashboard-menu__group--user {
-  border-top: 1px solid #e2e8f0;
-
-  .dashboard-menu__icon {
-    color: #475569;
-  }
-}
-
-.dashboard-menu__group--reports .dashboard-menu__group-title {
-  color: #166534;
-}
-
-.dashboard-menu .dashboard-menu__icon--incomes {
-  color: $income-color;
-}
-
-.dashboard-menu .dashboard-menu__icon--expenses {
-  color: $expense-color;
 }

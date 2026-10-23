@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { isPhone } from '../../shared/amount-calculator/device';
@@ -48,7 +48,6 @@ export class DashboardComponent implements OnInit {
     this.menuOpen = !this.menuOpen;
   }
 
-  @HostListener('document:keydown.escape')
   closeMenu(): void {
     this.menuOpen = false;
   }

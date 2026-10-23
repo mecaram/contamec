@@ -6,9 +6,10 @@ import { ClosureService } from '../closures/services/closure.service';
 
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
+import { DashboardMenuComponent } from './components/dashboard-menu/dashboard-menu.component';
 
 @NgModule({
-  declarations: [DashboardComponent],
+  declarations: [DashboardComponent, DashboardMenuComponent],
   imports: [
     CommonModule,
     RouterModule,

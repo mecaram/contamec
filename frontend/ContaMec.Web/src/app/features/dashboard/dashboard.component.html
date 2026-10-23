@@ -118,57 +118,11 @@
     </section>
   </main>
 
-  <ng-container *ngIf="showMenu">
-    <div class="dashboard-menu__backdrop" *ngIf="menuOpen" (click)="closeMenu()" aria-hidden="true"></div>
-    <nav
-      class="dashboard-menu"
-      id="dashboard-menu"
-      [class.dashboard-menu--open]="menuOpen"
-      [attr.aria-hidden]="!menuOpen"
-      [attr.inert]="menuOpen ? null : ''"
-      aria-label="Menú principal"
-    >
-      <div class="dashboard-menu__header">
-        <span class="dashboard-menu__title">ContaMEC</span>
-        <button class="dashboard-menu__close" type="button" (click)="closeMenu()" aria-label="Cerrar menú">
-          <span class="material-icons" aria-hidden="true">close</span>
-        </button>
-      </div>
-
-      <div
-        class="dashboard-menu__group"
-        *ngFor="let category of categories"
-        [ngClass]="'dashboard-menu__group--' + category.tone"
-      >
-        <ng-container *ngIf="category.items.length > 0">
-          <h2 class="dashboard-menu__group-title">{{ category.title }}</h2>
-          <a
-            class="dashboard-menu__item"
-            *ngFor="let item of category.items"
-            [routerLink]="item.route"
-            (click)="closeMenu()"
-          >
-            <span
-              class="dashboard-menu__icon material-icons"
-              [ngClass]="item.iconTone ? 'dashboard-menu__icon--' + item.iconTone : ''"
-              aria-hidden="true"
-            >{{ item.icon }}</span>
-            {{ item.name }}
-          </a>
-        </ng-container>
-      </div>
-
-      <div class="dashboard-menu__group dashboard-menu__group--user">
-        <h2 class="dashboard-menu__group-title">Usuario</h2>
-        <a class="dashboard-menu__item" routerLink="/cambiar-clave" (click)="closeMenu()">
-          <span class="dashboard-menu__icon material-icons" aria-hidden="true">lock</span>
-          Cambiar contraseña
-        </a>
-        <button class="dashboard-menu__item" type="button" (click)="closeMenu(); logout()">
-          <span class="dashboard-menu__icon material-icons" aria-hidden="true">logout</span>
-          Cerrar sesión
-        </button>
-      </div>
-    </nav>
-  </ng-container>
+  <app-dashboard-menu
+    *ngIf="showMenu"
+    [categories]="categories"
+    [open]="menuOpen"
+    (closed)="closeMenu()"
+    (logout)="logout()"
+  ></app-dashboard-menu>
 </div>
