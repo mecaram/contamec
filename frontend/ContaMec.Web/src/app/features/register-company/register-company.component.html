@@ -197,11 +197,11 @@
         <p class="register-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
 
         <div class="register-actions">
-          <button type="button" class="btn btn--secondary" (click)="backToLogin()" [disabled]="submitting">Cancelar</button>
           <button type="submit" class="btn btn--primary" [disabled]="submitting">
             <span *ngIf="!submitting">Solicitar demo gratis</span>
             <span *ngIf="submitting" aria-live="polite">Enviando solicitud…</span>
           </button>
+          <button type="button" class="btn btn--secondary" (click)="backToLogin()" [disabled]="submitting">Cancelar</button>
         </div>
       </form>
     </ng-template>

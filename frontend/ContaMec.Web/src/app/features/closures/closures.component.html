@@ -209,7 +209,6 @@
       </div>
 
       <div class="closures-modal__actions closures-modal__actions--footer">
-        <button mat-button type="button" (click)="closeCloseModal()" [disabled]="closeLoading">Cancelar</button>
         <button
           mat-flat-button
           color="primary"
@@ -219,6 +218,7 @@
         >
           {{ closeLoading ? 'Cerrando...' : 'Cerrar' }}
         </button>
+        <button mat-button type="button" (click)="closeCloseModal()" [disabled]="closeLoading">Cancelar</button>
       </div>
     </section>
   </div>
@@ -477,10 +477,10 @@
         </ng-template>
 
         <div class="closures-modal__actions">
-          <button mat-button type="button" (click)="closeBalanceValues()" [disabled]="balanceValuesSaving">Cancelar</button>
           <button mat-flat-button color="primary" type="button" (click)="saveBalanceValues()" [disabled]="balanceValuesSaving">
             {{ balanceValuesSaving ? 'Guardando...' : 'Guardar' }}
           </button>
+          <button mat-button type="button" (click)="closeBalanceValues()" [disabled]="balanceValuesSaving">Cancelar</button>
         </div>
       </div>
     </section>
