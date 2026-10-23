@@ -3,6 +3,8 @@ import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { PaymentAccountFormComponent } from './components/payment-account-form/payment-account-form.component';
 import { PaymentAccountListComponent } from './components/payment-account-list/payment-account-list.component';
@@ -12,7 +14,15 @@ import { PaymentAccountService } from './services/payment-account.service';
 
 @NgModule({
   declarations: [PaymentAccountsComponent, PaymentAccountFormComponent, PaymentAccountListComponent],
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, PaymentAccountsRoutingModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    PaymentAccountsRoutingModule
+  ],
   providers: [PaymentAccountService]
 })
 export class PaymentAccountsModule {}

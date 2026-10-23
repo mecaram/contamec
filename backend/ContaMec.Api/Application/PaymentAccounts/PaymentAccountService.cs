@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.PaymentAccounts.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
@@ -95,6 +96,28 @@ public class PaymentAccountService(ContaMecDbContext dbContext) : IPaymentAccoun
         _dbContext.PaymentAccounts.Remove(account);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (Nombre ascendente).
+    public async Task<byte[]> ExportListAsync(PaymentAccountSearchRequest request, int applicationId, ListExportFormat format)
+    {
+        request ??= new PaymentAccountSearchRequest();
+        var company = await ReportCompany.LoadAsync(_dbContext, applicationId);
+
+        var data = new PaymentAccountListData
+        {
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters =
+            [
+                ("ID", request.Id?.ToString() ?? "-"),
+                ("Nombre", string.IsNullOrWhiteSpace(request.Name) ? "-" : request.Name.Trim())
+            ],
+            Rows = await SearchAsync(request, applicationId)
+        };
+
+        return format == ListExportFormat.Excel ? PaymentAccountListReport.GenerateExcel(data) : PaymentAccountListReport.GeneratePdf(data);
     }
 
     private static Expression<Func<PaymentAccount, PaymentAccountResponse>> MapToResponse()

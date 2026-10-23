@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Auth;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.PaymentAccounts;
 using ContaMec.Api.Application.PaymentAccounts.Dto;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,32 @@ public class PaymentAccountsController(IPaymentAccountService paymentAccountServ
 
         var result = await paymentAccountService.SearchAsync(request, applicationId);
         return Ok(result);
+    }
+
+    [HttpGet("export/{format}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ExportList(
+        string format,
+        [FromQuery(Name = "id")] int? id,
+        [FromQuery(Name = "name")] string? name)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var (exportFormat, contentType, extension) = format.ToLowerInvariant() switch
+        {
+            "pdf" => (ListExportFormat.Pdf, "application/pdf", "pdf"),
+            "excel" => (ListExportFormat.Excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+            _ => (default(ListExportFormat?), "", "")
+        };
+        if (exportFormat is null)
+            return BadRequest(new { message = "Formato no soportado: use pdf o excel." });
+
+        var request = new PaymentAccountSearchRequest { Id = id, Name = name };
+        var file = await paymentAccountService.ExportListAsync(request, applicationId, exportFormat.Value);
+        return File(file, contentType, PaymentAccountListReport.FileName(extension));
     }
 
     [HttpGet("{id:int}")]
