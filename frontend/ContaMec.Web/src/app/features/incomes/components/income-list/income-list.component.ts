@@ -30,9 +30,11 @@ export class IncomeListComponent implements OnChanges {
   @Input() closedClosureIds: number[] = [];
   @Input() sortResetToken = 0;
   @Input() loading = false;
+  @Input() downloadingIds: number[] = [];
   @Output() edit = new EventEmitter<Income>();
   @Output() remove = new EventEmitter<Income>();
   @Output() copy = new EventEmitter<Income>();
+  @Output() downloadOrder = new EventEmitter<Income>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -97,6 +99,14 @@ export class IncomeListComponent implements OnChanges {
 
   onCopy(income: Income): void {
     this.copy.emit(income);
+  }
+
+  onDownloadOrder(income: Income): void {
+    this.downloadOrder.emit(income);
+  }
+
+  isDownloading(income: Income): boolean {
+    return this.downloadingIds.includes(income.id);
   }
 
   setSort(column: SortableColumn): void {

@@ -30,9 +30,11 @@ export class ExpenseListComponent implements OnChanges {
   @Input() closedClosureIds: number[] = [];
   @Input() sortResetToken = 0;
   @Input() loading = false;
+  @Input() downloadingIds: number[] = [];
   @Output() edit = new EventEmitter<Expense>();
   @Output() remove = new EventEmitter<Expense>();
   @Output() copy = new EventEmitter<Expense>();
+  @Output() downloadOrder = new EventEmitter<Expense>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -96,6 +98,14 @@ export class ExpenseListComponent implements OnChanges {
 
   onCopy(expense: Expense): void {
     this.copy.emit(expense);
+  }
+
+  onDownloadOrder(expense: Expense): void {
+    this.downloadOrder.emit(expense);
+  }
+
+  isDownloading(expense: Expense): boolean {
+    return this.downloadingIds.includes(expense.id);
   }
 
   setSort(column: SortableColumn): void {

@@ -49,22 +49,35 @@
         <td data-label="Cuenta de Pago">{{ row.paymentAccountName || '-' }}</td>
         <td class="income-list__actions">
           <ng-container *ngIf="canManage(row); else blockedActions">
-            <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar ingreso">
+            <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar ingreso" matTooltip="Editar Orden de Ingreso">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar ingreso" title="Copiar como nuevo ingreso">
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar ingreso" matTooltip="Copiar a Nuevo Ingreso">
               <mat-icon>content_copy</mat-icon>
             </button>
-            <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar ingreso">
+            <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar ingreso" matTooltip="Eliminar Ingreso">
               <mat-icon>delete</mat-icon>
             </button>
           </ng-container>
           <!-- Con el cierre cerrado no se edita ni elimina, pero se puede copiar al cierre abierto. -->
           <ng-template #blockedActions>
-            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar ingreso" title="Copiar como nuevo ingreso">
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar ingreso" matTooltip="Copiar a Nuevo Ingreso">
               <mat-icon>content_copy</mat-icon>
             </button>
           </ng-template>
+          <!-- La Orden de Ingreso se descarga también con el cierre cerrado. -->
+          <button
+            mat-icon-button
+            color="primary"
+            type="button"
+            (click)="onDownloadOrder(row)"
+            [disabled]="isDownloading(row)"
+            aria-label="Descargar Orden de Ingreso"
+            matTooltip="Descargar Orden de Ingreso"
+          >
+            <mat-spinner *ngIf="isDownloading(row); else pdfIcon" class="income-list__spinner" diameter="20"></mat-spinner>
+            <ng-template #pdfIcon><mat-icon>picture_as_pdf</mat-icon></ng-template>
+          </button>
         </td>
       </tr>
     </tbody>

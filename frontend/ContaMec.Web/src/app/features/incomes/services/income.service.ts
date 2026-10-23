@@ -101,6 +101,11 @@ export class IncomeService {
     return this.http.delete<void>(`${this.incomesUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 
+  /** Orden de Ingreso en PDF, armada por el backend con los datos actuales del ingreso. */
+  downloadOrderPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.incomesUrl}/${id}/pdf`, { headers: this.getAuthHeaders(), responseType: 'blob' });
+  }
+
   private getAuthHeaders(): HttpHeaders {
     const token = sessionStorage.getItem(this.tokenKey);
     if (!token) return new HttpHeaders();

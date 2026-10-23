@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Expenses.Dto;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -153,6 +154,57 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         _dbContext.Expenses.Remove(expense);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    // Solo lectura: la orden se arma con los datos actuales de la base y no modifica el egreso.
+    public async Task<byte[]?> GetOrderPdfAsync(int id, int applicationId)
+    {
+        var data = await _dbContext.Expenses
+            .AsNoTracking()
+            .Where(e => e.Id == id && e.ApplicationId == applicationId)
+            .Select(e => new
+            {
+                e.Id,
+                CompanyName = e.Application != null ? e.Application.Name : null,
+                DocumentType = e.Application != null ? e.Application.DocumentType : null,
+                DocumentNumber = e.Application != null ? e.Application.DocumentNumber : null,
+                Address = e.Application != null ? e.Application.Address : null,
+                Locality = e.Application != null ? e.Application.Locality : null,
+                e.EmissionDate,
+                ClosureNumber = e.Closure != null ? e.Closure.ClosureNumber : null,
+                AccountName = e.Account != null ? e.Account.Name : null,
+                SubAccountName = e.SubAccount != null ? e.SubAccount.Name : null,
+                e.OccurrenceType,
+                e.Detail,
+                e.Amount,
+                PaymentAccountName = e.PaymentAccount != null ? e.PaymentAccount.Name : null,
+                CreatedByUserName = e.CreatedByUser != null ? e.CreatedByUser.Name : null,
+                e.CreatedAt
+            })
+            .FirstOrDefaultAsync();
+        if (data is null)
+            return null;
+
+        return OrderPdf.Generate(new OrderData
+        {
+            Kind = OrderKind.Expense,
+            Id = data.Id,
+            CompanyName = data.CompanyName ?? string.Empty,
+            CompanyDocument = data.DocumentType.HasValue && !string.IsNullOrWhiteSpace(data.DocumentNumber)
+                ? $"{data.DocumentType}: {data.DocumentNumber}"
+                : null,
+            CompanyAddress = string.Join(", ", new[] { data.Address, data.Locality }.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p!.Trim())),
+            EmissionDate = data.EmissionDate,
+            ClosureNumber = data.ClosureNumber,
+            AccountName = data.AccountName,
+            SubAccountName = data.SubAccountName,
+            OccurrenceType = data.OccurrenceType?.ToString(),
+            Detail = data.Detail,
+            Amount = data.Amount,
+            PaymentAccountName = data.PaymentAccountName,
+            CreatedByUserName = data.CreatedByUserName,
+            CreatedAt = data.CreatedAt
+        });
     }
 
     // Una cuenta de otra aplicación se trata como inexistente. Devuelve si la cuenta requiere subcuentas.

@@ -30,6 +30,11 @@ export class ExpensesComponent implements OnInit {
   copySource: Expense | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Expense | null = null;
+  /** Ventana posterior al guardado que ofrece descargar la Orden de Egreso. */
+  savedDialog: { id: number; mode: 'create' | 'edit'; downloading: boolean; error: boolean } | null = null;
+  /** Egresos cuya Orden de Egreso se está descargando desde el listado. */
+  downloadingIds: number[] = [];
+  readonly orderPdfErrorMessage = 'No fue posible generar la Orden de Egreso. Intente nuevamente.';
   sortResetToken = 0;
   private notificationTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly today = this.startOfDay(new Date());
@@ -217,11 +222,15 @@ export class ExpensesComponent implements OnInit {
   submitForm(payload: Expense): void {
     if (this.formMode === 'create') {
       this.expensesService.create(payload).subscribe({
-        next: () => {
-          this.notify('Egreso creado correctamente.');
+        next: (created) => {
           this.formVisible = false;
           this.copySource = null;
           this.search();
+          if (created?.id) {
+            this.savedDialog = { id: created.id, mode: 'create', downloading: false, error: false };
+          } else {
+            this.notify('Egreso creado correctamente.');
+          }
         },
         error: () => this.notify('No se pudo crear el egreso.', 'error')
       });
@@ -236,10 +245,10 @@ export class ExpensesComponent implements OnInit {
 
     this.expensesService.update(id, payload).subscribe({
       next: () => {
-        this.notify('Egreso actualizado correctamente.');
         this.formVisible = false;
         this.editingExpense = null;
         this.search();
+        this.savedDialog = { id, mode: 'edit', downloading: false, error: false };
       },
       error: () => this.notify('Solo se puede modificar un egreso con cierre abierto.', 'error')
     });
@@ -267,6 +276,60 @@ export class ExpensesComponent implements OnInit {
 
   cancelDelete(): void {
     this.deleteTarget = null;
+  }
+
+  /** El egreso ya quedó guardado: si falla el PDF se puede reintentar sin volver a guardar. */
+  downloadFromSavedDialog(): void {
+    const dialog = this.savedDialog;
+    if (!dialog || dialog.downloading) return;
+
+    dialog.downloading = true;
+    dialog.error = false;
+    this.expensesService
+      .downloadOrderPdf(dialog.id)
+      .pipe(finalize(() => (dialog.downloading = false)))
+      .subscribe({
+        next: (blob) => {
+          this.saveOrderPdf(blob, dialog.id);
+          if (this.savedDialog === dialog) this.savedDialog = null;
+        },
+        error: () => (dialog.error = true)
+      });
+  }
+
+  closeSavedDialog(): void {
+    this.savedDialog = null;
+  }
+
+  /** Descarga directa desde el listado: sin confirmación y sin tocar el egreso. */
+  downloadOrder(expense: Expense): void {
+    if (this.downloadingIds.includes(expense.id)) return;
+
+    this.downloadingIds = [...this.downloadingIds, expense.id];
+    this.expensesService
+      .downloadOrderPdf(expense.id)
+      .pipe(finalize(() => (this.downloadingIds = this.downloadingIds.filter((id) => id !== expense.id))))
+      .subscribe({
+        next: (blob) => this.saveOrderPdf(blob, expense.id),
+        error: () => this.notify(this.orderPdfErrorMessage, 'error')
+      });
+  }
+
+  /** El número de la orden es el Id del egreso con 8 dígitos. */
+  formatOrderNumber(id: number): string {
+    return String(id).padStart(8, '0');
+  }
+
+  private saveOrderPdf(blob: Blob, id: number): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Orden_Egreso_${this.formatOrderNumber(id)}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    // Se libera cuando el navegador ya tomó el archivo.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   closeNotification(): void {

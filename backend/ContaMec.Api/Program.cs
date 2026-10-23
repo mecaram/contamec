@@ -25,6 +25,9 @@ using Npgsql.NameTranslation;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Órdenes de Ingreso y de Egreso en PDF: licencia Community de QuestPDF.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 const string CorsPolicyName = "AllowFrontend";
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SectionName));

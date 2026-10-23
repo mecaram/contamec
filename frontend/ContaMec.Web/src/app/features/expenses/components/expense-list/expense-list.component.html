@@ -47,22 +47,35 @@
         <td data-label="Cuenta de Pago">{{ row.paymentAccountName || '-' }}</td>
         <td class="expense-list__actions">
           <ng-container *ngIf="canManage(row); else blockedActions">
-            <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar egreso">
+            <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar egreso" matTooltip="Editar Orden de Egreso">
               <mat-icon>edit</mat-icon>
             </button>
-            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" title="Copiar como nuevo egreso">
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" matTooltip="Copiar a Nuevo Egreso">
               <mat-icon>content_copy</mat-icon>
             </button>
-            <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar egreso">
+            <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar egreso" matTooltip="Eliminar Egreso">
               <mat-icon>delete</mat-icon>
             </button>
           </ng-container>
           <!-- Con el cierre cerrado no se edita ni elimina, pero se puede copiar al cierre abierto. -->
           <ng-template #blockedActions>
-            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" title="Copiar como nuevo egreso">
+            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" matTooltip="Copiar a Nuevo Egreso">
               <mat-icon>content_copy</mat-icon>
             </button>
           </ng-template>
+          <!-- La Orden de Egreso se descarga también con el cierre cerrado. -->
+          <button
+            mat-icon-button
+            color="primary"
+            type="button"
+            (click)="onDownloadOrder(row)"
+            [disabled]="isDownloading(row)"
+            aria-label="Descargar Orden de Egreso"
+            matTooltip="Descargar Orden de Egreso"
+          >
+            <mat-spinner *ngIf="isDownloading(row); else pdfIcon" class="expense-list__spinner" diameter="20"></mat-spinner>
+            <ng-template #pdfIcon><mat-icon>picture_as_pdf</mat-icon></ng-template>
+          </button>
         </td>
       </tr>
     </tbody>

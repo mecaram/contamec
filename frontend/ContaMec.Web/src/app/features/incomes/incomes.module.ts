@@ -3,7 +3,9 @@ import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { IncomeFormComponent } from './components/income-form/income-form.component';
 import { IncomeListComponent } from './components/income-list/income-list.component';
@@ -20,7 +22,9 @@ import { SubAccountService } from '../sub-accounts/services/sub-account.service'
     ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
+    MatProgressSpinnerModule,
     MatSelectModule,
+    MatTooltipModule,
     IncomesRoutingModule
   ],
   providers: [IncomeService, PaymentAccountService, SubAccountService]

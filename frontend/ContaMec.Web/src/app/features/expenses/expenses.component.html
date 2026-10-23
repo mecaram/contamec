@@ -129,14 +129,39 @@
     [closedClosureIds]="closedClosureIds"
     [sortResetToken]="sortResetToken"
     [loading]="loading"
+    [downloadingIds]="downloadingIds"
     (edit)="openEdit($event)"
     (remove)="deleteExpense($event)"
     (copy)="openCopy($event)"
+    (downloadOrder)="downloadOrder($event)"
   ></app-expense-list>
 
   <div class="expenses-toast" *ngIf="notification" [ngClass]="'expenses-toast--' + notification.type">
     <span>{{ notification.message }}</span>
     <button type="button" class="expenses-toast__close" (click)="closeNotification()" aria-label="Cerrar mensaje">×</button>
+  </div>
+
+  <div class="expenses-dialog-backdrop" *ngIf="savedDialog">
+    <section class="expenses-dialog" role="dialog" aria-modal="true" aria-labelledby="expense-saved-title">
+      <h3 class="expenses-dialog__title" id="expense-saved-title">
+        {{ savedDialog.mode === 'create' ? 'Egreso registrado correctamente' : 'Egreso actualizado correctamente' }}
+      </h3>
+      <p class="expenses-dialog__text" *ngIf="savedDialog.mode === 'create'">
+        El egreso N.º {{ formatOrderNumber(savedDialog.id) }} se registró correctamente. ¿Desea descargar la Orden de Egreso en PDF?
+      </p>
+      <p class="expenses-dialog__text" *ngIf="savedDialog.mode === 'edit'">
+        El egreso N.º {{ formatOrderNumber(savedDialog.id) }} se actualizó correctamente. ¿Desea descargar la Orden de Egreso actualizada?
+      </p>
+      <div class="expenses-dialog__error" *ngIf="savedDialog.error" role="alert">{{ orderPdfErrorMessage }}</div>
+      <div class="expenses-dialog__actions">
+        <button mat-button type="button" (click)="closeSavedDialog()">Finalizar</button>
+        <button mat-flat-button color="primary" type="button" (click)="downloadFromSavedDialog()" [disabled]="savedDialog.downloading">
+          <mat-spinner *ngIf="savedDialog.downloading" class="expenses-dialog__spinner" diameter="18"></mat-spinner>
+          <mat-icon *ngIf="!savedDialog.downloading">picture_as_pdf</mat-icon>
+          {{ savedDialog.downloading ? 'Generando...' : 'Descargar PDF' }}
+        </button>
+      </div>
+    </section>
   </div>
 
   <div class="expenses-dialog-backdrop" *ngIf="deleteTarget">

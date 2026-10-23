@@ -1,6 +1,7 @@
 using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Expenses;
 using ContaMec.Api.Application.Expenses.Dto;
+using ContaMec.Api.Application.Orders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -145,6 +146,20 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("{id:int}/pdf")]
+    [Produces("application/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetOrderPdf(int id)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var pdf = await expenseService.GetOrderPdfAsync(id, applicationId);
+        return pdf is null ? NotFound() : File(pdf, "application/pdf", OrderPdf.FileName(OrderKind.Expense, id));
     }
 
     private bool TryGetCurrentUserId(out int userId)

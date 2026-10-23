@@ -1,6 +1,7 @@
 using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Incomes;
 using ContaMec.Api.Application.Incomes.Dto;
+using ContaMec.Api.Application.Orders;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -145,6 +146,20 @@ public class IncomesController(IIncomeService incomeService) : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpGet("{id:int}/pdf")]
+    [Produces("application/pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetOrderPdf(int id)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var pdf = await incomeService.GetOrderPdfAsync(id, applicationId);
+        return pdf is null ? NotFound() : File(pdf, "application/pdf", OrderPdf.FileName(OrderKind.Income, id));
     }
 
     private bool TryGetCurrentUserId(out int userId)

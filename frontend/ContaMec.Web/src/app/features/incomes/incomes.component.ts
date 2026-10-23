@@ -30,6 +30,11 @@ export class IncomesComponent implements OnInit {
   copySource: Income | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Income | null = null;
+  /** Ventana posterior al guardado que ofrece descargar la Orden de Ingreso. */
+  savedDialog: { id: number; mode: 'create' | 'edit'; downloading: boolean; error: boolean } | null = null;
+  /** Ingresos cuya Orden de Ingreso se está descargando desde el listado. */
+  downloadingIds: number[] = [];
+  readonly orderPdfErrorMessage = 'No fue posible generar la Orden de Ingreso. Intente nuevamente.';
   sortResetToken = 0;
   private notificationTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly today = this.startOfDay(new Date());
@@ -222,11 +227,15 @@ export class IncomesComponent implements OnInit {
   submitForm(payload: Income): void {
     if (this.formMode === 'create') {
       this.incomesService.create(payload).subscribe({
-        next: () => {
-          this.notify('Ingreso creado correctamente.');
+        next: (created) => {
           this.formVisible = false;
           this.copySource = null;
           this.search();
+          if (created?.id) {
+            this.savedDialog = { id: created.id, mode: 'create', downloading: false, error: false };
+          } else {
+            this.notify('Ingreso creado correctamente.');
+          }
         },
         error: () => this.notify('No se pudo crear el ingreso.')
       });
@@ -241,10 +250,10 @@ export class IncomesComponent implements OnInit {
 
     this.incomesService.update(id, payload).subscribe({
       next: () => {
-        this.notify('Ingreso actualizado correctamente.');
         this.formVisible = false;
         this.editingIncome = null;
         this.search();
+        this.savedDialog = { id, mode: 'edit', downloading: false, error: false };
       },
       error: () => this.notify('Solo se puede modificar un ingreso con cierre abierto.', 'error')
     });
@@ -273,6 +282,60 @@ export class IncomesComponent implements OnInit {
 
   cancelDelete(): void {
     this.deleteTarget = null;
+  }
+
+  /** El ingreso ya quedó guardado: si falla el PDF se puede reintentar sin volver a guardar. */
+  downloadFromSavedDialog(): void {
+    const dialog = this.savedDialog;
+    if (!dialog || dialog.downloading) return;
+
+    dialog.downloading = true;
+    dialog.error = false;
+    this.incomesService
+      .downloadOrderPdf(dialog.id)
+      .pipe(finalize(() => (dialog.downloading = false)))
+      .subscribe({
+        next: (blob) => {
+          this.saveOrderPdf(blob, dialog.id);
+          if (this.savedDialog === dialog) this.savedDialog = null;
+        },
+        error: () => (dialog.error = true)
+      });
+  }
+
+  closeSavedDialog(): void {
+    this.savedDialog = null;
+  }
+
+  /** Descarga directa desde el listado: sin confirmación y sin tocar el ingreso. */
+  downloadOrder(income: Income): void {
+    if (this.downloadingIds.includes(income.id)) return;
+
+    this.downloadingIds = [...this.downloadingIds, income.id];
+    this.incomesService
+      .downloadOrderPdf(income.id)
+      .pipe(finalize(() => (this.downloadingIds = this.downloadingIds.filter((id) => id !== income.id))))
+      .subscribe({
+        next: (blob) => this.saveOrderPdf(blob, income.id),
+        error: () => this.notify(this.orderPdfErrorMessage, 'error')
+      });
+  }
+
+  /** El número de la orden es el Id del ingreso con 8 dígitos. */
+  formatOrderNumber(id: number): string {
+    return String(id).padStart(8, '0');
+  }
+
+  private saveOrderPdf(blob: Blob, id: number): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Orden_Ingreso_${this.formatOrderNumber(id)}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    // Se libera cuando el navegador ya tomó el archivo.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   closeNotification(): void {

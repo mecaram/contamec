@@ -85,6 +85,11 @@ export class ExpenseService {
     return this.http.delete<void>(`${this.expensesUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 
+  /** Orden de Egreso en PDF, armada por el backend con los datos actuales del egreso. */
+  downloadOrderPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.expensesUrl}/${id}/pdf`, { headers: this.getAuthHeaders(), responseType: 'blob' });
+  }
+
   private getAuthHeaders(): HttpHeaders {
     const token = sessionStorage.getItem(this.tokenKey);
     if (!token) return new HttpHeaders();

@@ -10,4 +10,5 @@ public interface IIncomeService
     Task<int?> GetLastPaymentAccountIdAsync(int userId, int applicationId);
     Task<bool> UpdateAsync(int id, IncomeUpdateRequest request, int applicationId);
     Task<bool> DeleteAsync(int id, int applicationId);
+    Task<byte[]?> GetOrderPdfAsync(int id, int applicationId);
 }

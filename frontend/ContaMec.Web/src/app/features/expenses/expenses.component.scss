@@ -195,11 +195,30 @@ app-expense-list {
 .expenses-dialog__actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.expenses-dialog__error {
+  margin: -0.4rem 0 1rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.expenses-dialog__spinner {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 @media (max-width: 42rem) {
   .expenses-filters__detail {
     grid-column: span 1;
+  }
+
+  .expenses-dialog__actions button {
+    flex: 1 1 auto;
   }
 }
