@@ -54,7 +54,8 @@ th {
   white-space: nowrap;
 }
 
-.application-list__activate {
+// Desactivado toma el gris de Material.
+.application-list__activate:not([disabled]) {
   color: #15803d;
 }
 

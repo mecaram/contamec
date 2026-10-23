@@ -46,23 +46,32 @@
         <td data-label="Monto" class="expense-list__amount">{{ row.amount != null ? (row.amount | currency:'USD':'symbol':'1.2-2') : '-' }}</td>
         <td data-label="Cuenta de Pago">{{ row.paymentAccountName || '-' }}</td>
         <td class="expense-list__actions">
-          <ng-container *ngIf="canManage(row); else blockedActions">
-            <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar egreso" matTooltip="Editar Orden de Egreso">
-              <mat-icon>edit</mat-icon>
-            </button>
-            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" matTooltip="Copiar a Nuevo Egreso">
-              <mat-icon>content_copy</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" type="button" (click)="onDelete(row)" aria-label="Eliminar egreso" matTooltip="Eliminar Egreso">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </ng-container>
-          <!-- Con el cierre cerrado no se edita ni elimina, pero se puede copiar al cierre abierto. -->
-          <ng-template #blockedActions>
-            <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" matTooltip="Copiar a Nuevo Egreso">
-              <mat-icon>content_copy</mat-icon>
-            </button>
-          </ng-template>
+          <!-- Con el cierre cerrado Editar y Eliminar quedan visibles pero desactivados; se puede copiar al cierre abierto. -->
+          <button
+            mat-icon-button
+            color="primary"
+            type="button"
+            (click)="onEdit(row)"
+            [disabled]="!canManage(row)"
+            aria-label="Editar egreso"
+            matTooltip="Editar Orden de Egreso"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="primary" type="button" (click)="onCopy(row)" aria-label="Copiar egreso" matTooltip="Copiar a Nuevo Egreso">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            color="warn"
+            type="button"
+            (click)="onDelete(row)"
+            [disabled]="!canManage(row)"
+            aria-label="Eliminar egreso"
+            matTooltip="Eliminar Egreso"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
           <!-- La Orden de Egreso se descarga también con el cierre cerrado. -->
           <button
             mat-icon-button

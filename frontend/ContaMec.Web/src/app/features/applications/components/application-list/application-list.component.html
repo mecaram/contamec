@@ -58,12 +58,13 @@
         <td data-label="Fecha de alta">{{ row.createdAt ? (row.createdAt | date: 'dd/MM/yyyy') : '-' }}</td>
         <td data-label="Activa">{{ row.active ? 'Sí' : 'No' }}</td>
         <td class="application-list__actions">
+          <!-- Visible siempre; desactivado si la aplicación ya está activa. -->
           <button
-            *ngIf="!row.active"
             mat-icon-button
             type="button"
             class="application-list__activate"
             (click)="onActivate(row)"
+            [disabled]="row.active"
             aria-label="Activar aplicación"
             title="Activar aplicación"
           >
