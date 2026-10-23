@@ -50,6 +50,33 @@
 
   <div class="closures-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
+  <div class="closures-page__export-actions">
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      (click)="exportList('pdf')"
+      [disabled]="exporting !== null"
+      matTooltip="Exportar a Pdf"
+    >
+      <mat-spinner *ngIf="exporting === 'pdf'; else pdfExportIcon" class="closures-page__spinner" diameter="18"></mat-spinner>
+      <ng-template #pdfExportIcon><mat-icon>picture_as_pdf</mat-icon></ng-template>
+      Exportar a Pdf
+    </button>
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      (click)="exportList('excel')"
+      [disabled]="exporting !== null"
+      matTooltip="Exportar a Excel"
+    >
+      <mat-spinner *ngIf="exporting === 'excel'; else excelExportIcon" class="closures-page__spinner" diameter="18"></mat-spinner>
+      <ng-template #excelExportIcon><mat-icon>grid_on</mat-icon></ng-template>
+      Exportar a Excel
+    </button>
+  </div>
+
   <app-closure-list
     [closures]="closures"
     [loading]="loading"

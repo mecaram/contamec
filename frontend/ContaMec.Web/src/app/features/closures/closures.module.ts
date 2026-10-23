@@ -3,6 +3,8 @@ import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ClosureListComponent } from './components/closure-list/closure-list.component';
 import { ClosuresRoutingModule } from './closures-routing.module';
@@ -12,7 +14,15 @@ import { ClosureService } from './services/closure.service';
 
 @NgModule({
   declarations: [ClosuresComponent, ClosureListComponent],
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, ClosuresRoutingModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    ClosuresRoutingModule
+  ],
   providers: [ClosureService, ClosureBalanceService]
 })
 export class ClosuresModule {}

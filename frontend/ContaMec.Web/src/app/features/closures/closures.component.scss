@@ -9,6 +9,7 @@
 .closures-page__header,
 .closures-filters,
 .closures-page__error,
+.closures-page__export-actions,
 app-closure-list {
   // Más ancho que las demás pantallas: la lista de cierres tiene 11 columnas.
   max-width: 96rem;
@@ -86,8 +87,23 @@ app-closure-list {
 .closures-filters__actions {
   margin-top: 0.4rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.closures-page__export-actions {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.closures-page__spinner {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 .closures-page__error {

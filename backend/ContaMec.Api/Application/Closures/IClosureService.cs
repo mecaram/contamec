@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Closures.Dto;
+using ContaMec.Api.Application.Orders;
 
 namespace ContaMec.Api.Application.Closures;
 
@@ -8,4 +9,5 @@ public interface IClosureService
     Task<ClosureIncomeDetailResponse?> GetIncomeDetailAsync(int closureId, int applicationId);
     Task<ClosureExpenseDetailResponse?> GetExpenseDetailAsync(int closureId, int applicationId);
     Task<ClosureCloseResponse> CloseAsync(int closureId, int applicationId);
+    Task<byte[]> ExportListAsync(ClosureSearchRequest request, int applicationId, ListExportFormat format);
 }

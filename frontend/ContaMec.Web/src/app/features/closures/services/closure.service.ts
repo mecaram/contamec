@@ -48,12 +48,25 @@ export class ClosureService {
   constructor(private readonly http: HttpClient) {}
 
   search(filters: ClosureSearch): Observable<Closure[]> {
+    return this.http.get<Closure[]>(this.closuresUrl, { params: this.buildSearchParams(filters), headers: this.getAuthHeaders() });
+  }
+
+  /** Listado con los mismos filtros que la búsqueda, armado por el backend en PDF o Excel. */
+  exportList(filters: ClosureSearch, format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.closuresUrl}/export/${format}`, {
+      params: this.buildSearchParams(filters),
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  private buildSearchParams(filters: ClosureSearch): HttpParams {
     let params = new HttpParams();
     if (filters.closureNumber !== null && filters.closureNumber !== undefined) params = params.set('closureNumber', String(filters.closureNumber));
     if (filters.isClosed !== null && filters.isClosed !== undefined) params = params.set('isClosed', String(filters.isClosed));
     if (filters.openDateFrom) params = params.set('openDateFrom', filters.openDateFrom);
     if (filters.openDateTo) params = params.set('openDateTo', filters.openDateTo);
-    return this.http.get<Closure[]>(this.closuresUrl, { params, headers: this.getAuthHeaders() });
+    return params;
   }
 
   getIncomeDetail(closureId: number): Observable<ClosureIncomeDetailResponse> {

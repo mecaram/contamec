@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Closures.Dto;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
@@ -113,6 +114,34 @@ ORDER BY c.""Id"" DESC";
         }
 
         return closures;
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (N° Cierre descendente).
+    public async Task<byte[]> ExportListAsync(ClosureSearchRequest request, int applicationId, ListExportFormat format)
+    {
+        request ??= new ClosureSearchRequest();
+        var company = await ReportCompany.LoadAsync(dbContext, applicationId);
+        var rows = await SearchAsync(request, applicationId);
+
+        var argentina = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+        string Date(DateTime? value) => value.HasValue ? value.Value.ToString("dd/MM/yyyy", argentina) : "-";
+
+        var data = new ClosureListData
+        {
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters =
+            [
+                ("N° Cierre", request.ClosureNumber?.ToString() ?? "-"),
+                ("Estado", request.IsClosed switch { true => "Cerrados", false => "Abiertos", null => "Todos" }),
+                ("Fecha apertura desde", Date(request.OpenDateFrom)),
+                ("Fecha apertura hasta", Date(request.OpenDateTo))
+            ],
+            Rows = rows.OrderByDescending(c => c.ClosureNumber ?? int.MinValue).ThenByDescending(c => c.Id).ToList()
+        };
+
+        return format == ListExportFormat.Excel ? ClosureListReport.GenerateExcel(data) : ClosureListReport.GeneratePdf(data);
     }
 
     public async Task<ClosureIncomeDetailResponse?> GetIncomeDetailAsync(int closureId, int applicationId)
