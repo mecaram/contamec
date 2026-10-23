@@ -210,8 +210,8 @@
         <div><strong>Monto:</strong> {{ deleteTarget.amount != null ? (deleteTarget.amount | currency:'USD':'symbol':'1.2-2') : '-' }}</div>
       </div>
       <div class="incomes-dialog__actions">
-        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
         <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
       </div>
     </section>
   </div>

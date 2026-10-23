@@ -108,8 +108,8 @@
         <div><strong>Activa:</strong> {{ deleteTarget.active ? 'Sí' : 'No' }}</div>
       </div>
       <div class="applications-dialog__actions">
-        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
         <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
+        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
       </div>
     </section>
   </div>
@@ -125,8 +125,8 @@
       </div>
       <p class="applications-dialog__text">Quedará como <strong>Demo</strong> por 7 días a partir de hoy y se le enviará un aviso por correo.</p>
       <div class="applications-dialog__actions">
-        <button mat-button type="button" (click)="cancelActivate()">Cancelar</button>
         <button mat-flat-button color="primary" type="button" (click)="confirmActivate()">Activar</button>
+        <button mat-button type="button" (click)="cancelActivate()">Cancelar</button>
       </div>
     </section>
   </div>

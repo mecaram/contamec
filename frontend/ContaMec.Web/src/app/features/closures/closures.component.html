@@ -245,10 +245,10 @@
       </div>
 
       <div class="closures-modal__actions closures-modal__actions--footer">
-        <button mat-button type="button" (click)="cancelCloseConfirmation()" [disabled]="closeLoading">Cancelar</button>
         <button mat-flat-button color="primary" type="button" (click)="confirmCloseClosure()" [disabled]="closeLoading">
           {{ closeLoading ? 'Cerrando...' : 'Confirmar cierre' }}
         </button>
+        <button mat-button type="button" (click)="cancelCloseConfirmation()" [disabled]="closeLoading">Cancelar</button>
       </div>
     </section>
   </div>
