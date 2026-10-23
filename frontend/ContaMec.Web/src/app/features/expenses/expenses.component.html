@@ -102,7 +102,7 @@
 
   <div class="expenses-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
-  <div class="expenses-page__new-action">
+  <div class="expenses-page__new-action" *ngIf="!formVisible">
     <button mat-flat-button color="primary" type="button" (click)="openCreate()">
       <mat-icon>add</mat-icon>
       Nuevo Egreso
@@ -112,7 +112,6 @@
       color="primary"
       type="button"
       (click)="exportList('pdf')"
-      *ngIf="!formVisible"
       [disabled]="exporting !== null"
       matTooltip="Exportar a Pdf"
     >
@@ -125,7 +124,6 @@
       color="primary"
       type="button"
       (click)="exportList('excel')"
-      *ngIf="!formVisible"
       [disabled]="exporting !== null"
       matTooltip="Exportar a Excel"
     >
