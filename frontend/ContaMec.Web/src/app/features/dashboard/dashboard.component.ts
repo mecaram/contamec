@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { isPhone } from '../../shared/amount-calculator/device';
 import { Closure } from '../closures/models/closure.model';
 import { ClosureService } from '../closures/services/closure.service';
 import { DashboardCategory } from './dashboard.models';
@@ -14,6 +15,10 @@ export class DashboardComponent implements OnInit {
   readonly applicationName = this.auth.getApplicationName();
   readonly username = this.auth.getUsername();
   readonly previousLoginAt = this.auth.getPreviousLoginAt();
+
+  /** En el celular las opciones del dashboard también se ofrecen en un menú lateral. */
+  readonly showMenu = isPhone();
+  menuOpen = false;
 
   /** Liquidación activa: el cierre abierto de la empresa, con sus totales calculados por el backend. */
   activeClosure: Closure | null = null;
@@ -37,6 +42,15 @@ export class DashboardComponent implements OnInit {
         this.indicatorsLoading = false;
       }
     });
+  }
+
+  toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  @HostListener('document:keydown.escape')
+  closeMenu(): void {
+    this.menuOpen = false;
   }
 
   logout(): void {
