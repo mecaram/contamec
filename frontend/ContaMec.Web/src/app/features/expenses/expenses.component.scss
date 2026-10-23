@@ -91,6 +91,7 @@ app-expense-list {
 .expenses-filters__actions {
   margin-top: 0.4rem;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   justify-content: flex-end;
 }
@@ -106,7 +107,15 @@ app-expense-list {
 .expenses-page__new-action {
   margin-bottom: 1rem;
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.expenses-page__spinner {
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
 }
 
 .expenses-form-panel {

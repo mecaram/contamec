@@ -27,6 +27,19 @@ export class IncomeService {
   constructor(private readonly http: HttpClient) {}
 
   search(filters: IncomeSearch): Observable<Income[]> {
+    return this.http.get<Income[]>(this.incomesUrl, { params: this.buildSearchParams(filters), headers: this.getAuthHeaders() });
+  }
+
+  /** Listado con los mismos filtros que la búsqueda, armado por el backend en PDF o Excel. */
+  exportList(filters: IncomeSearch, format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.incomesUrl}/export/${format}`, {
+      params: this.buildSearchParams(filters),
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  private buildSearchParams(filters: IncomeSearch): HttpParams {
     let params = new HttpParams();
 
     if (filters.dateFrom) params = params.set('dateFrom', filters.dateFrom);
@@ -50,8 +63,7 @@ export class IncomeService {
       params = params.set('amountTo', String(filters.amountTo));
     }
     if (filters.detail) params = params.set('detail', filters.detail);
-
-    return this.http.get<Income[]>(this.incomesUrl, { params, headers: this.getAuthHeaders() });
+    return params;
   }
 
   getClosures(): Observable<ClosureLookup[]> {

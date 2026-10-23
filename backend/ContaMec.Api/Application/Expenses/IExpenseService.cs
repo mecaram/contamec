@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Expenses.Dto;
+using ContaMec.Api.Application.Orders;
 
 namespace ContaMec.Api.Application.Expenses;
 
@@ -11,4 +12,5 @@ public interface IExpenseService
     Task<bool> UpdateAsync(int id, ExpenseUpdateRequest request, int applicationId);
     Task<bool> DeleteAsync(int id, int applicationId);
     Task<byte[]?> GetOrderPdfAsync(int id, int applicationId);
+    Task<byte[]> ExportListAsync(ExpenseSearchRequest request, int applicationId, ListExportFormat format);
 }

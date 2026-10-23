@@ -71,7 +71,7 @@
       </div>
 
       <div class="expenses-field">
-        <label class="expenses-field__label" for="filter-payment-account">Cuenta de Pago</label>
+        <label class="expenses-field__label" for="filter-payment-account">Cuenta de pago</label>
         <select id="filter-payment-account" class="expenses-field__control" formControlName="paymentAccountId" (change)="search()">
           <option [ngValue]="null">Todas</option>
           <option *ngFor="let paymentAccount of paymentAccountOptions" [ngValue]="paymentAccount.id">{{ paymentAccount.label }}</option>
@@ -105,7 +105,33 @@
   <div class="expenses-page__new-action">
     <button mat-flat-button color="primary" type="button" (click)="openCreate()">
       <mat-icon>add</mat-icon>
-      Nuevo egreso
+      Nuevo Egreso
+    </button>
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      (click)="exportList('pdf')"
+      *ngIf="!formVisible"
+      [disabled]="exporting !== null"
+      matTooltip="Exportar a Pdf"
+    >
+      <mat-spinner *ngIf="exporting === 'pdf'; else pdfExportIcon" class="expenses-page__spinner" diameter="18"></mat-spinner>
+      <ng-template #pdfExportIcon><mat-icon>picture_as_pdf</mat-icon></ng-template>
+      Exportar a Pdf
+    </button>
+    <button
+      mat-stroked-button
+      color="primary"
+      type="button"
+      (click)="exportList('excel')"
+      *ngIf="!formVisible"
+      [disabled]="exporting !== null"
+      matTooltip="Exportar a Excel"
+    >
+      <mat-spinner *ngIf="exporting === 'excel'; else excelExportIcon" class="expenses-page__spinner" diameter="18"></mat-spinner>
+      <ng-template #excelExportIcon><mat-icon>grid_on</mat-icon></ng-template>
+      Exportar a Excel
     </button>
   </div>
 
