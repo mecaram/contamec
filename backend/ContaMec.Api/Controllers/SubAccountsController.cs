@@ -1,4 +1,5 @@
 using ContaMec.Api.Application.Auth;
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.SubAccounts;
 using ContaMec.Api.Application.SubAccounts.Dto;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +33,33 @@ public class SubAccountsController(ISubAccountService subAccountService) : Contr
 
         var result = await subAccountService.SearchAsync(request, applicationId);
         return Ok(result);
+    }
+
+    [HttpGet("export/{format}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ExportList(
+        string format,
+        [FromQuery(Name = "id")] int? id,
+        [FromQuery(Name = "name")] string? name,
+        [FromQuery(Name = "accountId")] int? accountId)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        var (exportFormat, contentType, extension) = format.ToLowerInvariant() switch
+        {
+            "pdf" => (ListExportFormat.Pdf, "application/pdf", "pdf"),
+            "excel" => (ListExportFormat.Excel, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx"),
+            _ => (default(ListExportFormat?), "", "")
+        };
+        if (exportFormat is null)
+            return BadRequest(new { message = "Formato no soportado: use pdf o excel." });
+
+        var request = new SubAccountSearchRequest { Id = id, Name = name, AccountId = accountId };
+        var file = await subAccountService.ExportListAsync(request, applicationId, exportFormat.Value);
+        return File(file, contentType, SubAccountListReport.FileName(extension));
     }
 
     [HttpGet("{id:int}")]

@@ -3,6 +3,8 @@ import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AccountService } from '../accounts/services/account.service';
 import { SubAccountFormComponent } from './components/sub-account-form/sub-account-form.component';
@@ -13,7 +15,15 @@ import { SubAccountService } from './services/sub-account.service';
 
 @NgModule({
   declarations: [SubAccountsComponent, SubAccountFormComponent, SubAccountListComponent],
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatIconModule, SubAccountsRoutingModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    SubAccountsRoutingModule
+  ],
   providers: [SubAccountService, AccountService]
 })
 export class SubAccountsModule {}

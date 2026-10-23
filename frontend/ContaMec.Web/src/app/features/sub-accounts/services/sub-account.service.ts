@@ -14,11 +14,24 @@ export class SubAccountService {
   constructor(private readonly http: HttpClient) {}
 
   search(filters: SubAccountSearch): Observable<SubAccount[]> {
+    return this.http.get<SubAccount[]>(this.subAccountsUrl, { params: this.buildSearchParams(filters), headers: this.getAuthHeaders() });
+  }
+
+  /** Listado con los mismos filtros que la búsqueda, armado por el backend en PDF o Excel. */
+  exportList(filters: SubAccountSearch, format: 'pdf' | 'excel'): Observable<Blob> {
+    return this.http.get(`${this.subAccountsUrl}/export/${format}`, {
+      params: this.buildSearchParams(filters),
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  private buildSearchParams(filters: SubAccountSearch): HttpParams {
     let params = new HttpParams();
     if (filters.id !== null && filters.id !== undefined) params = params.set('id', String(filters.id));
     if (filters.name) params = params.set('name', filters.name);
     if (filters.accountId !== null && filters.accountId !== undefined) params = params.set('accountId', String(filters.accountId));
-    return this.http.get<SubAccount[]>(this.subAccountsUrl, { params, headers: this.getAuthHeaders() });
+    return params;
   }
 
   create(subAccount: SubAccount): Observable<SubAccount> {

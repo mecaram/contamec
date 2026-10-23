@@ -1,3 +1,4 @@
+using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.SubAccounts.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
@@ -105,6 +106,46 @@ public class SubAccountService(ContaMecDbContext dbContext) : ISubAccountService
         _dbContext.SubAccounts.Remove(subAccount);
         await _dbContext.SaveChangesAsync();
         return true;
+    }
+
+    // Mismos filtros que la búsqueda; el listado sale ordenado como en pantalla (Nombre ascendente).
+    public async Task<byte[]> ExportListAsync(SubAccountSearchRequest request, int applicationId, ListExportFormat format)
+    {
+        request ??= new SubAccountSearchRequest();
+        var company = await ReportCompany.LoadAsync(_dbContext, applicationId);
+
+        var data = new SubAccountListData
+        {
+            CompanyName = company.Name,
+            CompanyDocument = company.Document,
+            CompanyAddress = company.Address,
+            Filters = await DescribeFiltersAsync(request, applicationId),
+            Rows = await SearchAsync(request, applicationId)
+        };
+
+        return format == ListExportFormat.Excel ? SubAccountListReport.GenerateExcel(data) : SubAccountListReport.GeneratePdf(data);
+    }
+
+    // La cuenta se muestra por nombre, como en el combo del filtro.
+    private async Task<List<(string Label, string Value)>> DescribeFiltersAsync(SubAccountSearchRequest request, int applicationId)
+    {
+        var account = "Todas";
+        if (request.AccountId.HasValue)
+        {
+            var accountName = await _dbContext.Accounts
+                .AsNoTracking()
+                .Where(a => a.Id == request.AccountId.Value && a.ApplicationId == applicationId)
+                .Select(a => a.Name)
+                .FirstOrDefaultAsync();
+            account = string.IsNullOrWhiteSpace(accountName) ? request.AccountId.Value.ToString() : accountName.Trim();
+        }
+
+        return
+        [
+            ("ID", request.Id?.ToString() ?? "-"),
+            ("Nombre", string.IsNullOrWhiteSpace(request.Name) ? "-" : request.Name.Trim()),
+            ("Cuenta", account)
+        ];
     }
 
     // SubAccounts no tiene ApplicationId: la aplicación se toma de la cuenta a la que pertenece.
