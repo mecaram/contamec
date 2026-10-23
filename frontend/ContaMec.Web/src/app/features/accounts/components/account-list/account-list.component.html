@@ -42,6 +42,16 @@
         <td data-label="Comportamiento" class="account-list__center">{{ row.behaviorType || '-' }}</td>
         <td data-label="Activo" class="account-list__center">{{ formatYesNo(row.active) }}</td>
         <td class="account-list__actions">
+          <button
+            mat-icon-button
+            type="button"
+            title="Ver Detalle"
+            aria-label="Ver Detalle"
+            [disabled]="!row.subAccountRequires"
+            (click)="onViewDetail(row)"
+          >
+            <mat-icon>visibility</mat-icon>
+          </button>
           <button mat-icon-button color="primary" type="button" (click)="onEdit(row)" aria-label="Editar cuenta">
             <mat-icon>edit</mat-icon>
           </button>

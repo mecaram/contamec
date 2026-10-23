@@ -92,11 +92,67 @@
     [loading]="loading"
     (edit)="openEdit($event)"
     (remove)="deleteAccount($event)"
+    (viewDetail)="openDetail($event)"
   ></app-account-list>
 
   <div class="accounts-toast" *ngIf="notification" [ngClass]="'accounts-toast--' + notification.type">
     <span>{{ notification.message }}</span>
     <button type="button" class="accounts-toast__close" (click)="closeNotification()" aria-label="Cerrar mensaje">×</button>
+  </div>
+
+  <div class="accounts-dialog-backdrop" *ngIf="detailTarget">
+    <section class="accounts-dialog accounts-dialog--detail" role="dialog" aria-modal="true" aria-labelledby="account-detail-title">
+      <header class="accounts-dialog__header">
+        <h3 class="accounts-dialog__title" id="account-detail-title">Detalle de la cuenta</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar detalle" (click)="closeDetail()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="accounts-dialog__summary accounts-dialog__summary--detail">
+        <div><strong>ID:</strong> {{ detailTarget.id }}</div>
+        <div><strong>Nombre:</strong> {{ detailTarget.name || '-' }}</div>
+        <div><strong>Tipo:</strong> {{ detailTarget.type || '-' }}</div>
+        <div><strong>Comportamiento:</strong> {{ detailTarget.behaviorType || '-' }}</div>
+        <div><strong>Activo:</strong> {{ formatYesNo(detailTarget.active) }}</div>
+      </div>
+
+      <h4 class="accounts-dialog__subtitle">Subcuentas</h4>
+      <p class="accounts-dialog__text" *ngIf="detailLoading">Cargando subcuentas...</p>
+      <p class="accounts-dialog__text accounts-dialog__text--error" *ngIf="detailError">{{ detailError }}</p>
+      <p class="accounts-dialog__text" *ngIf="!detailLoading && !detailError && detailSubAccounts.length === 0">
+        La cuenta no tiene subcuentas cargadas.
+      </p>
+      <div class="accounts-dialog__table-wrap" *ngIf="!detailLoading && detailSubAccounts.length > 0">
+        <table class="accounts-dialog__table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th class="accounts-dialog__center">Comportamiento</th>
+              <th class="accounts-dialog__center">Activo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let subAccount of detailSubAccounts">
+              <td>{{ subAccount.id }}</td>
+              <td>{{ subAccount.name || '-' }}</td>
+              <td class="accounts-dialog__center">{{ subAccount.behaviorType || '-' }}</td>
+              <td class="accounts-dialog__center">{{ formatYesNo(subAccount.active) }}</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4">Total subcuentas: {{ detailSubAccounts.length }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="accounts-dialog__actions">
+        <button mat-flat-button color="primary" type="button" (click)="closeDetail()">Aceptar</button>
+      </div>
+    </section>
   </div>
 
   <div class="accounts-dialog-backdrop" *ngIf="deleteTarget">

@@ -11,6 +11,7 @@ import { AccountListComponent } from './components/account-list/account-list.com
 import { AccountsRoutingModule } from './accounts-routing.module';
 import { AccountsComponent } from './accounts.component';
 import { AccountService } from './services/account.service';
+import { SubAccountService } from '../sub-accounts/services/sub-account.service';
 
 @NgModule({
   declarations: [AccountsComponent, AccountFormComponent, AccountListComponent],
@@ -23,6 +24,6 @@ import { AccountService } from './services/account.service';
     MatTooltipModule,
     AccountsRoutingModule
   ],
-  providers: [AccountService]
+  providers: [AccountService, SubAccountService]
 })
 export class AccountsModule {}

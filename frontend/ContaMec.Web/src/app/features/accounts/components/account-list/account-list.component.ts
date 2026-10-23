@@ -28,6 +28,8 @@ export class AccountListComponent implements OnChanges {
   @Input() loading = false;
   @Output() edit = new EventEmitter<Account>();
   @Output() remove = new EventEmitter<Account>();
+  /** Solo para cuentas que requieren subcuentas: muestra la cuenta con su listado de subcuentas. */
+  @Output() viewDetail = new EventEmitter<Account>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -83,6 +85,11 @@ export class AccountListComponent implements OnChanges {
 
   onDelete(account: Account): void {
     this.remove.emit(account);
+  }
+
+  onViewDetail(account: Account): void {
+    if (!account.subAccountRequires) return;
+    this.viewDetail.emit(account);
   }
 
   setSort(column: SortableColumn): void {

@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
+import { SubAccount } from '../sub-accounts/models/sub-account.model';
+import { SubAccountService } from '../sub-accounts/services/sub-account.service';
 import { Account } from './models/account.model';
 import { AccountSearch } from './models/account-search.model';
 import { AccountService } from './services/account.service';
@@ -19,6 +21,11 @@ export class AccountsComponent implements OnInit {
   editingAccount: Account | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Account | null = null;
+  /** Cuenta que se muestra en la ventana de detalle, con sus subcuentas. */
+  detailTarget: Account | null = null;
+  detailSubAccounts: SubAccount[] = [];
+  detailLoading = false;
+  detailError: string | null = null;
   /** Exportación del listado en curso. */
   exporting: 'pdf' | 'excel' | null = null;
   sortResetToken = 0;
@@ -32,7 +39,8 @@ export class AccountsComponent implements OnInit {
 
   constructor(
     private readonly fb: FormBuilder,
-    private readonly accountsService: AccountService
+    private readonly accountsService: AccountService,
+    private readonly subAccountService: SubAccountService
   ) {}
 
   ngOnInit(): void {
@@ -136,6 +144,45 @@ export class AccountsComponent implements OnInit {
 
   cancelDelete(): void {
     this.deleteTarget = null;
+  }
+
+  openDetail(account: Account): void {
+    this.detailTarget = account;
+    this.detailSubAccounts = [];
+    this.detailError = null;
+    this.detailLoading = true;
+    this.subAccountService
+      .search({ accountId: account.id })
+      .pipe(finalize(() => {
+        if (this.detailTarget === account) this.detailLoading = false;
+      }))
+      .subscribe({
+        next: (items) => {
+          // Si se cerró o se abrió otra cuenta mientras cargaba, la respuesta ya no corresponde.
+          if (this.detailTarget !== account) return;
+          this.detailSubAccounts = [...(items ?? [])].sort((a, b) =>
+            (a.name ?? '').localeCompare(b.name ?? '', 'es', { sensitivity: 'base' })
+          );
+        },
+        error: () => {
+          if (this.detailTarget !== account) return;
+          this.detailError = 'No se pudieron consultar las subcuentas.';
+        }
+      });
+  }
+
+  @HostListener('document:keydown.escape')
+  closeDetail(): void {
+    this.detailTarget = null;
+    this.detailSubAccounts = [];
+    this.detailLoading = false;
+    this.detailError = null;
+  }
+
+  /** Sin dato en la base (registros anteriores) se muestra un guion. */
+  formatYesNo(value: boolean | null | undefined): string {
+    if (value === null || value === undefined) return '-';
+    return value ? 'Sí' : 'No';
   }
 
   closeNotification(): void {
