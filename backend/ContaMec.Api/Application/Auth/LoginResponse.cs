@@ -16,6 +16,14 @@ public class LoginResponse
     [JsonPropertyName("applicationName")]
     public string ApplicationName { get; set; } = string.Empty;
 
+    /// <summary>Plan de la empresa (tipo de aplicación): "Demo" o "Producción"; null si no tiene.</summary>
+    [JsonPropertyName("planName")]
+    public string? PlanName { get; set; }
+
+    /// <summary>Último día del plan (inclusive) en fecha de Argentina, "yyyy-MM-dd"; null si no vence.</summary>
+    [JsonPropertyName("planExpirationDate")]
+    public string? PlanExpirationDate { get; set; }
+
     [JsonPropertyName("role")]
     public string Role { get; set; } = string.Empty;
 

@@ -14,6 +14,8 @@ export interface LoginResponse {
   username: string;
   applicationId: number;
   applicationName: string;
+  planName: string | null;
+  planExpirationDate: string | null;
   role: string;
   previousLoginAt: string | null;
 }
@@ -31,6 +33,8 @@ export class AuthService {
   private readonly usernameKey = 'contamec_username';
   private readonly applicationIdKey = 'contamec_application_id';
   private readonly applicationNameKey = 'contamec_application_name';
+  private readonly planNameKey = 'contamec_plan_name';
+  private readonly planExpirationDateKey = 'contamec_plan_expiration_date';
   private readonly roleKey = 'contamec_role';
   private readonly previousLoginAtKey = 'contamec_previous_login_at';
   private readonly superAdministratorRole = 'SuperAdministrador';
@@ -124,6 +128,8 @@ export class AuthService {
     sessionStorage.setItem(this.usernameKey, response.username);
     sessionStorage.setItem(this.applicationIdKey, String(response.applicationId));
     sessionStorage.setItem(this.applicationNameKey, response.applicationName);
+    sessionStorage.setItem(this.planNameKey, response.planName ?? '');
+    sessionStorage.setItem(this.planExpirationDateKey, response.planExpirationDate ?? '');
     sessionStorage.setItem(this.roleKey, response.role ?? '');
     // Vacío significa "primer acceso"; la clave ausente, una sesión iniciada antes de existir este dato.
     sessionStorage.setItem(this.previousLoginAtKey, response.previousLoginAt ?? '');
@@ -243,6 +249,16 @@ export class AuthService {
     return sessionStorage.getItem(this.applicationNameKey);
   }
 
+  /** Plan de la empresa ("Demo" o "Producción"); null si no tiene o la sesión se inició antes de existir este dato. */
+  getPlanName(): string | null {
+    return sessionStorage.getItem(this.planNameKey) || null;
+  }
+
+  /** Último día del plan (inclusive), "yyyy-MM-dd"; null si no vence o la sesión se inició antes de existir este dato. */
+  getPlanExpirationDate(): string | null {
+    return sessionStorage.getItem(this.planExpirationDateKey) || null;
+  }
+
   /** Fecha ISO del inicio de sesión anterior: '' si es el primero, null si no se conoce. */
   getPreviousLoginAt(): string | null {
     return sessionStorage.getItem(this.previousLoginAtKey);
@@ -260,6 +276,8 @@ export class AuthService {
     sessionStorage.removeItem(this.usernameKey);
     sessionStorage.removeItem(this.applicationIdKey);
     sessionStorage.removeItem(this.applicationNameKey);
+    sessionStorage.removeItem(this.planNameKey);
+    sessionStorage.removeItem(this.planExpirationDateKey);
     sessionStorage.removeItem(this.roleKey);
     sessionStorage.removeItem(this.previousLoginAtKey);
   }

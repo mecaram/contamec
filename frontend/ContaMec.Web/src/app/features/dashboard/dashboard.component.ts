@@ -13,6 +13,11 @@ import { DashboardCategory } from './dashboard.models';
 })
 export class DashboardComponent implements OnInit {
   readonly applicationName = this.auth.getApplicationName();
+  readonly planName = this.auth.getPlanName();
+  /** Último día del plan, como fecha local sin hora; null si no vence. */
+  readonly planExpiresOn = this.parseDate(this.auth.getPlanExpirationDate());
+  /** Días que faltan hasta el último día del plan: 0 si vence hoy, negativo si ya venció (solo el SuperAdministrador entra igual). */
+  readonly planDaysLeft = this.planExpiresOn ? this.daysFromToday(this.planExpiresOn) : null;
   readonly username = this.auth.getUsername();
   readonly previousLoginAt = this.auth.getPreviousLoginAt();
 
@@ -59,6 +64,18 @@ export class DashboardComponent implements OnInit {
   logout(): void {
     this.auth.logout();
     void this.router.navigateByUrl('/login');
+  }
+
+  private parseDate(value: string | null): Date | null {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value ?? '');
+    return match ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])) : null;
+  }
+
+  private daysFromToday(date: Date): number {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Redondeo por los días de 23 o 25 horas en los cambios de horario.
+    return Math.round((date.getTime() - today.getTime()) / 86_400_000);
   }
 
   private readonly isSuperAdministrator = this.auth.isSuperAdministrator();
