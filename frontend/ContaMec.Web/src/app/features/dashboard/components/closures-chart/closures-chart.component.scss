@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.closures-chart__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.closures-chart__subtitle {
+  margin: 0.25rem 0 1rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+// Chart.js toma el tamaño del contenedor (maintainAspectRatio: false).
+.closures-chart__canvas {
+  position: relative;
+  height: 20rem;
+
+  @media (max-width: 600px) {
+    height: 16rem;
+  }
+}
+
+.closures-chart__empty {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+}

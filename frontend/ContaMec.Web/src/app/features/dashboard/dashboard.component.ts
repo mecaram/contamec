@@ -22,6 +22,8 @@ export class DashboardComponent implements OnInit {
 
   /** Liquidación activa: el cierre abierto de la empresa, con sus totales calculados por el backend. */
   activeClosure: Closure | null = null;
+  /** Todos los cierres de la empresa (con sus totales), para los gráficos de Estadísticas. */
+  closures: Closure[] = [];
   indicatorsLoading = true;
   indicatorsError: string | null = null;
 
@@ -32,9 +34,11 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.closureService.search({ isClosed: false }).subscribe({
+    // Una sola consulta alimenta los indicadores (cierre abierto) y las estadísticas (historial).
+    this.closureService.search({}).subscribe({
       next: (closures) => {
-        this.activeClosure = closures[0] ?? null;
+        this.closures = closures;
+        this.activeClosure = closures.find((closure) => !closure.isClosed) ?? null;
         this.indicatorsLoading = false;
       },
       error: () => {

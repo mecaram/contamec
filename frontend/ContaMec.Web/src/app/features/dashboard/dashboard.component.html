@@ -82,6 +82,21 @@
       </ng-container>
     </section>
 
+    <section class="dashboard__section dashboard__section--statistics" aria-labelledby="dashboard-statistics">
+      <h2 class="dashboard__section-title" id="dashboard-statistics">Estadisticas</h2>
+
+      <p class="dashboard__indicators-message" *ngIf="indicatorsLoading">Cargando estadísticas...</p>
+      <p class="dashboard__indicators-message dashboard__indicators-message--error" *ngIf="indicatorsError">
+        No se pudieron cargar las estadísticas.
+      </p>
+
+      <div class="dashboard__charts" *ngIf="!indicatorsLoading && !indicatorsError">
+        <article class="chart-card chart-card--wide mat-elevation-z2">
+          <app-closures-chart [closures]="closures"></app-closures-chart>
+        </article>
+      </div>
+    </section>
+
     <section
       class="dashboard__section"
       *ngFor="let category of categories; let i = index"

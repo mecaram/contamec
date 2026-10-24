@@ -1,0 +1,19 @@
+<h3 class="closures-chart__title">Ingresos vs. Egresos</h3>
+<p class="closures-chart__subtitle">Ultimos {{ shown.length }} cierres, con el flujo neto de cada uno.</p>
+
+<div class="closures-chart__canvas" *ngIf="shown.length > 0; else noClosures">
+  <canvas
+    baseChart
+    chartType="bar"
+    [datasets]="datasets"
+    [labels]="labels"
+    [options]="options"
+    [legend]="true"
+    role="img"
+    aria-label="Gráfico de ingresos, egresos y flujo neto de los últimos cierres"
+  ></canvas>
+</div>
+
+<ng-template #noClosures>
+  <p class="closures-chart__empty">Todavía no hay cierres para comparar.</p>
+</ng-template>

@@ -152,6 +152,39 @@
   }
 }
 
+.dashboard__section--statistics {
+  .dashboard__section-title {
+    color: #115e59;
+  }
+
+  .dashboard__section-title::before {
+    background: #14b8a6;
+  }
+}
+
+// Tarjetas de gráficos: dos por fila en pantallas anchas; las --wide ocupan la fila entera.
+.dashboard__charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+
+  @media (min-width: 60rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.chart-card {
+  min-width: 0;
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px !important;
+}
+
+.chart-card--wide {
+  grid-column: 1 / -1;
+}
+
 .dashboard__section--daily {
   .dashboard__section-title {
     color: #5b21b6;
@@ -366,4 +399,23 @@
   background: #fff;
   color: #37474f;
   cursor: pointer;
+}
+
+/* Indicadores del flujo de fondos: 4 tarjetas en una sola fila */
+.dashboard__indicators .dashboard__grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Tablets: 2 x 2 */
+@media (max-width: 1024px) {
+  .dashboard__indicators .dashboard__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Celulares: una debajo de la otra */
+@media (max-width: 600px) {
+  .dashboard__indicators .dashboard__grid {
+    grid-template-columns: 1fr;
+  }
 }
