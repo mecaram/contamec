@@ -9,9 +9,10 @@ import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
 import { ClosuresChartComponent } from './components/closures-chart/closures-chart.component';
 import { DashboardMenuComponent } from './components/dashboard-menu/dashboard-menu.component';
+import { TrendsChartComponent } from './components/trends-chart/trends-chart.component';
 
 @NgModule({
-  declarations: [DashboardComponent, DashboardMenuComponent, ClosuresChartComponent],
+  declarations: [DashboardComponent, DashboardMenuComponent, ClosuresChartComponent, TrendsChartComponent],
   imports: [
     CommonModule,
     RouterModule,

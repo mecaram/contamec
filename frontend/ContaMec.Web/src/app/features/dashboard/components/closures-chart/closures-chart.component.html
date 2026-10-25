@@ -1,9 +1,6 @@
 <h3 class="closures-chart__title">Ingresos vs. Egresos</h3>
 <p class="closures-chart__subtitle">
   Ultimos {{ shown.length }} cierres, con el flujo neto de cada uno.
-  <span class="closures-chart__note" *ngIf="hasReferences && hasActive">
-    Los promedios no incluyen el cierre activo.
-  </span>
 </p>
 
 <div class="closures-chart__canvas" *ngIf="shown.length > 0; else noClosures">
@@ -32,5 +29,5 @@
 </div>
 
 <ng-template #noClosures>
-  <p class="closures-chart__empty">Todavía no hay cierres para comparar.</p>
+  <p class="closures-chart__empty">Todavía no hay cierres cerrados para comparar.</p>
 </ng-template>

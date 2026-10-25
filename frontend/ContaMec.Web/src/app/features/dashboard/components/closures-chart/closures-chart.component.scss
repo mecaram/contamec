@@ -15,12 +15,6 @@
   color: #64748b;
 }
 
-.closures-chart__note {
-  display: block;
-  margin-top: 0.125rem;
-  font-size: 0.75rem;
-}
-
 // Chart.js toma el tamaño del contenedor (maintainAspectRatio: false).
 .closures-chart__canvas {
   position: relative;

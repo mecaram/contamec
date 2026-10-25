@@ -1,0 +1,121 @@
+:host {
+  display: block;
+}
+
+.trends-chart__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.trends-chart__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.trends-chart__subtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+// Selector de indicador: botones unidos, el elegido resaltado con el color del grupo Estadisticas.
+.trends-chart__selector {
+  display: inline-flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.trends-chart__option {
+  padding: 0.375rem 0.875rem;
+  font: inherit;
+  font-size: 0.8rem;
+  color: #475569;
+  background: #fff;
+  border: 0;
+  cursor: pointer;
+
+  & + & {
+    border-left: 1px solid #cbd5e1;
+  }
+
+  &:hover {
+    background: #f1f5f9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #14b8a6;
+    outline-offset: -2px;
+  }
+
+  &--active,
+  &--active:hover {
+    color: #fff;
+    background: #115e59;
+  }
+}
+
+// Chart.js toma el tamaño del contenedor (maintainAspectRatio: false).
+.trends-chart__canvas {
+  position: relative;
+  height: 20rem;
+
+  @media (max-width: 600px) {
+    height: 16rem;
+  }
+}
+
+.trends-chart__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.trends-chart__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+
+  input {
+    margin: 0;
+    accent-color: #115e59;
+    cursor: pointer;
+  }
+}
+
+// Muestra de la serie: barra (indicador), línea continua (corto plazo) o punteada (largo plazo). Toma el color de `color`.
+.trends-chart__swatch {
+  display: inline-block;
+  width: 1.25rem;
+
+  &--bar {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 2px;
+    background-color: currentColor;
+  }
+
+  &--line {
+    border-top: 2px solid currentColor;
+  }
+
+  &--dashed {
+    border-top: 2px dashed currentColor;
+  }
+}
+
+.trends-chart__empty {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.6);
+}

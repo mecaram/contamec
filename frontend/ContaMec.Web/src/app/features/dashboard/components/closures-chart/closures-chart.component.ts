@@ -3,28 +3,18 @@ import { Component, Inject, Input, LOCALE_ID, OnChanges, ViewChild } from '@angu
 import { Chart, ChartDataSets, ChartLegendLabelItem, ChartOptions, ChartTooltipItem } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Closure } from '../../../closures/models/closure.model';
-
-/** Cantidad de cierres que se comparan: el activo y los anteriores. */
-const MAX_CLOSURES = 12;
-
-// Mismos colores que _dashboard-colors.scss ($income-color, $expense-color) y que las tarjetas de resultado positivo.
-const INCOME_COLOR = '#0284c7';
-const EXPENSE_COLOR = '#ea580c';
-const NET_FLOW_COLOR = '#15803d';
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
-
-/** Una serie del gráfico que se muestra u oculta con su casilla de verificación o desde la leyenda. */
-export interface ChartSeries {
-  label: string;
-  color: string;
-  /** Muestra del trazo junto a la casilla: barra, línea continua o línea punteada. */
-  swatch: 'bar' | 'line' | 'dashed';
-  visible: boolean;
-}
+import {
+  average,
+  ChartSeries,
+  closureLabel,
+  closureTooltipTitle,
+  EXPENSE_COLOR,
+  INCOME_COLOR,
+  legendLabelsInDatasetOrder,
+  MAX_CLOSURES,
+  NET_FLOW_COLOR,
+  closedClosures
+} from '../closure-chart.utils';
 
 /** Ingresos y egresos (barras) y flujo neto (línea) de los últimos cierres, del más viejo al más nuevo. */
 @Component({
@@ -33,12 +23,10 @@ export interface ChartSeries {
   styleUrls: ['./closures-chart.component.scss']
 })
 export class ClosuresChartComponent implements OnChanges {
-  /** Cierres de la empresa en cualquier orden; se toman los últimos MAX_CLOSURES por Id. */
+  /** Cierres de la empresa en cualquier orden; se muestran los últimos MAX_CLOSURES cerrados. */
   @Input() closures: Closure[] = [];
 
   shown: Closure[] = [];
-  /** Si entre los cierres mostrados está el activo, que queda fuera de los promedios. */
-  hasActive = false;
   labels: string[] = [];
   datasets: ChartDataSets[] = [];
   readonly options: ChartOptions;
@@ -66,11 +54,8 @@ export class ClosuresChartComponent implements OnChanges {
         position: 'bottom',
         labels: {
           usePointStyle: true,
-          // Chart.js ordena la leyenda por `order` (el de dibujo); acá va en el orden de las series, como las casillas.
-          generateLabels: (chart: Chart) =>
-            (Chart.defaults.global.legend?.labels?.generateLabels?.(chart) ?? []).sort(
-              (a, b) => (a.datasetIndex ?? 0) - (b.datasetIndex ?? 0)
-            )
+          // En el orden de las series, como las casillas.
+          generateLabels: legendLabelsInDatasetOrder
         },
         // Hace lo de siempre (mostrar u ocultar la serie) y deja las casillas de verificación en el mismo estado.
         onClick(this: any, event: MouseEvent, item: ChartLegendLabelItem) {
@@ -83,17 +68,7 @@ export class ClosuresChartComponent implements OnChanges {
         intersect: false,
         itemSort: (a, b) => (a.datasetIndex ?? 0) - (b.datasetIndex ?? 0),
         callbacks: {
-          // Primera línea: número y período del cierre. Segunda: fechas de apertura y cierre.
-          title: (items: ChartTooltipItem[]) => {
-            const closure = this.shown[items[0]?.index ?? -1];
-            if (!closure) return '';
-            const heading = `Cierre ${this.closureLabel(closure)}${closure.isClosed ? '' : ' (activo)'}`;
-            const dates = [
-              closure.openDate ? `abierto el ${datePipe.transform(closure.openDate, 'dd/MM/yyyy')}` : '',
-              closure.isClosed && closure.closeDate ? `cerrado el ${datePipe.transform(closure.closeDate, 'dd/MM/yyyy')}` : ''
-            ].filter((text) => text).join(', ');
-            return dates ? [heading, dates.charAt(0).toUpperCase() + dates.slice(1)] : heading;
-          },
+          title: (items: ChartTooltipItem[]) => closureTooltipTitle(this.shown[items[0]?.index ?? -1], datePipe),
           label: (item: ChartTooltipItem, data) =>
             `${data.datasets?.[item.datasetIndex ?? 0]?.label}: ${this.money(Number(item.value), '1.2-2')}`
         }
@@ -106,14 +81,11 @@ export class ClosuresChartComponent implements OnChanges {
   }
 
   ngOnChanges(): void {
-    this.shown = [...(this.closures ?? [])].sort((a, b) => a.id - b.id).slice(-MAX_CLOSURES);
-    this.hasActive = this.shown.some((closure) => !closure.isClosed);
-    this.labels = this.shown.map((closure) => this.closureLabel(closure));
+    this.shown = closedClosures(this.closures).slice(-MAX_CLOSURES);
+    this.labels = this.shown.map(closureLabel);
 
-    // El cierre activo tiene importes parciales: no entra en los promedios.
-    const closed = this.shown.filter((closure) => closure.isClosed);
-    const incomeAverage = this.average(closed.map((closure) => closure.incomes ?? 0));
-    const expenseAverage = this.average(closed.map((closure) => closure.expenses ?? 0));
+    const incomeAverage = average(this.shown.map((closure) => closure.incomes ?? 0));
+    const expenseAverage = average(this.shown.map((closure) => closure.expenses ?? 0));
 
     // La línea va con order 0 para dibujarse por encima de las barras.
     const [netFlowSeries, incomeSeries, expenseSeries] = this.series;
@@ -211,29 +183,6 @@ export class ClosuresChartComponent implements OnChanges {
       pointHoverRadius: 0,
       pointHitRadius: 0
     };
-  }
-
-  private average(values: number[]): number | null {
-    if (values.length === 0) return null;
-    return values.reduce((sum, value) => sum + value, 0) / values.length;
-  }
-
-  /** Número de cierre y el mes al que corresponde, por ejemplo "12 - Septiembre/2026". */
-  private closureLabel(closure: Closure): string {
-    const number = `${closure.closureNumber ?? '#' + closure.id}`;
-    const month = this.closureMonth(closure);
-    return month ? `${number} - ${month}` : number;
-  }
-
-  /**
-   * Mes en que el cierre tuvo más ingresos y egresos (un cierre abierto el 31/08 con casi todo en septiembre es
-   * "Septiembre/2026"). Sin movimientos, el mes de apertura.
-   */
-  private closureMonth(closure: Closure): string | null {
-    const match = /^(\d{4})-(\d{2})/.exec(closure.predominantMonth ?? closure.openDate ?? '');
-    if (!match) return null;
-    const name = MONTH_NAMES[Number(match[2]) - 1];
-    return name ? `${name}/${match[1]}` : null;
   }
 
   private money(value: number, digitsInfo: string): string {

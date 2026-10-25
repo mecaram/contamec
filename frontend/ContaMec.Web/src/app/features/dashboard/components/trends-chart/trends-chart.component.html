@@ -1,0 +1,50 @@
+<div class="trends-chart__header">
+  <div>
+    <h3 class="trends-chart__title">Evolución y Tendencias Financieras</h3>
+    <p class="trends-chart__subtitle">
+      Comparación de ingresos y egresos de los últimos {{ shown.length }} cierres, con tendencias de corto y largo plazo.
+    </p>
+  </div>
+
+  <div class="trends-chart__selector" role="group" aria-label="Indicador" *ngIf="shown.length > 0">
+    <button
+      *ngFor="let option of metrics"
+      type="button"
+      class="trends-chart__option"
+      [class.trends-chart__option--active]="option === metric"
+      [attr.aria-pressed]="option === metric"
+      (click)="selectMetric(option)"
+    >
+      {{ option.label }}
+    </button>
+  </div>
+</div>
+
+<div class="trends-chart__canvas" *ngIf="shown.length > 0; else noClosures">
+  <canvas
+    baseChart
+    chartType="bar"
+    [datasets]="datasets"
+    [labels]="labels"
+    [options]="options"
+    [legend]="true"
+    role="img"
+    [attr.aria-label]="'Gráfico de ' + metric.label + ' de los últimos cierres con sus tendencias de corto y largo plazo'"
+  ></canvas>
+</div>
+
+<div class="trends-chart__toggles" *ngIf="shown.length > 0">
+  <label class="trends-chart__toggle" *ngFor="let item of series">
+    <input type="checkbox" [checked]="item.visible" (change)="toggleSeries(item)" />
+    <span
+      class="trends-chart__swatch trends-chart__swatch--{{ item.swatch }}"
+      [style.color]="item.color"
+      aria-hidden="true"
+    ></span>
+    {{ item.label }}
+  </label>
+</div>
+
+<ng-template #noClosures>
+  <p class="trends-chart__empty">Todavía no hay cierres cerrados para comparar.</p>
+</ng-template>
