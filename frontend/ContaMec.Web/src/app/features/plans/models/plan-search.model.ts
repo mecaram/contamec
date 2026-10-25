@@ -7,4 +7,8 @@ export interface PlanSearch {
   plan?: string | null;
   /** 'current' (vigentes), 'expired' (vencidos) o 'none' (sin vencimiento). */
   expiration?: string | null;
+  /** Vencimiento desde este día, inclusive (yyyy-MM-dd). */
+  expirationFrom?: string | null;
+  /** Vencimiento hasta este día, inclusive (yyyy-MM-dd). */
+  expirationTo?: string | null;
 }

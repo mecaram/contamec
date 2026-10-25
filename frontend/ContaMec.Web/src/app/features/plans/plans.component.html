@@ -55,6 +55,14 @@
           <option value="none">Sin vencimiento</option>
         </select>
       </div>
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-expiration-from">Vence desde</label>
+        <input id="filter-expiration-from" class="plans-field__control" type="date" formControlName="expirationFrom" (change)="search()" />
+      </div>
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-expiration-to">Vence hasta</label>
+        <input id="filter-expiration-to" class="plans-field__control" type="date" formControlName="expirationTo" (change)="search()" />
+      </div>
     </form>
 
     <div class="plans-filters__actions">

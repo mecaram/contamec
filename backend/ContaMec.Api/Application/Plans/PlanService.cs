@@ -52,6 +52,19 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
             _ => query
         };
 
+        // Por día, sin importar la hora: "hasta" incluye todo ese día.
+        if (request.ExpirationFrom.HasValue)
+        {
+            var from = request.ExpirationFrom.Value.Date;
+            query = query.Where(a => a.PlanExpirationDate >= from);
+        }
+
+        if (request.ExpirationTo.HasValue)
+        {
+            var toExclusive = request.ExpirationTo.Value.Date.AddDays(1);
+            query = query.Where(a => a.PlanExpirationDate < toExclusive);
+        }
+
         var rows = await query
             .OrderBy(a => a.Name)
             .ThenBy(a => a.Id)

@@ -52,7 +52,9 @@ export class PlansComponent implements OnInit {
     locality: [''],
     plan: [''],
     active: [''],
-    expiration: ['']
+    expiration: [''],
+    expirationFrom: [''],
+    expirationTo: ['']
   });
 
   constructor(
@@ -79,8 +81,9 @@ export class PlansComponent implements OnInit {
         next: (items) => {
           this.plans = items ?? [];
         },
-        error: () => {
-          this.errorMessage = 'No se pudieron consultar los planes.';
+        error: (err: HttpErrorResponse) => {
+          // Por ejemplo, que la fecha de vencimiento desde es mayor a la hasta.
+          this.errorMessage = err?.error?.message || 'No se pudieron consultar los planes.';
           this.plans = [];
         }
       });
@@ -93,7 +96,9 @@ export class PlansComponent implements OnInit {
       locality: '',
       plan: '',
       active: '',
-      expiration: ''
+      expiration: '',
+      expirationFrom: '',
+      expirationTo: ''
     });
     this.sortResetToken += 1;
     this.search();
@@ -230,7 +235,9 @@ export class PlansComponent implements OnInit {
       locality: raw.locality || null,
       active,
       plan: raw.plan || null,
-      expiration: raw.expiration || null
+      expiration: raw.expiration || null,
+      expirationFrom: raw.expirationFrom || null,
+      expirationTo: raw.expirationTo || null
     };
   }
 }

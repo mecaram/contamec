@@ -43,6 +43,8 @@ export class PlanService {
     if (filters.active !== null && filters.active !== undefined) params = params.set('active', String(filters.active));
     if (filters.plan) params = params.set('plan', filters.plan);
     if (filters.expiration) params = params.set('expiration', filters.expiration);
+    if (filters.expirationFrom) params = params.set('expirationFrom', filters.expirationFrom);
+    if (filters.expirationTo) params = params.set('expirationTo', filters.expirationTo);
     return params;
   }
 

@@ -12,4 +12,10 @@ public class PlanSearchRequest
 
     /// <summary>"current" (vigentes), "expired" (vencidos) o "none" (sin vencimiento); vacío para todos.</summary>
     public string? Expiration { get; set; }
+
+    /// <summary>Vencimiento desde este día, inclusive (solo la fecha).</summary>
+    public DateTime? ExpirationFrom { get; set; }
+
+    /// <summary>Vencimiento hasta este día, inclusive (solo la fecha).</summary>
+    public DateTime? ExpirationTo { get; set; }
 }

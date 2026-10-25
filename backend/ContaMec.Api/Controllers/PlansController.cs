@@ -14,14 +14,20 @@ public class PlansController(IPlanService planService) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(List<PlanResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Search(
         [FromQuery(Name = "applicationId")] int? applicationId,
         [FromQuery(Name = "applicationName")] string? applicationName,
         [FromQuery(Name = "locality")] string? locality,
         [FromQuery(Name = "active")] bool? active,
         [FromQuery(Name = "plan")] string? plan,
-        [FromQuery(Name = "expiration")] string? expiration)
+        [FromQuery(Name = "expiration")] string? expiration,
+        [FromQuery(Name = "expirationFrom")] DateTime? expirationFrom,
+        [FromQuery(Name = "expirationTo")] DateTime? expirationTo)
     {
+        if (expirationFrom.HasValue && expirationTo.HasValue && expirationFrom.Value.Date > expirationTo.Value.Date)
+            return BadRequest(new { message = "La fecha de vencimiento desde no puede ser mayor a la fecha hasta." });
+
         var request = new PlanSearchRequest
         {
             ApplicationId = applicationId,
@@ -29,7 +35,9 @@ public class PlansController(IPlanService planService) : ControllerBase
             Locality = locality,
             Active = active,
             Plan = plan,
-            Expiration = expiration
+            Expiration = expiration,
+            ExpirationFrom = expirationFrom,
+            ExpirationTo = expirationTo
         };
 
         return Ok(await planService.SearchAsync(request));
