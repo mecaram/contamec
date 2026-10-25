@@ -5,11 +5,11 @@
       <p class="incomes-page__subtitle">Consulte, cree y administre los ingresos diarios.</p>
     </div>
     <div class="incomes-page__header-actions">
-      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard" [disabled]="saving">
         <mat-icon>arrow_back</mat-icon>
         Volver al menú principal
       </button>
-      <button mat-stroked-button color="primary" type="button" (click)="cancelForm()" *ngIf="formVisible">
+      <button mat-stroked-button color="primary" type="button" (click)="cancelForm()" *ngIf="formVisible" [disabled]="saving">
         <mat-icon>list</mat-icon>
         Volver al listado
       </button>
@@ -152,6 +152,7 @@
       [paymentAccountOptions]="paymentAccountOptions"
       [defaultPaymentAccountId]="lastPaymentAccountId"
       [minEmissionDate]="openClosureDate"
+      [saving]="saving"
       (cancelForm)="cancelForm()"
       (saveForm)="submitForm($event)"
     ></app-income-form>

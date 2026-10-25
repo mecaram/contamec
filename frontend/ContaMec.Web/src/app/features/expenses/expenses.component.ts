@@ -32,6 +32,8 @@ export class ExpensesComponent implements OnInit {
   deleteTarget: Expense | null = null;
   /** Ventana posterior al guardado que ofrece descargar la Orden de Egreso. */
   savedDialog: { id: number; mode: 'create' | 'edit'; downloading: boolean; error: boolean } | null = null;
+  /** Alta o edición en curso: hasta que responde el backend no se puede volver a guardar. */
+  saving = false;
   /** Egresos cuya Orden de Egreso se está descargando desde el listado. */
   downloadingIds: number[] = [];
   /** Exportación del listado en curso. */
@@ -216,14 +218,20 @@ export class ExpensesComponent implements OnInit {
   }
 
   cancelForm(): void {
+    // Mientras se guarda, el formulario no se cierra: se espera la respuesta del backend.
+    if (this.saving) return;
     this.formVisible = false;
     this.editingExpense = null;
     this.copySource = null;
   }
 
   submitForm(payload: Expense): void {
+    // Un solo guardado a la vez: el botón queda desactivado hasta que responde el backend.
+    if (this.saving) return;
+
     if (this.formMode === 'create') {
-      this.expensesService.create(payload).subscribe({
+      this.saving = true;
+      this.expensesService.create(payload).pipe(finalize(() => (this.saving = false))).subscribe({
         next: (created) => {
           this.formVisible = false;
           this.copySource = null;
@@ -245,7 +253,8 @@ export class ExpensesComponent implements OnInit {
       return;
     }
 
-    this.expensesService.update(id, payload).subscribe({
+    this.saving = true;
+    this.expensesService.update(id, payload).pipe(finalize(() => (this.saving = false))).subscribe({
       next: () => {
         this.formVisible = false;
         this.editingExpense = null;

@@ -21,6 +21,8 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() defaultPaymentAccountId: number | null = null;
   /** Apertura del cierre abierto: la fecha de emisión va desde ese día hasta hoy. */
   @Input() minEmissionDate: string | null = null;
+  /** Guardado en curso: Guardar y Cancelar quedan desactivados hasta que responde el backend. */
+  @Input() saving = false;
   @Output() cancelForm = new EventEmitter<void>();
   @Output() saveForm = new EventEmitter<Income>();
   amountDisplay = '';
@@ -201,6 +203,8 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   save(): void {
+    // Enter también envía el formulario: se ignora mientras se guarda.
+    if (this.saving) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

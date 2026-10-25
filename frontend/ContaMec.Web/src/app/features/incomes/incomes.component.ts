@@ -32,6 +32,8 @@ export class IncomesComponent implements OnInit {
   deleteTarget: Income | null = null;
   /** Ventana posterior al guardado que ofrece descargar la Orden de Ingreso. */
   savedDialog: { id: number; mode: 'create' | 'edit'; downloading: boolean; error: boolean } | null = null;
+  /** Alta o edición en curso: hasta que responde el backend no se puede volver a guardar. */
+  saving = false;
   /** Ingresos cuya Orden de Ingreso se está descargando desde el listado. */
   downloadingIds: number[] = [];
   /** Exportación del listado en curso. */
@@ -221,14 +223,20 @@ export class IncomesComponent implements OnInit {
   }
 
   cancelForm(): void {
+    // Mientras se guarda, el formulario no se cierra: se espera la respuesta del backend.
+    if (this.saving) return;
     this.formVisible = false;
     this.editingIncome = null;
     this.copySource = null;
   }
 
   submitForm(payload: Income): void {
+    // Un solo guardado a la vez: el botón queda desactivado hasta que responde el backend.
+    if (this.saving) return;
+
     if (this.formMode === 'create') {
-      this.incomesService.create(payload).subscribe({
+      this.saving = true;
+      this.incomesService.create(payload).pipe(finalize(() => (this.saving = false))).subscribe({
         next: (created) => {
           this.formVisible = false;
           this.copySource = null;
@@ -250,7 +258,8 @@ export class IncomesComponent implements OnInit {
       return;
     }
 
-    this.incomesService.update(id, payload).subscribe({
+    this.saving = true;
+    this.incomesService.update(id, payload).pipe(finalize(() => (this.saving = false))).subscribe({
       next: () => {
         this.formVisible = false;
         this.editingIncome = null;
