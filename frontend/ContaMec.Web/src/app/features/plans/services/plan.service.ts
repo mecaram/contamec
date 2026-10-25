@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Plan } from '../models/plan.model';
+import { Plan, PlanActivationKind } from '../models/plan.model';
 import { PlanSearch } from '../models/plan-search.model';
 
 @Injectable()
@@ -21,8 +21,9 @@ export class PlanService {
     return this.http.get<string[]>(`${this.plansUrl}/localities`, { headers: this.getAuthHeaders() });
   }
 
-  activateDemo(applicationId: number): Observable<Plan> {
-    return this.http.post<Plan>(`${this.plansUrl}/${applicationId}/demo`, null, { headers: this.getAuthHeaders() });
+  activatePlan(applicationId: number, kind: PlanActivationKind): Observable<Plan> {
+    const segment = kind === 'proPlus' ? 'pro-plus' : 'demo';
+    return this.http.post<Plan>(`${this.plansUrl}/${applicationId}/${segment}`, null, { headers: this.getAuthHeaders() });
   }
 
   private buildSearchParams(filters: PlanSearch): HttpParams {

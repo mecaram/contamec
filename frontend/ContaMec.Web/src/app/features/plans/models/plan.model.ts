@@ -1,3 +1,6 @@
+/** Plan que asignan las acciones Activar Plan Demo y Activar Plan Pro+. */
+export type PlanActivationKind = 'demo' | 'proPlus';
+
 export interface Plan {
   applicationId: number;
   applicationName?: string | null;

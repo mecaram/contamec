@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { Plan } from '../../models/plan.model';
+import { Plan, PlanActivationKind } from '../../models/plan.model';
 
 type SortableColumn = 'applicationId' | 'applicationName' | 'plan' | 'startDate' | 'expirationDate' | 'active';
 
@@ -30,7 +30,7 @@ export class PlanListComponent implements OnChanges {
   @Input() sortResetToken = 0;
   @Input() loading = false;
 
-  @Output() activateDemo = new EventEmitter<Plan>();
+  @Output() activatePlan = new EventEmitter<{ plan: Plan; kind: PlanActivationKind }>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {

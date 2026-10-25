@@ -49,4 +49,14 @@ public class PlansController(IPlanService planService) : ControllerBase
         var result = await planService.ActivateDemoAsync(applicationId);
         return result is null ? NotFound() : Ok(result);
     }
+
+    /// <summary>Activa la empresa y sus usuarios y le asigna el plan Pro+ por 30 días más.</summary>
+    [HttpPost("{applicationId:int}/pro-plus")]
+    [ProducesResponseType(typeof(PlanResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ActivateProPlus(int applicationId)
+    {
+        var result = await planService.ActivateProPlusAsync(applicationId);
+        return result is null ? NotFound() : Ok(result);
+    }
 }

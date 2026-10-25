@@ -69,14 +69,14 @@
     [plans]="plans"
     [sortResetToken]="sortResetToken"
     [loading]="loading"
-    (activateDemo)="openDemoModal($event)"
+    (activatePlan)="openActivationModal($event)"
   ></app-plan-list>
 
-  <div class="plans-modal-backdrop" *ngIf="demoTarget">
-    <section class="plans-modal" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
+  <div class="plans-modal-backdrop" *ngIf="activationTarget">
+    <section class="plans-modal" role="dialog" aria-modal="true" aria-labelledby="activation-modal-title">
       <header class="plans-modal__header">
-        <h3 id="demo-modal-title" class="plans-modal__title">Activar Plan Demo</h3>
-        <button mat-icon-button type="button" aria-label="Cerrar" (click)="closeDemoModal()" [disabled]="demoSaving">
+        <h3 id="activation-modal-title" class="plans-modal__title">Activar Plan {{ activationLabel }}</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar" (click)="closeActivationModal()" [disabled]="activationSaving">
           <mat-icon>close</mat-icon>
         </button>
       </header>
@@ -84,30 +84,30 @@
       <div class="plans-modal__meta">
         <div class="plans-modal__meta-row">
           <span class="plans-modal__meta-label">Empresa:</span>
-          <span class="plans-modal__meta-value">{{ demoTarget.applicationName || ('#' + demoTarget.applicationId) }}</span>
+          <span class="plans-modal__meta-value">{{ activationTarget.applicationName || ('#' + activationTarget.applicationId) }}</span>
         </div>
         <div class="plans-modal__meta-row">
           <span class="plans-modal__meta-label">Plan:</span>
-          <span class="plans-modal__meta-value">Demo</span>
+          <span class="plans-modal__meta-value">{{ activationLabel }}</span>
         </div>
         <div class="plans-modal__meta-row">
           <span class="plans-modal__meta-label">Vencimiento:</span>
-          <span class="plans-modal__meta-value">{{ demoExpiration | date: 'dd/MM/yyyy' }}</span>
+          <span class="plans-modal__meta-value">{{ activationExpiration | date: 'dd/MM/yyyy' }}</span>
         </div>
       </div>
 
       <div class="plans-modal__hint">
-        Se sumarán {{ demoDays }} días {{ demoExtendsCurrent ? 'al vencimiento actual' : 'a partir de hoy' }}.
-        {{ demoTarget.active ? 'Los usuarios de la empresa quedarán activos.' : 'La empresa y sus usuarios quedarán activos.' }}
+        Se sumarán {{ activationDays }} días {{ activationExtendsCurrent ? 'al vencimiento actual' : 'a partir de hoy' }}.
+        {{ activationTarget.active ? 'Los usuarios de la empresa quedarán activos.' : 'La empresa y sus usuarios quedarán activos.' }}
       </div>
 
-      <div class="plans-modal__error" *ngIf="demoError">{{ demoError }}</div>
+      <div class="plans-modal__error" *ngIf="activationError">{{ activationError }}</div>
 
       <div class="plans-modal__actions">
-        <button mat-flat-button color="primary" type="button" (click)="confirmDemo()" [disabled]="demoSaving">
-          {{ demoSaving ? 'Activando...' : 'Confirmar' }}
+        <button mat-flat-button color="primary" type="button" (click)="confirmActivation()" [disabled]="activationSaving">
+          {{ activationSaving ? 'Activando...' : 'Confirmar' }}
         </button>
-        <button mat-button type="button" (click)="closeDemoModal()" [disabled]="demoSaving">Cancelar</button>
+        <button mat-button type="button" (click)="closeActivationModal()" [disabled]="activationSaving">Cancelar</button>
       </div>
     </section>
   </div>

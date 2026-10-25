@@ -1,12 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { Plan } from './models/plan.model';
+import { Plan, PlanActivationKind } from './models/plan.model';
 import { PlanSearch } from './models/plan-search.model';
 import { PlanService } from './services/plan.service';
 
-/** Días que suma Activar Plan Demo; el backend usa el mismo valor. */
-const DEMO_DAYS = 7;
+/** Nombre y días que suma cada acción Activar Plan; el backend usa los mismos días. */
+const PLAN_ACTIVATIONS: Record<PlanActivationKind, { label: string; days: number }> = {
+  demo: { label: 'Demo', days: 7 },
+  proPlus: { label: 'Pro+', days: 30 }
+};
 
 @Component({
   selector: 'app-plans',
@@ -21,11 +24,11 @@ export class PlansComponent implements OnInit {
   /** Opciones del filtro Localidad: las localidades distintas de las empresas. */
   localities: string[] = [];
 
-  readonly demoDays = DEMO_DAYS;
-  /** Empresa del modal Activar Plan Demo; null si está cerrado. */
-  demoTarget: Plan | null = null;
-  demoSaving = false;
-  demoError: string | null = null;
+  /** Empresa del modal Activar Plan; null si está cerrado. */
+  activationTarget: Plan | null = null;
+  activationKind: PlanActivationKind = 'demo';
+  activationSaving = false;
+  activationError: string | null = null;
 
   readonly filterForm = this.fb.group({
     applicationId: [null as number | null],
@@ -81,43 +84,52 @@ export class PlansComponent implements OnInit {
   }
 
   /** El plan vigente (vence hoy o después) se extiende desde su vencimiento; sin vencimiento o vencido, desde hoy. */
-  get demoExtendsCurrent(): boolean {
-    const daysLeft = this.demoTarget?.daysLeft;
-    return !!this.demoTarget?.expirationDate && daysLeft !== null && daysLeft !== undefined && daysLeft >= 0;
+  get activationExtendsCurrent(): boolean {
+    const daysLeft = this.activationTarget?.daysLeft;
+    return !!this.activationTarget?.expirationDate && daysLeft !== null && daysLeft !== undefined && daysLeft >= 0;
+  }
+
+  get activationLabel(): string {
+    return PLAN_ACTIVATIONS[this.activationKind].label;
+  }
+
+  get activationDays(): number {
+    return PLAN_ACTIVATIONS[this.activationKind].days;
   }
 
   /** Vencimiento que va a guardar el backend, para mostrarlo antes de confirmar. */
-  get demoExpiration(): Date {
-    const from = this.demoExtendsCurrent ? this.parseDate(this.demoTarget!.expirationDate!) : new Date();
-    from.setDate(from.getDate() + DEMO_DAYS);
+  get activationExpiration(): Date {
+    const from = this.activationExtendsCurrent ? this.parseDate(this.activationTarget!.expirationDate!) : new Date();
+    from.setDate(from.getDate() + this.activationDays);
     return from;
   }
 
-  openDemoModal(plan: Plan): void {
-    this.demoTarget = plan;
-    this.demoError = null;
+  openActivationModal(event: { plan: Plan; kind: PlanActivationKind }): void {
+    this.activationTarget = event.plan;
+    this.activationKind = event.kind;
+    this.activationError = null;
   }
 
-  closeDemoModal(): void {
-    if (this.demoSaving) return;
-    this.demoTarget = null;
-    this.demoError = null;
+  closeActivationModal(): void {
+    if (this.activationSaving) return;
+    this.activationTarget = null;
+    this.activationError = null;
   }
 
-  confirmDemo(): void {
-    if (!this.demoTarget || this.demoSaving) return;
-    this.demoSaving = true;
-    this.demoError = null;
+  confirmActivation(): void {
+    if (!this.activationTarget || this.activationSaving) return;
+    this.activationSaving = true;
+    this.activationError = null;
     this.planService
-      .activateDemo(this.demoTarget.applicationId)
-      .pipe(finalize(() => (this.demoSaving = false)))
+      .activatePlan(this.activationTarget.applicationId, this.activationKind)
+      .pipe(finalize(() => (this.activationSaving = false)))
       .subscribe({
         next: () => {
-          this.demoTarget = null;
+          this.activationTarget = null;
           this.search();
         },
         error: () => {
-          this.demoError = 'No se pudo activar el plan Demo.';
+          this.activationError = `No se pudo activar el plan ${this.activationLabel}.`;
         }
       });
   }

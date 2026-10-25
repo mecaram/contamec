@@ -66,8 +66,11 @@
         </td>
         <td class="plan-list__center" data-label="Activa">{{ row.active ? 'Sí' : 'No' }}</td>
         <td class="plan-list__actions plan-list__center" data-label="Acciones">
-          <button mat-icon-button type="button" title="Activar Plan Demo" aria-label="Activar Plan Demo" (click)="activateDemo.emit(row)">
+          <button mat-icon-button type="button" title="Activar Plan Demo" aria-label="Activar Plan Demo" (click)="activatePlan.emit({ plan: row, kind: 'demo' })">
             <mat-icon>rocket_launch</mat-icon>
+          </button>
+          <button mat-icon-button type="button" title="Activar Plan Pro+" aria-label="Activar Plan Pro+" (click)="activatePlan.emit({ plan: row, kind: 'proPlus' })">
+            <mat-icon>workspace_premium</mat-icon>
           </button>
         </td>
       </tr>

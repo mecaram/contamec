@@ -61,12 +61,19 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
     }
 
     private const int DemoDays = 7;
+    private const int ProPlusDays = 30;
+
+    public Task<PlanResponse?> ActivateDemoAsync(int applicationId) =>
+        ActivatePlanAsync(applicationId, ApplicationType.Demo, DemoDays);
+
+    public Task<PlanResponse?> ActivateProPlusAsync(int applicationId) =>
+        ActivatePlanAsync(applicationId, ApplicationType.ProPlus, ProPlusDays);
 
     /// <summary>
-    /// Activa la empresa y sus usuarios y le asigna el plan Demo por <see cref="DemoDays"/> días más:
+    /// Activa la empresa y sus usuarios y le asigna el plan por <paramref name="days"/> días más:
     /// sin vencimiento o vencido, desde hoy; vigente (vence hoy o después), desde su vencimiento actual.
     /// </summary>
-    public async Task<PlanResponse?> ActivateDemoAsync(int applicationId)
+    private async Task<PlanResponse?> ActivatePlanAsync(int applicationId, ApplicationType type, int days)
     {
         var application = await dbContext.Applications
             .Include(a => a.Users)
@@ -78,12 +85,12 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
         var expiresAt = application.ApplicationExpirationDate;
         var isCurrent = expiresAt.HasValue && expiresAt.Value.Date >= now.Date;
 
-        // El inicio del plan solo cambia si empieza uno nuevo; al extender una Demo vigente se conserva.
-        if (application.Type != ApplicationType.Demo || !isCurrent)
+        // El inicio del plan solo cambia si empieza uno nuevo; al extender el mismo plan vigente se conserva.
+        if (application.Type != type || !isCurrent)
             application.ApplicationTypeDate = now;
 
-        application.Type = ApplicationType.Demo;
-        application.ApplicationExpirationDate = isCurrent ? expiresAt!.Value.AddDays(DemoDays) : now.AddDays(DemoDays);
+        application.Type = type;
+        application.ApplicationExpirationDate = isCurrent ? expiresAt!.Value.AddDays(days) : now.AddDays(days);
         application.Active = true;
         application.Guid ??= System.Guid.NewGuid().ToString();
         foreach (var user in application.Users)
