@@ -160,30 +160,62 @@ public class ApplicationService(
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id, int currentApplicationId)
+    /// <summary>
+    /// Elimina una aplicación inactiva junto con todos sus datos. Las claves foráneas no borran en cascada,
+    /// así que se borra de las tablas hijas hacia Applications, en una transacción: se borra todo o nada.
+    /// </summary>
+    /// <exception cref="ArgumentException">Es la aplicación de la sesión, está activa u otra aplicación depende de sus datos.</exception>
+    public async Task<ApplicationDeleteResponse?> DeleteAsync(int id, int currentApplicationId)
     {
-        var application = await _dbContext.Applications.FirstOrDefaultAsync(a => a.Id == id);
+        var application = await _dbContext.Applications.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
         if (application is null)
-            return false;
+            return null;
 
         if (id == currentApplicationId)
             throw new ArgumentException("No puede eliminar la aplicación con la que inició sesión.");
 
-        // Las claves foráneas hacia Applications no borran en cascada.
-        var hasData =
-            await _dbContext.Users.AnyAsync(x => x.ApplicationId == id)
-            || await _dbContext.Accounts.AnyAsync(x => x.ApplicationId == id)
-            || await _dbContext.PaymentAccounts.AnyAsync(x => x.ApplicationId == id)
-            || await _dbContext.Closures.AnyAsync(x => x.ApplicationId == id)
-            || await _dbContext.ClosureBalances.AnyAsync(x => x.ApplicationId == id)
-            || await _dbContext.Incomes.AnyAsync(x => x.ApplicationId == id)
-            || await _dbContext.Expenses.AnyAsync(x => x.ApplicationId == id);
-        if (hasData)
-            throw new ArgumentException("No se puede eliminar la aplicación porque tiene datos asociados.");
+        if (application.Active)
+            throw new ArgumentException("No se puede eliminar la aplicación porque está activa. Desactívela antes de eliminarla.");
 
-        _dbContext.Applications.Remove(application);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        var response = new ApplicationDeleteResponse();
+        void Add(string table, string label, int count)
+        {
+            if (count > 0)
+                response.Deleted.Add(new ApplicationDeletedTable { Table = table, Label = label, Count = count });
+        }
+
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        try
+        {
+            // Primero lo que referencia a cierres, cuentas, subcuentas y cuentas de pago.
+            Add("ClosureBalances", "Saldos de cierre", await _dbContext.ClosureBalances.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+            Add("Incomes", "Ingresos", await _dbContext.Incomes.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+            Add("Expenses", "Egresos", await _dbContext.Expenses.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+            Add("SubAccounts", "Subcuentas", await _dbContext.SubAccounts.Where(x => x.Account != null && x.Account.ApplicationId == id).ExecuteDeleteAsync());
+            Add("Accounts", "Cuentas", await _dbContext.Accounts.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+            Add("PaymentAccounts", "Cuentas de pago", await _dbContext.PaymentAccounts.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+            Add("Closures", "Cierres", await _dbContext.Closures.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+
+            // Las cotizaciones las usan todas las aplicaciones: se conservan y solo pierden el usuario que las cargó.
+            response.UnlinkedExchangeRates = await _dbContext.ExchangeRates
+                .Where(x => x.CreatedByUser != null && x.CreatedByUser.ApplicationId == id)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.CreatedByUserId, (int?)null));
+
+            Add("Users", "Usuarios", await _dbContext.Users.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+            Add("Plans", "Planes", await _dbContext.Plans.Where(x => x.ApplicationId == id).ExecuteDeleteAsync());
+            Add("Applications", "Aplicaciones", await _dbContext.Applications.Where(x => x.Id == id).ExecuteDeleteAsync());
+
+            await transaction.CommitAsync();
+        }
+        catch (Exception ex) when ((ex as PostgresException ?? ex.InnerException as PostgresException) is { SqlState: PostgresErrorCodes.ForeignKeyViolation } pg)
+        {
+            // Por ejemplo, un ingreso de otra aplicación cargado por un usuario de esta. La transacción se descarta.
+            await transaction.RollbackAsync();
+            throw new ArgumentException(
+                $"No se puede eliminar la aplicación porque otra aplicación tiene registros que dependen de sus datos (tabla {pg.TableName}). No se borró nada.");
+        }
+
+        return response;
     }
 
     private const int DemoDays = 7;

@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Application, ApplicationActivation } from '../models/application.model';
+import { Application, ApplicationActivation, ApplicationDeleteResult } from '../models/application.model';
 import { ApplicationSearch } from '../models/application-search.model';
 
 @Injectable()
@@ -46,8 +46,8 @@ export class ApplicationService {
     return this.http.post<ApplicationActivation>(`${this.applicationsUrl}/${id}/activate`, null, { headers: this.getAuthHeaders() });
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.applicationsUrl}/${id}`, { headers: this.getAuthHeaders() });
+  delete(id: number): Observable<ApplicationDeleteResult> {
+    return this.http.delete<ApplicationDeleteResult>(`${this.applicationsUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 
   private buildPayload(application: Application) {

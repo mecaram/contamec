@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { Application } from './models/application.model';
+import { Application, ApplicationDeleteResult } from './models/application.model';
 import { ApplicationSearch } from './models/application-search.model';
 import { ApplicationService } from './services/application.service';
 
@@ -19,6 +19,11 @@ export class ApplicationsComponent implements OnInit {
   editingApplication: Application | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Application | null = null;
+  deleting = false;
+  /** Motivo por el que el backend no eliminó la aplicación (por ejemplo, que está activa). */
+  deleteError: string | null = null;
+  /** Resumen de la eliminación: queda abierto hasta que el operador lo cierra. */
+  deleteResult: { applicationId: number; name: string; result: ApplicationDeleteResult } | null = null;
   /** Exportación del listado en curso. */
   exporting: 'pdf' | 'excel' | null = null;
   activateTarget: Application | null = null;
@@ -117,26 +122,38 @@ export class ApplicationsComponent implements OnInit {
 
   deleteApplication(application: Application): void {
     this.deleteTarget = application;
+    this.deleteError = null;
   }
 
   confirmDelete(): void {
-    if (!this.deleteTarget) return;
+    if (!this.deleteTarget || this.deleting) return;
     const target = this.deleteTarget;
-    this.applicationService.delete(target.id).subscribe({
-      next: () => {
-        this.deleteTarget = null;
-        this.notify('Aplicación eliminada correctamente.');
-        this.search();
-      },
-      error: (error) => {
-        this.deleteTarget = null;
-        this.notify(error?.error?.message ?? 'No se pudo eliminar la aplicación.', 'error');
-      }
-    });
+    this.deleting = true;
+    this.deleteError = null;
+    // Las reglas (activa, datos asociados) las valida el backend.
+    this.applicationService
+      .delete(target.id)
+      .pipe(finalize(() => (this.deleting = false)))
+      .subscribe({
+        next: (result) => {
+          this.deleteTarget = null;
+          this.deleteResult = { applicationId: target.id, name: target.name || '-', result };
+          this.search();
+        },
+        error: (error) => {
+          this.deleteError = error?.error?.message ?? 'No se pudo eliminar la aplicación.';
+        }
+      });
   }
 
   cancelDelete(): void {
+    if (this.deleting) return;
     this.deleteTarget = null;
+    this.deleteError = null;
+  }
+
+  closeDeleteResult(): void {
+    this.deleteResult = null;
   }
 
   activateApplication(application: Application): void {

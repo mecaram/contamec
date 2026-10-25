@@ -204,3 +204,44 @@ app-application-list {
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+.applications-dialog__warning,
+.applications-dialog__error {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+}
+
+.applications-dialog__warning {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.applications-dialog__error {
+  background: #fef2f2;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.applications-dialog__table {
+  width: 100%;
+  margin: -0.25rem 0 1rem;
+  border-collapse: collapse;
+}
+
+.applications-dialog__table th,
+.applications-dialog__table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.applications-dialog__table th,
+.applications-dialog__table tfoot td {
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.applications-dialog__table .applications-dialog__number {
+  text-align: right;
+}

@@ -12,6 +12,15 @@ export interface Application {
   createdAt?: string | null;
 }
 
+/** Resultado de eliminar una aplicación: registros borrados por tabla. */
+export interface ApplicationDeleteResult {
+  /** Tablas con registros borrados, en el orden en que se borraron; la aplicación va al final. */
+  deleted: { table: string; label: string; count: number }[];
+  /** Cotizaciones que cargaron sus usuarios: no se borran, solo quedan sin usuario. */
+  unlinkedExchangeRates: number;
+  total: number;
+}
+
 export interface ApplicationActivation {
   email?: string | null;
   emailSent: boolean;

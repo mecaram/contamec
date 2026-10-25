@@ -107,9 +107,52 @@
         <div><strong>Nombre:</strong> {{ deleteTarget.name || '-' }}</div>
         <div><strong>Activa:</strong> {{ deleteTarget.active ? 'Sí' : 'No' }}</div>
       </div>
+      <p class="applications-dialog__warning">
+        Se eliminarán también todos sus datos: usuarios, cuentas, subcuentas, cuentas de pago, cierres, ingresos, egresos y planes.
+        Esta acción no se puede deshacer.
+      </p>
+      <p class="applications-dialog__error" *ngIf="deleteError">{{ deleteError }}</p>
       <div class="applications-dialog__actions">
-        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">Eliminar</button>
-        <button mat-button type="button" (click)="cancelDelete()">Cancelar</button>
+        <button mat-flat-button color="warn" type="button" (click)="confirmDelete()" [disabled]="deleting">
+          {{ deleting ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+        <button mat-button type="button" (click)="cancelDelete()" [disabled]="deleting">Cancelar</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="applications-dialog-backdrop" *ngIf="deleteResult">
+    <section class="applications-dialog" role="dialog" aria-modal="true">
+      <h3 class="applications-dialog__title">Aplicación eliminada</h3>
+      <p class="applications-dialog__text">
+        Se eliminó la aplicación #{{ deleteResult.applicationId }} ({{ deleteResult.name }}). Registros borrados:
+      </p>
+      <table class="applications-dialog__table">
+        <thead>
+          <tr>
+            <th>Tabla</th>
+            <th class="applications-dialog__number">Registros</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of deleteResult.result.deleted">
+            <td>{{ item.label }}</td>
+            <td class="applications-dialog__number">{{ item.count }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td class="applications-dialog__number">{{ deleteResult.result.total }}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <p class="applications-dialog__text" *ngIf="deleteResult.result.unlinkedExchangeRates > 0">
+        {{ deleteResult.result.unlinkedExchangeRates === 1 ? 'Una cotización cargada' : deleteResult.result.unlinkedExchangeRates + ' cotizaciones cargadas' }}
+        por sus usuarios se {{ deleteResult.result.unlinkedExchangeRates === 1 ? 'conservó' : 'conservaron' }} sin usuario, porque las usan todas las aplicaciones.
+      </p>
+      <div class="applications-dialog__actions">
+        <button mat-flat-button color="primary" type="button" (click)="closeDeleteResult()">Aceptar</button>
       </div>
     </section>
   </div>

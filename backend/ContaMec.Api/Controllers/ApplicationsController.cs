@@ -124,8 +124,9 @@ public class ApplicationsController(IApplicationService applicationService) : Co
         }
     }
 
+    /// <summary>Elimina una aplicación inactiva con todos sus datos y devuelve cuántos registros se borraron de cada tabla.</summary>
     [HttpDelete("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApplicationDeleteResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -136,8 +137,8 @@ public class ApplicationsController(IApplicationService applicationService) : Co
 
         try
         {
-            var deleted = await applicationService.DeleteAsync(id, applicationId);
-            return deleted ? NoContent() : NotFound();
+            var result = await applicationService.DeleteAsync(id, applicationId);
+            return result is null ? NotFound() : Ok(result);
         }
         catch (ArgumentException ex)
         {
