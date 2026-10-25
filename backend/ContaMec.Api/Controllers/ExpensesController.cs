@@ -62,10 +62,10 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
     }
 
     [HttpGet("last-payment-account")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ExpenseDefaultsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetLastPaymentAccount()
+    public async Task<IActionResult> GetDefaults()
     {
         if (!TryGetCurrentUserId(out var currentUserId))
             return Unauthorized(new { message = "Usuario no autenticado." });
@@ -73,8 +73,7 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
         if (!User.TryGetApplicationId(out var applicationId))
             return Forbid();
 
-        var paymentAccountId = await expenseService.GetLastPaymentAccountIdAsync(currentUserId, applicationId);
-        return Ok(new { paymentAccountId });
+        return Ok(await expenseService.GetDefaultsAsync(currentUserId, applicationId));
     }
 
     [HttpPost]

@@ -109,15 +109,31 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         return created ?? throw new InvalidOperationException("No se pudo leer el egreso recién creado.");
     }
 
-    // Cuenta de pago del último egreso que registró el usuario en la aplicación, para proponerla en el alta.
-    public async Task<int?> GetLastPaymentAccountIdAsync(int userId, int applicationId)
+    // Cuenta, subcuenta y cuenta de pago de los últimos egresos que registró el usuario en la aplicación, para proponerlas en el alta.
+    public async Task<ExpenseDefaultsResponse> GetDefaultsAsync(int userId, int applicationId)
     {
-        return await _dbContext.Expenses
+        var userItems = _dbContext.Expenses
             .AsNoTracking()
-            .Where(e => e.ApplicationId == applicationId && e.CreatedByUserId == userId && e.PaymentAccountId != null)
+            .Where(e => e.ApplicationId == applicationId && e.CreatedByUserId == userId);
+
+        var last = await userItems
+            .OrderByDescending(e => e.Id)
+            .Select(e => new { e.AccountId, e.SubAccountId })
+            .FirstOrDefaultAsync();
+
+        // Los egresos anteriores pueden no tener cuenta de pago: se toma la del último que tenga una.
+        var paymentAccountId = await userItems
+            .Where(e => e.PaymentAccountId != null)
             .OrderByDescending(e => e.Id)
             .Select(e => e.PaymentAccountId)
             .FirstOrDefaultAsync();
+
+        return new ExpenseDefaultsResponse
+        {
+            AccountId = last?.AccountId,
+            SubAccountId = last?.SubAccountId,
+            PaymentAccountId = paymentAccountId
+        };
     }
 
     public async Task<bool> UpdateAsync(int id, ExpenseUpdateRequest request, int applicationId)

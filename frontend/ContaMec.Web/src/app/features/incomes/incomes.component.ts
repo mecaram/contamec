@@ -19,6 +19,8 @@ export class IncomesComponent implements OnInit {
   paymentAccountOptions: Array<{ id: number; label: string }> = [];
   /** Cuenta de pago que se propone en el alta: la del último ingreso que registró el usuario. */
   lastPaymentAccountId: number | null = null;
+  lastAccountId: number | null = null;
+  lastSubAccountId: number | null = null;
   /** Subcuentas activas de la cuenta elegida en el filtro; vacío si no hay cuenta o no requiere subcuentas. */
   subAccountFilterOptions: Array<{ id: number; label: string }> = [];
   loading = false;
@@ -198,12 +200,22 @@ export class IncomesComponent implements OnInit {
     this.formMode = 'create';
     this.editingIncome = null;
     this.copySource = null;
-    this.lastPaymentAccountId = null;
+    this.clearDefaults();
     this.formVisible = true;
-    this.incomesService.getLastPaymentAccount().subscribe({
-      next: (result) => (this.lastPaymentAccountId = result?.paymentAccountId ?? null),
-      error: () => (this.lastPaymentAccountId = null)
+    this.incomesService.getDefaults().subscribe({
+      next: (result) => {
+        this.lastAccountId = result?.accountId ?? null;
+        this.lastSubAccountId = result?.subAccountId ?? null;
+        this.lastPaymentAccountId = result?.paymentAccountId ?? null;
+      },
+      error: () => this.clearDefaults()
     });
+  }
+
+  private clearDefaults(): void {
+    this.lastAccountId = null;
+    this.lastSubAccountId = null;
+    this.lastPaymentAccountId = null;
   }
 
   openEdit(income: Income): void {
@@ -218,7 +230,7 @@ export class IncomesComponent implements OnInit {
     this.formMode = 'create';
     this.editingIncome = null;
     this.copySource = income;
-    this.lastPaymentAccountId = null;
+    this.clearDefaults();
     this.formVisible = true;
   }
 

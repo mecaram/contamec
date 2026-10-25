@@ -19,6 +19,9 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() paymentAccountOptions: Array<{ id: number; label: string }> = [];
   /** En el alta se propone esta cuenta de pago (la del último ingreso registrado), si sigue disponible. */
   @Input() defaultPaymentAccountId: number | null = null;
+  /** En el alta se proponen la cuenta y la subcuenta del último ingreso registrado, si siguen disponibles. */
+  @Input() defaultAccountId: number | null = null;
+  @Input() defaultSubAccountId: number | null = null;
   /** Apertura del cierre abierto: la fecha de emisión va desde ese día hasta hoy. */
   @Input() minEmissionDate: string | null = null;
   /** Guardado en curso: Guardar y Cancelar quedan desactivados hasta que responde el backend. */
@@ -91,6 +94,9 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
     if (changes.income || changes.mode || changes.defaultPaymentAccountId || changes.paymentAccountOptions) {
       this.applyDefaultPaymentAccount();
     }
+    if (changes.income || changes.mode || changes.defaultAccountId || changes.defaultSubAccountId || changes.accountOptions) {
+      this.applyDefaultAccount();
+    }
   }
 
   private get copySource(): Income | null {
@@ -118,6 +124,20 @@ export class IncomeFormComponent implements OnInit, OnChanges, OnDestroy {
     if (id !== null && this.paymentAccountOptions.some((p) => p.id === id)) {
       control.setValue(id);
     }
+  }
+
+  /**
+   * Solo en un alta nueva (no al copiar) y si todavía no se eligió una cuenta: la propuesta debe estar entre las opciones (activas).
+   * La subcuenta se conserva solo si sigue activa y la cuenta requiere subcuentas; eso lo resuelve refreshSubAccounts.
+   */
+  private applyDefaultAccount(): void {
+    const account = this.form.controls.accountId;
+    if (this.mode !== 'create' || this.income || this.copySource || account.value !== null || account.dirty) return;
+    const id = this.defaultAccountId;
+    if (id === null || !this.accountOptions.some((a) => a.id === id)) return;
+    account.setValue(id, { emitEvent: false });
+    this.form.controls.subAccountId.setValue(this.defaultSubAccountId, { emitEvent: false });
+    this.refreshSubAccounts();
   }
 
   get subAccountPlaceholder(): string {

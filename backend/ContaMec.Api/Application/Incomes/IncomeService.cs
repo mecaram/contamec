@@ -109,15 +109,31 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         return created ?? throw new InvalidOperationException("No se pudo leer el ingreso recién creado.");
     }
 
-    // Cuenta de pago del último ingreso que registró el usuario en la aplicación, para proponerla en el alta.
-    public async Task<int?> GetLastPaymentAccountIdAsync(int userId, int applicationId)
+    // Cuenta, subcuenta y cuenta de pago de los últimos ingresos que registró el usuario en la aplicación, para proponerlas en el alta.
+    public async Task<IncomeDefaultsResponse> GetDefaultsAsync(int userId, int applicationId)
     {
-        return await _dbContext.Incomes
+        var userItems = _dbContext.Incomes
             .AsNoTracking()
-            .Where(i => i.ApplicationId == applicationId && i.CreatedByUserId == userId && i.PaymentAccountId != null)
+            .Where(i => i.ApplicationId == applicationId && i.CreatedByUserId == userId);
+
+        var last = await userItems
+            .OrderByDescending(i => i.Id)
+            .Select(i => new { i.AccountId, i.SubAccountId })
+            .FirstOrDefaultAsync();
+
+        // Los ingresos anteriores pueden no tener cuenta de pago: se toma la del último que tenga una.
+        var paymentAccountId = await userItems
+            .Where(i => i.PaymentAccountId != null)
             .OrderByDescending(i => i.Id)
             .Select(i => i.PaymentAccountId)
             .FirstOrDefaultAsync();
+
+        return new IncomeDefaultsResponse
+        {
+            AccountId = last?.AccountId,
+            SubAccountId = last?.SubAccountId,
+            PaymentAccountId = paymentAccountId
+        };
     }
 
     public async Task<bool> UpdateAsync(int id, IncomeUpdateRequest request, int applicationId)
