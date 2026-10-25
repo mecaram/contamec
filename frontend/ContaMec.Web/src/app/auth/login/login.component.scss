@@ -371,8 +371,9 @@ $primary-hover: #1d4ed8;
   border: 0;
 }
 
+// Ahora va justo debajo del lema: mantiene la separación que antes daba "Desarrollado por".
 .login-card__demo {
-  margin-top: 0.75rem;
+  margin-top: 1.25rem;
   font-size: 0.95rem;
   font-weight: 700;
   color: #fff;
