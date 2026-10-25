@@ -183,10 +183,17 @@
       <p class="expenses-dialog__text" *ngIf="savedDialog.mode === 'edit'">
         El egreso N.º {{ formatOrderNumber(savedDialog.id) }} se actualizó correctamente. ¿Desea descargar la Orden de Egreso actualizada?
       </p>
+      <app-voucher-upload
+        inputId="expense-voucher-file"
+        [api]="savedDialog.voucherApi"
+        [hasVoucher]="savedDialog.hasVoucher"
+        (hasVoucherChange)="onSavedDialogVoucherChange($event)"
+        (busyChange)="savedDialog.voucherBusy = $event"
+      ></app-voucher-upload>
       <div class="expenses-dialog__error" *ngIf="savedDialog.error" role="alert">{{ orderPdfErrorMessage }}</div>
       <div class="expenses-dialog__actions">
-        <button mat-button type="button" (click)="closeSavedDialog()">Finalizar</button>
-        <button mat-flat-button color="primary" type="button" (click)="downloadFromSavedDialog()" [disabled]="savedDialog.downloading">
+        <button mat-button type="button" (click)="closeSavedDialog()" [disabled]="savedDialog.voucherBusy">Finalizar</button>
+        <button mat-flat-button color="primary" type="button" (click)="downloadFromSavedDialog()" [disabled]="savedDialog.downloading || savedDialog.voucherBusy">
           <mat-spinner *ngIf="savedDialog.downloading" class="expenses-dialog__spinner" diameter="18"></mat-spinner>
           <mat-icon *ngIf="!savedDialog.downloading">picture_as_pdf</mat-icon>
           {{ savedDialog.downloading ? 'Generando...' : 'Descargar PDF' }}

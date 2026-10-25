@@ -1,0 +1,69 @@
+<div class="voucher">
+  <label class="voucher__label" [attr.for]="inputId">Comprobante</label>
+  <p class="voucher__hint">Opcional. PDF o imagen (JPG, PNG o WEBP), hasta 10 MB.</p>
+
+  <input #fileInput class="voucher__input" type="file" [id]="inputId" [accept]="accept" (change)="onFileSelected(fileInput)" />
+
+  <!-- Comprobante ya adjunto -->
+  <div class="voucher__current" *ngIf="hasVoucher && !selectedFile">
+    <span class="voucher__current-name">
+      <mat-icon aria-hidden="true">attach_file</mat-icon>
+      Comprobante adjunto
+    </span>
+    <div class="voucher__actions" *ngIf="!confirmRemove">
+      <button mat-stroked-button color="primary" type="button" (click)="open()" [disabled]="busy">
+        <mat-spinner *ngIf="opening; else viewIcon" class="voucher__spinner" diameter="16"></mat-spinner>
+        <ng-template #viewIcon><mat-icon>visibility</mat-icon></ng-template>
+        Ver
+      </button>
+      <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()" [disabled]="busy">
+        <mat-icon>swap_horiz</mat-icon>
+        Reemplazar
+      </button>
+      <button mat-stroked-button color="warn" type="button" (click)="askRemove()" [disabled]="busy">
+        <mat-icon>delete</mat-icon>
+        Quitar
+      </button>
+    </div>
+    <div class="voucher__confirm" *ngIf="confirmRemove">
+      <span>¿Quitar el comprobante? Se borra el archivo.</span>
+      <div class="voucher__actions">
+        <button mat-flat-button color="warn" type="button" (click)="remove()" [disabled]="removing">
+          {{ removing ? 'Quitando...' : 'Quitar' }}
+        </button>
+        <button mat-button type="button" (click)="cancelRemove()" [disabled]="removing">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sin comprobante: elegir archivo -->
+  <div class="voucher__actions" *ngIf="!hasVoucher && !selectedFile">
+    <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()" [disabled]="busy">
+      <mat-spinner *ngIf="preparing; else pickIcon" class="voucher__spinner" diameter="16"></mat-spinner>
+      <ng-template #pickIcon><mat-icon>upload_file</mat-icon></ng-template>
+      {{ preparing ? 'Preparando...' : 'Seleccionar archivo' }}
+    </button>
+  </div>
+
+  <!-- Archivo elegido, pendiente de subir -->
+  <div class="voucher__selected" *ngIf="selectedFile">
+    <img *ngIf="previewUrl" class="voucher__preview" [src]="previewUrl" alt="Vista previa del comprobante" />
+    <div class="voucher__file">
+      <mat-icon aria-hidden="true">{{ previewUrl ? 'image' : 'picture_as_pdf' }}</mat-icon>
+      <span class="voucher__file-name" [title]="selectedFile.name">{{ selectedFile.name }}</span>
+      <span class="voucher__file-size">{{ selectedSize }}</span>
+    </div>
+    <p class="voucher__hint voucher__hint--pending">Todavía no se adjuntó: presione {{ hasVoucher ? 'Reemplazar' : 'Subir' }}.</p>
+    <div class="voucher__actions">
+      <button mat-flat-button color="primary" type="button" (click)="upload()" [disabled]="uploading">
+        <mat-spinner *ngIf="uploading; else uploadIcon" class="voucher__spinner voucher__spinner--light" diameter="16"></mat-spinner>
+        <ng-template #uploadIcon><mat-icon>cloud_upload</mat-icon></ng-template>
+        {{ uploading ? 'Subiendo...' : (hasVoucher ? 'Reemplazar' : 'Subir') }}
+      </button>
+      <button mat-button type="button" (click)="cancelSelection()" [disabled]="uploading">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="voucher__message voucher__message--error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
+  <div class="voucher__message voucher__message--success" *ngIf="successMessage" role="status">{{ successMessage }}</div>
+</div>

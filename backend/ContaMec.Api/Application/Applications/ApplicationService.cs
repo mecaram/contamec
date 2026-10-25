@@ -1,6 +1,7 @@
 using ContaMec.Api.Application.Applications.Dto;
 using ContaMec.Api.Application.Orders;
 using ContaMec.Api.Application.Notifications;
+using ContaMec.Api.Application.Vouchers;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,8 @@ public class ApplicationService(
     ContaMecDbContext dbContext,
     IEmailNotifier emailNotifier,
     IEmailTemplateService emailTemplates,
-    IOptions<NotificationSettings> notificationOptions) : IApplicationService
+    IOptions<NotificationSettings> notificationOptions,
+    IVoucherService voucherService) : IApplicationService
 {
     private readonly ContaMecDbContext _dbContext = dbContext;
     private readonly NotificationSettings _notifications = notificationOptions.Value;
@@ -184,6 +186,12 @@ public class ApplicationService(
                 response.Deleted.Add(new ApplicationDeletedTable { Table = table, Label = label, Count = count });
         }
 
+        // Los comprobantes de los egresos se borran de Storage recién cuando la base confirmó el borrado.
+        var voucherPaths = await _dbContext.Expenses
+            .Where(x => x.ApplicationId == id && x.Voucher != null)
+            .Select(x => x.Voucher)
+            .ToListAsync();
+
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
@@ -215,6 +223,7 @@ public class ApplicationService(
                 $"No se puede eliminar la aplicación porque otra aplicación tiene registros que dependen de sus datos (tabla {pg.TableName}). No se borró nada.");
         }
 
+        await voucherService.DeleteFilesAsync(voucherPaths);
         return response;
     }
 

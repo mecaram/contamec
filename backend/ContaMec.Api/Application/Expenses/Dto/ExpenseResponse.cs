@@ -16,4 +16,6 @@ public class ExpenseResponse
     public string? OccurrenceType { get; set; }
     public int? CreatedByUserId { get; set; }
     public DateTime? CreatedAt { get; set; }
+    /// <summary>Tiene comprobante adjunto; la URL se pide aparte (GET api/expenses/{id}/voucher) porque vence.</summary>
+    public bool HasVoucher { get; set; }
 }

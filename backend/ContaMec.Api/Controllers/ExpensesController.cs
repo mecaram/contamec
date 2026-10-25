@@ -2,6 +2,8 @@ using ContaMec.Api.Application.Auth;
 using ContaMec.Api.Application.Expenses;
 using ContaMec.Api.Application.Expenses.Dto;
 using ContaMec.Api.Application.Orders;
+using ContaMec.Api.Application.Vouchers;
+using ContaMec.Api.Application.Vouchers.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -144,6 +146,92 @@ public class ExpensesController(IExpenseService expenseService) : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // Margen sobre los 10 MB del archivo para el resto del cuerpo multipart.
+    private const long VoucherRequestLimit = VoucherService.MaxBytes + 1024 * 1024;
+
+    [HttpPost("{id:int}/voucher")]
+    [RequestSizeLimit(VoucherRequestLimit)]
+    [RequestFormLimits(MultipartBodyLengthLimit = VoucherRequestLimit)]
+    [ProducesResponseType(typeof(VoucherResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> UploadVoucher(int id, IFormFile? file)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        if (file is null || file.Length == 0)
+            return BadRequest(new { message = "Seleccione el archivo del comprobante." });
+        if (file.Length > VoucherService.MaxBytes)
+            return BadRequest(new { message = "El comprobante no puede superar los 10 MB." });
+
+        using var buffer = new MemoryStream();
+        await file.CopyToAsync(buffer);
+
+        try
+        {
+            var result = await expenseService.SaveVoucherAsync(id, applicationId, new VoucherFile(file.FileName, file.ContentType, buffer.ToArray()));
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (VoucherStorageException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:int}/voucher")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> RemoveVoucher(int id)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        try
+        {
+            var removed = await expenseService.RemoveVoucherAsync(id, applicationId);
+            return removed is null ? NotFound() : NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (VoucherStorageException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("{id:int}/voucher")]
+    [ProducesResponseType(typeof(VoucherUrlResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> GetVoucherUrl(int id)
+    {
+        if (!User.TryGetApplicationId(out var applicationId))
+            return Forbid();
+
+        try
+        {
+            var result = await expenseService.GetVoucherUrlAsync(id, applicationId);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (VoucherStorageException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { message = ex.Message });
         }
     }
 

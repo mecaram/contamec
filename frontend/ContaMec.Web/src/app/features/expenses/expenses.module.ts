@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AmountCalculatorModule } from '../../shared/amount-calculator/amount-calculator.module';
+import { VoucherModule } from '../../shared/voucher/voucher.module';
 import { ExpenseFormComponent } from './components/expense-form/expense-form.component';
 import { ExpenseListComponent } from './components/expense-list/expense-list.component';
 import { ExpensesRoutingModule } from './expenses-routing.module';
@@ -27,6 +28,7 @@ import { SubAccountService } from '../sub-accounts/services/sub-account.service'
     MatSelectModule,
     MatTooltipModule,
     AmountCalculatorModule,
+    VoucherModule,
     ExpensesRoutingModule
   ],
   providers: [ExpenseService, PaymentAccountService, SubAccountService]

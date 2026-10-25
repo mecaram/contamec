@@ -14,6 +14,7 @@ using ContaMec.Api.Application.Plans;
 using ContaMec.Api.Application.PaymentAccounts;
 using ContaMec.Api.Application.SubAccounts;
 using ContaMec.Api.Application.Users;
+using ContaMec.Api.Application.Vouchers;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -35,6 +36,7 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSett
 builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection(AuthSettings.SectionName));
 builder.Services.Configure<NotificationSettings>(builder.Configuration.GetSection(NotificationSettings.SectionName));
 builder.Services.Configure<ResendSettings>(builder.Configuration.GetSection(ResendSettings.SectionName));
+builder.Services.Configure<SupabaseStorageSettings>(builder.Configuration.GetSection(SupabaseStorageSettings.SectionName));
 
 builder.Services.AddCors(options =>
 {
@@ -128,6 +130,8 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ISubAccountService, SubAccountService>();
 builder.Services.AddScoped<IIncomeService, IncomeService>();
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
+builder.Services.AddHttpClient<IVoucherStorage, SupabaseVoucherStorage>();
+builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddScoped<IPaymentAccountService, PaymentAccountService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();

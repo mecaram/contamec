@@ -6,6 +6,7 @@ import { ExpenseSearch } from './models/expense-search.model';
 import { ClosureLookup, ExpenseAccountOption, ExpenseService } from './services/expense.service';
 import { PaymentAccountService } from '../payment-accounts/services/payment-account.service';
 import { SubAccountService } from '../sub-accounts/services/sub-account.service';
+import { VoucherApi } from '../../shared/voucher/voucher-api';
 
 @Component({
   selector: 'app-expenses',
@@ -32,8 +33,17 @@ export class ExpensesComponent implements OnInit {
   copySource: Expense | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Expense | null = null;
-  /** Ventana posterior al guardado que ofrece descargar la Orden de Egreso. */
-  savedDialog: { id: number; mode: 'create' | 'edit'; downloading: boolean; error: boolean } | null = null;
+  /** Ventana posterior al guardado: ofrece descargar la Orden de Egreso y adjuntar el comprobante. */
+  savedDialog: {
+    id: number;
+    mode: 'create' | 'edit';
+    downloading: boolean;
+    error: boolean;
+    hasVoucher: boolean;
+    voucherApi: VoucherApi;
+    /** Subida o borrado del comprobante en curso: no se cierra la ventana hasta que termine. */
+    voucherBusy: boolean;
+  } | null = null;
   /** Alta o edición en curso: hasta que responde el backend no se puede volver a guardar. */
   saving = false;
   /** Egresos cuya Orden de Egreso se está descargando desde el listado. */
@@ -249,7 +259,7 @@ export class ExpensesComponent implements OnInit {
           this.copySource = null;
           this.search();
           if (created?.id) {
-            this.savedDialog = { id: created.id, mode: 'create', downloading: false, error: false };
+            this.openSavedDialog(created.id, 'create', false);
           } else {
             this.notify('Egreso creado correctamente.');
           }
@@ -265,13 +275,14 @@ export class ExpensesComponent implements OnInit {
       return;
     }
 
+    const hasVoucher = !!this.editingExpense?.hasVoucher;
     this.saving = true;
     this.expensesService.update(id, payload).pipe(finalize(() => (this.saving = false))).subscribe({
       next: () => {
         this.formVisible = false;
         this.editingExpense = null;
         this.search();
-        this.savedDialog = { id, mode: 'edit', downloading: false, error: false };
+        this.openSavedDialog(id, 'edit', hasVoucher);
       },
       error: () => this.notify('Solo se puede modificar un egreso con cierre abierto.', 'error')
     });
@@ -301,10 +312,29 @@ export class ExpensesComponent implements OnInit {
     this.deleteTarget = null;
   }
 
+  private openSavedDialog(id: number, mode: 'create' | 'edit', hasVoucher: boolean): void {
+    this.savedDialog = {
+      id,
+      mode,
+      downloading: false,
+      error: false,
+      hasVoucher,
+      voucherApi: this.expensesService.voucherApi(id),
+      voucherBusy: false
+    };
+  }
+
+  /** Al adjuntar o quitar el comprobante se actualiza el listado (la marca de comprobante de cada egreso). */
+  onSavedDialogVoucherChange(hasVoucher: boolean): void {
+    if (!this.savedDialog) return;
+    this.savedDialog.hasVoucher = hasVoucher;
+    this.search();
+  }
+
   /** El egreso ya quedó guardado: si falla el PDF se puede reintentar sin volver a guardar. */
   downloadFromSavedDialog(): void {
     const dialog = this.savedDialog;
-    if (!dialog || dialog.downloading) return;
+    if (!dialog || dialog.downloading || dialog.voucherBusy) return;
 
     dialog.downloading = true;
     dialog.error = false;
@@ -321,6 +351,7 @@ export class ExpensesComponent implements OnInit {
   }
 
   closeSavedDialog(): void {
+    if (this.savedDialog?.voucherBusy) return;
     this.savedDialog = null;
   }
 

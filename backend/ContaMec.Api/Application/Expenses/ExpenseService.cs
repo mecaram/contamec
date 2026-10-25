@@ -1,6 +1,8 @@
 using ContaMec.Api.Application.ClosureBalances;
 using ContaMec.Api.Application.Expenses.Dto;
 using ContaMec.Api.Application.Orders;
+using ContaMec.Api.Application.Vouchers;
+using ContaMec.Api.Application.Vouchers.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +11,11 @@ using System.Linq.Expressions;
 
 namespace ContaMec.Api.Application.Expenses;
 
-public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
+public class ExpenseService(ContaMecDbContext dbContext, IVoucherService voucherService) : IExpenseService
 {
+    /// <summary>Carpeta de los comprobantes de egresos dentro del bucket.</summary>
+    private const string VoucherFolder = "expenses";
+
     private readonly ContaMecDbContext _dbContext = dbContext;
 
     public async Task<List<ExpenseResponse>> SearchAsync(ExpenseSearchRequest request, int applicationId)
@@ -192,7 +197,43 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
         await _dbContext.SaveChangesAsync();
         await ClosureBalanceAdjuster.AdjustAsync(_dbContext, expense.ClosureId, expense.PaymentAccountId, expense.Amount ?? 0m, applicationId);
         await transaction.CommitAsync();
+        // El egreso ya no existe: su comprobante quedaría huérfano en Storage.
+        await voucherService.DeleteFilesAsync([expense.Voucher]);
         return true;
+    }
+
+    // Adjunta o reemplaza el comprobante. Igual que la edición, solo con el cierre abierto.
+    public async Task<VoucherResponse?> SaveVoucherAsync(int id, int applicationId, VoucherFile file)
+    {
+        var expense = await GetModifiableForVoucherAsync(id, applicationId);
+        return expense is null ? null : await voucherService.SaveAsync(expense, VoucherFolder, file);
+    }
+
+    public async Task<bool?> RemoveVoucherAsync(int id, int applicationId)
+    {
+        var expense = await GetModifiableForVoucherAsync(id, applicationId);
+        return expense is null ? null : await voucherService.RemoveAsync(expense);
+    }
+
+    // Solo lectura: se puede ver el comprobante aunque el cierre esté cerrado.
+    public async Task<VoucherUrlResponse?> GetVoucherUrlAsync(int id, int applicationId)
+    {
+        var path = await _dbContext.Expenses
+            .AsNoTracking()
+            .Where(e => e.Id == id && e.ApplicationId == applicationId)
+            .Select(e => e.Voucher)
+            .FirstOrDefaultAsync();
+        return path is null ? null : await voucherService.GetUrlAsync(path);
+    }
+
+    private async Task<Expense?> GetModifiableForVoucherAsync(int id, int applicationId)
+    {
+        var expense = await _dbContext.Expenses.FirstOrDefaultAsync(e => e.Id == id && e.ApplicationId == applicationId);
+        if (expense is null)
+            return null;
+        if (!await CanModifyExpenseAsync(expense.ClosureId))
+            throw new ArgumentException("Solo se puede cambiar el comprobante de un egreso con cierre abierto.");
+        return expense;
     }
 
     // Solo lectura: la orden se arma con los datos actuales de la base y no modifica el egreso.
@@ -385,7 +426,8 @@ public class ExpenseService(ContaMecDbContext dbContext) : IExpenseService
                 : expense.OccurrenceType == OccurrenceType.Extraordinaria ? nameof(OccurrenceType.Extraordinaria)
                 : null,
             CreatedByUserId = expense.CreatedByUserId,
-            CreatedAt = expense.CreatedAt
+            CreatedAt = expense.CreatedAt,
+            HasVoucher = expense.Voucher != null
         };
     }
 

@@ -2,7 +2,7 @@ using System;
 
 namespace ContaMec.Api.Domain.Entities;
 
-public class Expense
+public class Expense : IHasVoucher
 {
     public int Id { get; set; }
     public int ClosureId { get; set; }
@@ -17,6 +17,8 @@ public class Expense
     public int? SubAccountId { get; set; }
     public OccurrenceType? OccurrenceType { get; set; }
     public int? ExchangeRateId { get; set; }
+    /// <summary>Ruta del comprobante adjunto en el bucket de Storage (expenses/{Id}/{timestamp}.{ext}); null si no tiene.</summary>
+    public string? Voucher { get; set; }
 
     public Closure Closure { get; set; } = null!;
     public Account Account { get; set; } = null!;
