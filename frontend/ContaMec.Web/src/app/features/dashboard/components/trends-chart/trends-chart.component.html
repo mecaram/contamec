@@ -27,7 +27,7 @@
     [datasets]="datasets"
     [labels]="labels"
     [options]="options"
-    [legend]="true"
+    [legend]="false"
     role="img"
     [attr.aria-label]="'Gráfico de ' + metric.label + ' de los últimos cierres con sus tendencias de corto y largo plazo'"
   ></canvas>
@@ -35,13 +35,13 @@
 
 <div class="trends-chart__toggles" *ngIf="shown.length > 0">
   <label class="trends-chart__toggle" *ngFor="let item of series">
-    <input type="checkbox" [checked]="item.visible" (change)="toggleSeries(item)" />
     <span
-      class="trends-chart__swatch trends-chart__swatch--{{ item.swatch }}"
+      class="trends-chart__swatch"
       [style.color]="item.color"
       aria-hidden="true"
     ></span>
     {{ item.label }}
+    <input type="checkbox" [checked]="item.visible" (change)="toggleSeries(item)" />
   </label>
 </div>
 

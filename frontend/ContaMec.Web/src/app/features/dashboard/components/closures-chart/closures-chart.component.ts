@@ -1,6 +1,6 @@
 import { DatePipe, formatCurrency } from '@angular/common';
 import { Component, Inject, Input, LOCALE_ID, OnChanges, ViewChild } from '@angular/core';
-import { Chart, ChartDataSets, ChartLegendLabelItem, ChartOptions, ChartTooltipItem } from 'chart.js';
+import { ChartDataSets, ChartOptions, ChartTooltipItem } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Closure } from '../../../closures/models/closure.model';
 import {
@@ -10,7 +10,6 @@ import {
   closureTooltipTitle,
   EXPENSE_COLOR,
   INCOME_COLOR,
-  legendLabelsInDatasetOrder,
   MAX_CLOSURES,
   NET_FLOW_COLOR,
   closedClosures
@@ -33,11 +32,11 @@ export class ClosuresChartComponent implements OnChanges {
 
   /** Todas las series, en el mismo orden que los datasets (la posición es el índice del dataset). */
   readonly series: ChartSeries[] = [
-    { label: 'Flujo neto', color: NET_FLOW_COLOR, swatch: 'line', visible: true },
-    { label: 'Ingresos', color: INCOME_COLOR, swatch: 'bar', visible: true },
-    { label: 'Egresos', color: EXPENSE_COLOR, swatch: 'bar', visible: true },
-    { label: 'Promedio ingresos', color: INCOME_COLOR, swatch: 'dashed', visible: true },
-    { label: 'Promedio egresos', color: EXPENSE_COLOR, swatch: 'dashed', visible: true }
+    { label: 'Flujo neto', color: NET_FLOW_COLOR, visible: true },
+    { label: 'Ingresos', color: INCOME_COLOR, visible: true },
+    { label: 'Egresos', color: EXPENSE_COLOR, visible: true },
+    { label: 'Promedio ingresos', color: INCOME_COLOR, visible: true },
+    { label: 'Promedio egresos', color: EXPENSE_COLOR, visible: true }
   ];
   /** Si hay promedios para mostrar (hace falta al menos un cierre cerrado). */
   hasReferences = false;
@@ -46,23 +45,11 @@ export class ClosuresChartComponent implements OnChanges {
 
   constructor(@Inject(LOCALE_ID) private readonly locale: string) {
     const datePipe = new DatePipe(locale);
-    const component = this;
     this.options = {
       responsive: true,
       maintainAspectRatio: false,
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          // En el orden de las series, como las casillas.
-          generateLabels: legendLabelsInDatasetOrder
-        },
-        // Hace lo de siempre (mostrar u ocultar la serie) y deja las casillas de verificación en el mismo estado.
-        onClick(this: any, event: MouseEvent, item: ChartLegendLabelItem) {
-          Chart.defaults.global.legend?.onClick?.call(this, event, item);
-          component.syncSeries();
-        }
-      },
+      // La leyenda es la del template: cada serie con su casilla de verificación al lado.
+      legend: { display: false },
       tooltips: {
         mode: 'index',
         intersect: false,
@@ -132,8 +119,7 @@ export class ClosuresChartComponent implements OnChanges {
   }
 
   /**
-   * Promedios de ingresos y egresos, como líneas horizontales punteadas. Se ocultan con su casilla de verificación o
-   * desde la leyenda. Sin cierres cerrados no hay nada que promediar y no se agregan.
+   * Promedios de ingresos y egresos, como líneas horizontales punteadas. Se ocultan con su casilla de verificación. Sin cierres cerrados no hay nada que promediar y no se agregan.
    */
   private referenceLines(incomeAverage: number | null, expenseAverage: number | null): ChartDataSets[] {
     this.hasReferences = incomeAverage !== null && expenseAverage !== null;
@@ -154,15 +140,6 @@ export class ClosuresChartComponent implements OnChanges {
     const dataset = this.datasets[index];
     if (dataset) dataset.hidden = !item.visible;
     this.chart?.hideDataset(index, !item.visible);
-  }
-
-  /** Copia a las casillas lo que se mostró u ocultó desde la leyenda del gráfico. */
-  private syncSeries(): void {
-    const chart = this.chart?.chart;
-    if (!chart) return;
-    this.series.forEach((item, index) => {
-      if (index < (chart.data.datasets?.length ?? 0)) item.visible = chart.isDatasetVisible(index);
-    });
   }
 
   private averageLine(reference: ChartSeries, value: number): ChartDataSets {

@@ -1,5 +1,4 @@
 import { DatePipe } from '@angular/common';
-import { Chart, ChartLegendLabelItem } from 'chart.js';
 import { Closure } from '../../closures/models/closure.model';
 
 // Lo comparten los gráficos de cierres del grupo Estadisticas, para que rotulen y expliquen cada cierre igual.
@@ -17,12 +16,10 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-/** Una serie del gráfico que se muestra u oculta con su casilla de verificación o desde la leyenda. */
+/** Una serie del gráfico que se muestra u oculta con su casilla de verificación. */
 export interface ChartSeries {
   label: string;
   color: string;
-  /** Muestra del trazo junto a la casilla: barra, línea continua o línea punteada. */
-  swatch: 'bar' | 'line' | 'dashed';
   visible: boolean;
 }
 
@@ -49,13 +46,6 @@ export function closureTooltipTitle(closure: Closure | undefined, datePipe: Date
     closure.isClosed && closure.closeDate ? `cerrado el ${datePipe.transform(closure.closeDate, 'dd/MM/yyyy')}` : ''
   ].filter((text) => text).join(', ');
   return dates ? [heading, dates.charAt(0).toUpperCase() + dates.slice(1)] : heading;
-}
-
-/** Chart.js ordena la leyenda por `order` (el de dibujo); así queda en el orden de los datasets. */
-export function legendLabelsInDatasetOrder(chart: Chart): ChartLegendLabelItem[] {
-  return (Chart.defaults.global.legend?.labels?.generateLabels?.(chart) ?? []).sort(
-    (a, b) => (a.datasetIndex ?? 0) - (b.datasetIndex ?? 0)
-  );
 }
 
 export function average(values: number[]): number | null {

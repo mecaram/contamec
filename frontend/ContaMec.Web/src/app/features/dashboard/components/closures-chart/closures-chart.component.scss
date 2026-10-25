@@ -48,25 +48,13 @@
   }
 }
 
-// Muestra de la serie: barra, línea continua (flujo neto) o punteada (promedios). Toma el color de `color`.
+// Círculo con el color de la serie (toma `color`), como el de la leyenda de Chart.js.
 .closures-chart__swatch {
   display: inline-block;
-  width: 1.25rem;
-
-  &--bar {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 2px;
-    background-color: currentColor;
-  }
-
-  &--line {
-    border-top: 2px solid currentColor;
-  }
-
-  &--dashed {
-    border-top: 2px dashed currentColor;
-  }
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: currentColor;
 }
 
 .closures-chart__empty {
