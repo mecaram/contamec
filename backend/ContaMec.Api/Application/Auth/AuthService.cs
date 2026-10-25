@@ -128,11 +128,11 @@ public class AuthService(
         && application.ApplicationExpirationDate is { } expiresAt
         && ArgentinaClock.Now.Date > expiresAt.Date;
 
-    /// <summary>Nombre del plan como figura en el enum ApplicationTypes de la base (con tilde en Producción).</summary>
+    /// <summary>Nombre del plan como figura en el enum ApplicationTypes de la base.</summary>
     private static string? PlanName(Domain.Entities.ApplicationType? type) => type switch
     {
         Domain.Entities.ApplicationType.Demo => "Demo",
-        Domain.Entities.ApplicationType.Produccion => "Producción",
+        Domain.Entities.ApplicationType.ProPlus => "Pro+",
         _ => null
     };
 

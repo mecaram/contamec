@@ -249,7 +249,7 @@ export class AuthService {
     return sessionStorage.getItem(this.applicationNameKey);
   }
 
-  /** Plan de la empresa ("Demo" o "Producción"); null si no tiene o la sesión se inició antes de existir este dato. */
+  /** Plan de la empresa ("Demo" o "Pro+"); null si no tiene o la sesión se inició antes de existir este dato. */
   getPlanName(): string | null {
     return sessionStorage.getItem(this.planNameKey) || null;
   }

@@ -16,7 +16,7 @@ public class LoginResponse
     [JsonPropertyName("applicationName")]
     public string ApplicationName { get; set; } = string.Empty;
 
-    /// <summary>Plan de la empresa (tipo de aplicación): "Demo" o "Producción"; null si no tiene.</summary>
+    /// <summary>Plan de la empresa (tipo de aplicación): "Demo" o "Pro+"; null si no tiene.</summary>
     [JsonPropertyName("planName")]
     public string? PlanName { get; set; }
 
