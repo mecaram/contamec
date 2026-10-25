@@ -13,10 +13,10 @@ public class PlanResponse
     /// <summary>"Demo" o "Pro+"; null si la empresa no tiene plan.</summary>
     public string? Plan { get; set; }
 
-    /// <summary>Fecha en que se asignó el plan actual (ApplicationTypeDate).</summary>
+    /// <summary>Fecha en que se asignó el plan actual (PlanStartDate).</summary>
     public DateTime? StartDate { get; set; }
 
-    /// <summary>Último día del plan, inclusive (ApplicationExpirationDate); null si no vence.</summary>
+    /// <summary>Último día del plan, inclusive (PlanExpirationDate); null si no vence.</summary>
     public DateTime? ExpirationDate { get; set; }
 
     /// <summary>Días hasta el vencimiento contra la fecha de Argentina: 0 si vence hoy, negativo si venció; null si no vence.</summary>

@@ -201,9 +201,9 @@ public class ApplicationService(
 
         var now = ArgentinaClock.Now;
         application.Active = true;
-        application.Type = ApplicationType.Demo;
-        application.ApplicationTypeDate = now;
-        application.ApplicationExpirationDate = now.AddDays(DemoDays);
+        application.Plan = ApplicationType.Demo;
+        application.PlanStartDate = now;
+        application.PlanExpirationDate = now.AddDays(DemoDays);
         application.Guid ??= System.Guid.NewGuid().ToString();
         foreach (var user in application.Users)
             user.IsActive = true;
@@ -231,8 +231,8 @@ public class ApplicationService(
             ["Empresa"] = application.Name,
             ["Usuario"] = JoinUsernames(application),
             ["DiasDemo"] = DemoDays.ToString(),
-            ["FechaInicio"] = $"{application.ApplicationTypeDate:dd/MM/yyyy HH:mm}",
-            ["FechaVencimiento"] = $"{application.ApplicationExpirationDate:dd/MM/yyyy HH:mm}",
+            ["FechaInicio"] = $"{application.PlanStartDate:dd/MM/yyyy HH:mm}",
+            ["FechaVencimiento"] = $"{application.PlanExpirationDate:dd/MM/yyyy HH:mm}",
             ["LoginUrl"] = _notifications.LoginUrl,
             ["WhatsAppSoporte"] = FormatSupportWhatsApp(),
             ["WhatsAppSoporteNumero"] = _notifications.WhatsApp
@@ -281,8 +281,8 @@ public class ApplicationService(
                 <table style="width:100%;border-collapse:collapse;font-size:14px">
                   {Row("Empresa", application.Name)}
                   {Row("Usuario", usernames)}
-                  {Row("Inicio de la demo", $"{application.ApplicationTypeDate:dd/MM/yyyy HH:mm} hs")}
-                  {Row("Vence el", $"{application.ApplicationExpirationDate:dd/MM/yyyy HH:mm} hs")}
+                  {Row("Inicio de la demo", $"{application.PlanStartDate:dd/MM/yyyy HH:mm} hs")}
+                  {Row("Vence el", $"{application.PlanExpirationDate:dd/MM/yyyy HH:mm} hs")}
                 </table>
                 <p style="margin:24px 0;text-align:center">
                   <a href="{loginUrl}" style="display:inline-block;background:#0c4a6e;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600">Ingresar a ContaMec</a>

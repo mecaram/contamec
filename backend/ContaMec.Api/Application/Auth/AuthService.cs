@@ -51,7 +51,7 @@ public class AuthService(
         var roleName = user.UserRole?.Name ?? string.Empty;
         if (IsPlanExpired(application, roleName))
             throw new LoginRejectedException(
-                $"No es posible iniciar sesión porque el plan de su empresa venció el {application.ApplicationExpirationDate:dd/MM/yyyy}. Comuníquese con el administrador del sistema.");
+                $"No es posible iniciar sesión porque el plan de su empresa venció el {application.PlanExpirationDate:dd/MM/yyyy}. Comuníquese con el administrador del sistema.");
 
         var previousLoginAt = user.LastLoginAt;
         user.LastLoginAt = ArgentinaClock.Now;
@@ -65,8 +65,8 @@ public class AuthService(
             Username = name,
             ApplicationId = application.Id,
             ApplicationName = application.Name,
-            PlanName = Domain.Entities.ApplicationTypeNames.Display(application.Type),
-            PlanExpirationDate = application.ApplicationExpirationDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            PlanName = Domain.Entities.ApplicationTypeNames.Display(application.Plan),
+            PlanExpirationDate = application.PlanExpirationDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
             Role = roleName,
             PreviousLoginAt = previousLoginAt
         };
@@ -119,13 +119,13 @@ public class AuthService(
     }
 
     /// <summary>
-    /// El plan sirve hasta el día de ApplicationExpirationDate inclusive, sin importar la hora (fecha de Argentina);
+    /// El plan sirve hasta el día de PlanExpirationDate inclusive, sin importar la hora (fecha de Argentina);
     /// sin fecha no vence.
     /// El SuperAdministrador no se bloquea: es quien renueva los planes de las empresas.
     /// </summary>
     private static bool IsPlanExpired(Domain.Entities.Application application, string roleName) =>
         roleName != UserRoleNames.SuperAdministrator
-        && application.ApplicationExpirationDate is { } expiresAt
+        && application.PlanExpirationDate is { } expiresAt
         && ArgentinaClock.Now.Date > expiresAt.Date;
 
     private bool VerifyPassword(string password, string storedHash)

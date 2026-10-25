@@ -38,17 +38,17 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
 
         query = request.Plan switch
         {
-            nameof(ApplicationType.Demo) => query.Where(a => a.Type == ApplicationType.Demo),
-            nameof(ApplicationType.ProPlus) => query.Where(a => a.Type == ApplicationType.ProPlus),
-            "none" => query.Where(a => a.Type == null),
+            nameof(ApplicationType.Demo) => query.Where(a => a.Plan == ApplicationType.Demo),
+            nameof(ApplicationType.ProPlus) => query.Where(a => a.Plan == ApplicationType.ProPlus),
+            "none" => query.Where(a => a.Plan == null),
             _ => query
         };
 
         query = request.Expiration switch
         {
-            "current" => query.Where(a => a.ApplicationExpirationDate >= today),
-            "expired" => query.Where(a => a.ApplicationExpirationDate < today),
-            "none" => query.Where(a => a.ApplicationExpirationDate == null),
+            "current" => query.Where(a => a.PlanExpirationDate >= today),
+            "expired" => query.Where(a => a.PlanExpirationDate < today),
+            "none" => query.Where(a => a.PlanExpirationDate == null),
             _ => query
         };
 
@@ -82,21 +82,31 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
             return null;
 
         var now = ArgentinaClock.Now;
-        var expiresAt = application.ApplicationExpirationDate;
+        var expiresAt = application.PlanExpirationDate;
         var isCurrent = expiresAt.HasValue && expiresAt.Value.Date >= now.Date;
 
         // El inicio del plan solo cambia si empieza uno nuevo; al extender el mismo plan vigente se conserva.
-        if (application.Type != type || !isCurrent)
-            application.ApplicationTypeDate = now;
+        if (application.Plan != type || !isCurrent)
+            application.PlanStartDate = now;
 
-        application.Type = type;
-        application.ApplicationExpirationDate = isCurrent ? expiresAt!.Value.AddDays(days) : now.AddDays(days);
+        application.Plan = type;
+        application.PlanExpirationDate = isCurrent ? expiresAt!.Value.AddDays(days) : now.AddDays(days);
         application.Active = true;
         application.Guid ??= System.Guid.NewGuid().ToString();
         foreach (var user in application.Users)
             user.IsActive = true;
 
-        // Un único SaveChanges: empresa, usuarios y plan se guardan juntos o no se guarda nada.
+        // El período nuevo rige desde hoy, o desde el día siguiente al vencimiento si el plan seguía vigente.
+        dbContext.Plans.Add(new Plan
+        {
+            CreatedAt = now,
+            ApplicationId = application.Id,
+            Type = type,
+            StartDate = isCurrent ? expiresAt!.Value.AddDays(1) : now,
+            ExpirationDate = application.PlanExpirationDate
+        });
+
+        // Un único SaveChanges: empresa, usuarios, plan e historial se guardan juntos o no se guarda nada.
         await dbContext.SaveChangesAsync();
 
         return ToResponse(application, now.Date);
@@ -110,10 +120,10 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
         Locality = a.Locality,
         WhatsApp = a.WhatsApp,
         Active = a.Active,
-        Plan = ApplicationTypeNames.Display(a.Type),
-        StartDate = a.ApplicationTypeDate,
-        ExpirationDate = a.ApplicationExpirationDate,
-        DaysLeft = a.ApplicationExpirationDate.HasValue ? (a.ApplicationExpirationDate.Value.Date - today).Days : null
+        Plan = ApplicationTypeNames.Display(a.Plan),
+        StartDate = a.PlanStartDate,
+        ExpirationDate = a.PlanExpirationDate,
+        DaysLeft = a.PlanExpirationDate.HasValue ? (a.PlanExpirationDate.Value.Date - today).Days : null
     };
 
     /// <summary>Localidades distintas de las empresas (sin espacios sobrantes ni vacías), en orden alfabético.</summary>

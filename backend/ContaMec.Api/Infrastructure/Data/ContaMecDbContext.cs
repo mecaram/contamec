@@ -19,6 +19,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
     // Calificado: "Application" choca con el namespace ContaMec.Api.Application.
     public DbSet<Domain.Entities.Application> Applications => Set<Domain.Entities.Application>();
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
+    public DbSet<Plan> Plans => Set<Plan>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -47,9 +48,9 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
             entity.Property(e => e.Active).HasColumnName("Active");
             entity.Property(e => e.WhatsApp).HasColumnName("WhatsApp");
-            entity.Property(e => e.Type).HasColumnName("Type");
-            entity.Property(e => e.ApplicationTypeDate).HasColumnName("ApplicationTypeDate").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
-            entity.Property(e => e.ApplicationExpirationDate).HasColumnName("ApplicationExpirationDate").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.Plan).HasColumnName("Plan");
+            entity.Property(e => e.PlanStartDate).HasColumnName("PlanStartDate").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.PlanExpirationDate).HasColumnName("PlanExpirationDate").HasColumnType("timestamp with time zone");
             entity.Property(e => e.Email).HasColumnName("Email");
             entity.Property(e => e.Address).HasColumnName("Address");
             entity.Property(e => e.Locality).HasColumnName("Locality");
@@ -68,6 +69,19 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.Subject).HasColumnName("Subject");
             entity.Property(e => e.Body).HasColumnName("Body");
             entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+        });
+
+        modelBuilder.Entity<Plan>(entity =>
+        {
+            entity.ToTable("Plans");
+
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("Id");
+            entity.Property(e => e.CreatedAt).HasColumnName("Created_at").HasColumnType("timestamp with time zone").HasDefaultValueSql("now()");
+            entity.Property(e => e.ApplicationId).HasColumnName("ApplicationID");
+            entity.Property(e => e.Type).HasColumnName("Plan");
+            entity.Property(e => e.StartDate).HasColumnName("PlanStartDate").HasColumnType("timestamp with time zone");
+            entity.Property(e => e.ExpirationDate).HasColumnName("PlanExpirationDate").HasColumnType("timestamp with time zone");
         });
 
         modelBuilder.Entity<Closure>(entity =>

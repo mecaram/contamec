@@ -14,9 +14,9 @@ public class Application
     public string? Address { get; set; }
     public string? Locality { get; set; }
     public string? Guid { get; set; }
-    public ApplicationType? Type { get; set; }
-    public DateTime? ApplicationTypeDate { get; set; }
-    public DateTime? ApplicationExpirationDate { get; set; }
+    public ApplicationType? Plan { get; set; }
+    public DateTime? PlanStartDate { get; set; }
+    public DateTime? PlanExpirationDate { get; set; }
     public DocumentType? DocumentType { get; set; }
     public string? DocumentNumber { get; set; }
 
