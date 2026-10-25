@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { Plan, PlanActivationKind } from './models/plan.model';
+import { PlanHistory } from './models/plan-history.model';
+import { planDaysLabel, planDaysTone } from './plan-days';
 import { PlanSearch } from './models/plan-search.model';
 import { PlanService } from './services/plan.service';
 
@@ -29,6 +32,13 @@ export class PlansComponent implements OnInit {
   activationKind: PlanActivationKind = 'demo';
   activationSaving = false;
   activationError: string | null = null;
+
+  /** Empresa del modal Historial de planes; null si está cerrado. */
+  historyTarget: Plan | null = null;
+  historyItems: PlanHistory[] = [];
+  historyLoading = false;
+  historyError: string | null = null;
+  private historySubscription?: Subscription;
 
   readonly filterForm = this.fb.group({
     applicationId: [null as number | null],
@@ -132,6 +142,38 @@ export class PlansComponent implements OnInit {
           this.activationError = `No se pudo activar el plan ${this.activationLabel}.`;
         }
       });
+  }
+
+  daysLabel(daysLeft: number): string {
+    return planDaysLabel(daysLeft);
+  }
+
+  daysTone(daysLeft: number): string {
+    return planDaysTone(daysLeft);
+  }
+
+  openHistory(plan: Plan): void {
+    this.historySubscription?.unsubscribe();
+    this.historyTarget = plan;
+    this.historyItems = [];
+    this.historyError = null;
+    this.historyLoading = true;
+    this.historySubscription = this.planService
+      .getHistory(plan.applicationId)
+      .pipe(finalize(() => (this.historyLoading = false)))
+      .subscribe({
+        next: (items) => (this.historyItems = items ?? []),
+        error: () => (this.historyError = 'No se pudo consultar el historial de planes.')
+      });
+  }
+
+  closeHistory(): void {
+    // Si la consulta sigue en curso, su respuesta ya no se muestra.
+    this.historySubscription?.unsubscribe();
+    this.historyTarget = null;
+    this.historyItems = [];
+    this.historyError = null;
+    this.historyLoading = false;
   }
 
   /** Solo la parte de fecha: así no se corre de día por la zona horaria. */

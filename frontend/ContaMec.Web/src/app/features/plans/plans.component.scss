@@ -119,6 +119,67 @@ app-plan-list {
   box-shadow: 0 20px 48px rgba(15, 23, 42, 0.3);
 }
 
+.plans-modal--wide {
+  width: min(40rem, 100%);
+}
+
+.plans-modal__loading {
+  margin: 0 1rem 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.plans-modal__table-wrap {
+  margin: 0 1rem 0.75rem;
+  overflow-x: auto;
+}
+
+.plans-modal__table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.plans-modal__table th,
+.plans-modal__table td {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.plans-modal__table th {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.75);
+  background: #f8fafc;
+}
+
+.plans-modal__table tfoot td {
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.plans-modal__table .plans-modal__center {
+  text-align: center;
+}
+
+.plans-modal__days {
+  font-weight: 600;
+}
+
+.plans-modal__days--ok {
+  color: #15803d;
+}
+
+.plans-modal__days--soon {
+  color: #b45309;
+}
+
+.plans-modal__days--expired {
+  color: #b91c1c;
+}
+
 .plans-modal__header {
   padding: 0.75rem 1rem;
   display: flex;
@@ -155,6 +216,12 @@ app-plan-list {
   font-size: 0.9rem;
   font-weight: 700;
   color: #0f172a;
+}
+
+// Renglón único: la etiqueta no necesita ancho fijo para alinearse con otras y el nombre la sigue directamente.
+.plans-modal__meta-row--inline .plans-modal__meta-label {
+  width: auto;
+  min-width: 0;
 }
 
 .plans-modal__meta-value {

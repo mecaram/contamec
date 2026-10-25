@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Plan, PlanActivationKind } from '../models/plan.model';
+import { PlanHistory } from '../models/plan-history.model';
 import { PlanSearch } from '../models/plan-search.model';
 
 @Injectable()
@@ -19,6 +20,10 @@ export class PlanService {
 
   getLocalities(): Observable<string[]> {
     return this.http.get<string[]>(`${this.plansUrl}/localities`, { headers: this.getAuthHeaders() });
+  }
+
+  getHistory(applicationId: number): Observable<PlanHistory[]> {
+    return this.http.get<PlanHistory[]>(`${this.plansUrl}/${applicationId}/history`, { headers: this.getAuthHeaders() });
   }
 
   activatePlan(applicationId: number, kind: PlanActivationKind): Observable<Plan> {

@@ -1,10 +1,8 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { Plan, PlanActivationKind } from '../../models/plan.model';
+import { planDaysLabel, planDaysTone } from '../../plan-days';
 
 type SortableColumn = 'applicationId' | 'applicationName' | 'plan' | 'startDate' | 'expirationDate' | 'active';
-
-/** Días antes del vencimiento en que se avisa en ámbar. */
-const EXPIRES_SOON_DAYS = 7;
 
 @Component({
   selector: 'app-plan-list',
@@ -31,6 +29,7 @@ export class PlanListComponent implements OnChanges {
   @Input() loading = false;
 
   @Output() activatePlan = new EventEmitter<{ plan: Plan; kind: PlanActivationKind }>();
+  @Output() viewHistory = new EventEmitter<Plan>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -117,14 +116,12 @@ export class PlanListComponent implements OnChanges {
   }
 
   daysLabel(daysLeft: number): string {
-    if (daysLeft < 0) return 'Vencido';
-    if (daysLeft === 0) return 'Vence hoy';
-    return daysLeft === 1 ? 'Falta 1 día' : `Faltan ${daysLeft} días`;
+    return planDaysLabel(daysLeft);
   }
 
   daysClass(daysLeft: number): string {
-    if (daysLeft < 0) return 'plan-list__days--expired';
-    return daysLeft <= EXPIRES_SOON_DAYS ? 'plan-list__days--soon' : '';
+    const tone = planDaysTone(daysLeft);
+    return tone === 'ok' ? '' : `plan-list__days--${tone}`;
   }
 
   goToPreviousPage(): void {

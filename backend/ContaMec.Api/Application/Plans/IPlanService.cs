@@ -8,4 +8,5 @@ public interface IPlanService
     Task<List<string>> GetLocalitiesAsync();
     Task<PlanResponse?> ActivateDemoAsync(int applicationId);
     Task<PlanResponse?> ActivateProPlusAsync(int applicationId);
+    Task<List<PlanHistoryResponse>> GetHistoryAsync(int applicationId);
 }

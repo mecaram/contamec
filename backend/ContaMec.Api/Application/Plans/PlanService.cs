@@ -112,6 +112,28 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
         return ToResponse(application, now.Date);
     }
 
+    /// <summary>Planes activados para la empresa, del más reciente al más antiguo.</summary>
+    public async Task<List<PlanHistoryResponse>> GetHistoryAsync(int applicationId)
+    {
+        var today = ArgentinaClock.Now.Date;
+        var rows = await dbContext.Plans
+            .AsNoTracking()
+            .Where(p => p.ApplicationId == applicationId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id)
+            .ToListAsync();
+
+        return rows.Select(p => new PlanHistoryResponse
+        {
+            Id = p.Id,
+            CreatedAt = p.CreatedAt,
+            Plan = ApplicationTypeNames.Display(p.Type),
+            StartDate = p.StartDate,
+            ExpirationDate = p.ExpirationDate,
+            DaysLeft = p.ExpirationDate.HasValue ? (p.ExpirationDate.Value.Date - today).Days : null
+        }).ToList();
+    }
+
     private static PlanResponse ToResponse(Domain.Entities.Application a, DateTime today) => new()
     {
         ApplicationId = a.Id,

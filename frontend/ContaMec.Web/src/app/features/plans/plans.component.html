@@ -70,7 +70,71 @@
     [sortResetToken]="sortResetToken"
     [loading]="loading"
     (activatePlan)="openActivationModal($event)"
+    (viewHistory)="openHistory($event)"
   ></app-plan-list>
+
+  <div class="plans-modal-backdrop" *ngIf="historyTarget">
+    <section class="plans-modal plans-modal--wide" role="dialog" aria-modal="true" aria-labelledby="history-modal-title">
+      <header class="plans-modal__header">
+        <h3 id="history-modal-title" class="plans-modal__title">Historial de planes</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar" (click)="closeHistory()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="plans-modal__meta">
+        <div class="plans-modal__meta-row plans-modal__meta-row--inline">
+          <span class="plans-modal__meta-label">Empresa:</span>
+          <span class="plans-modal__meta-value">{{ historyTarget.applicationName || ('#' + historyTarget.applicationId) }}</span>
+        </div>
+      </div>
+
+      <div class="plans-modal__loading" *ngIf="historyLoading">Cargando historial...</div>
+      <div class="plans-modal__error" *ngIf="historyError">{{ historyError }}</div>
+      <div class="plans-modal__loading" *ngIf="!historyLoading && !historyError && historyItems.length === 0">
+        La empresa no tiene planes registrados.
+      </div>
+
+      <div class="plans-modal__table-wrap" *ngIf="!historyLoading && !historyError && historyItems.length > 0">
+        <table class="plans-modal__table">
+          <thead>
+            <tr>
+              <th class="plans-modal__center">Activado el</th>
+              <th class="plans-modal__center">Plan</th>
+              <th class="plans-modal__center">Inicio</th>
+              <th class="plans-modal__center">Vence</th>
+              <th class="plans-modal__center">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of historyItems">
+              <td class="plans-modal__center">{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="plans-modal__center">{{ item.plan || '-' }}</td>
+              <td class="plans-modal__center">{{ item.startDate ? (item.startDate | date: 'dd/MM/yyyy') : '-' }}</td>
+              <td class="plans-modal__center">{{ item.expirationDate ? (item.expirationDate | date: 'dd/MM/yyyy') : '-' }}</td>
+              <td class="plans-modal__center">
+                <span
+                  *ngIf="item.daysLeft !== null && item.daysLeft !== undefined; else noDaysLeft"
+                  class="plans-modal__days"
+                  [ngClass]="'plans-modal__days--' + daysTone(item.daysLeft)"
+                >{{ daysLabel(item.daysLeft) }}</span>
+                <ng-template #noDaysLeft>-</ng-template>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5">Total registros: {{ historyItems.length }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="plans-modal__actions">
+        <button mat-button type="button" (click)="closeHistory()">Cerrar</button>
+      </div>
+    </section>
+  </div>
 
   <div class="plans-modal-backdrop" *ngIf="activationTarget">
     <section class="plans-modal" role="dialog" aria-modal="true" aria-labelledby="activation-modal-title">

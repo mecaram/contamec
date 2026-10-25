@@ -40,6 +40,11 @@ public class PlansController(IPlanService planService) : ControllerBase
     [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLocalities() => Ok(await planService.GetLocalitiesAsync());
 
+    /// <summary>Historial de planes activados para la empresa, del más reciente al más antiguo.</summary>
+    [HttpGet("{applicationId:int}/history")]
+    [ProducesResponseType(typeof(List<PlanHistoryResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetHistory(int applicationId) => Ok(await planService.GetHistoryAsync(applicationId));
+
     /// <summary>Activa la empresa y sus usuarios y le asigna el plan Demo por 7 días más.</summary>
     [HttpPost("{applicationId:int}/demo")]
     [ProducesResponseType(typeof(PlanResponse), StatusCodes.Status200OK)]
