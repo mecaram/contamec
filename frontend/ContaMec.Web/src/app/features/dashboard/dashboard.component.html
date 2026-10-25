@@ -39,8 +39,20 @@
     </button>
 
     <section class="dashboard__section dashboard__indicators" aria-labelledby="dashboard-indicators">
-      <h2 class="dashboard__section-title" id="dashboard-indicators">Flujo de Fondos</h2>
+      <h2 class="dashboard__section-title" id="dashboard-indicators">
+        <button
+          class="dashboard__section-toggle"
+          type="button"
+          (click)="toggleSection('funds')"
+          [attr.aria-expanded]="!isCollapsed('funds')"
+          aria-controls="dashboard-funds-body"
+        >
+          Flujo de Fondos
+          <span class="dashboard__section-chevron material-icons" aria-hidden="true">expand_more</span>
+        </button>
+      </h2>
 
+      <div class="dashboard__section-body" id="dashboard-funds-body" [hidden]="isCollapsed('funds')">
       <p class="dashboard__indicators-message" *ngIf="indicatorsLoading">Cargando indicadores...</p>
       <p class="dashboard__indicators-message dashboard__indicators-message--error" *ngIf="indicatorsError">{{ indicatorsError }}</p>
       <p class="dashboard__indicators-message" *ngIf="!indicatorsLoading && !indicatorsError && !activeClosure">
@@ -89,11 +101,25 @@
           </article>
         </div>
       </ng-container>
+      </div>
     </section>
 
     <section class="dashboard__section dashboard__section--statistics" aria-labelledby="dashboard-statistics">
-      <h2 class="dashboard__section-title" id="dashboard-statistics">Estadisticas</h2>
+      <h2 class="dashboard__section-title" id="dashboard-statistics">
+        <button
+          class="dashboard__section-toggle"
+          type="button"
+          (click)="toggleSection('statistics')"
+          [attr.aria-expanded]="!isCollapsed('statistics')"
+          aria-controls="dashboard-statistics-body"
+        >
+          Estadisticas
+          <span class="dashboard__section-chevron material-icons" aria-hidden="true">expand_more</span>
+        </button>
+      </h2>
 
+      <!-- Se oculta en lugar de quitarse, así los gráficos conservan el indicador y las casillas elegidas. -->
+      <div class="dashboard__section-body" id="dashboard-statistics-body" [hidden]="isCollapsed('statistics')">
       <p class="dashboard__indicators-message" *ngIf="indicatorsLoading">Cargando estadísticas...</p>
       <p class="dashboard__indicators-message dashboard__indicators-message--error" *ngIf="indicatorsError">
         No se pudieron cargar las estadísticas.
@@ -107,6 +133,7 @@
           <app-trends-chart [closures]="closures"></app-trends-chart>
         </article>
       </div>
+      </div>
     </section>
 
     <section
@@ -115,8 +142,20 @@
       [attr.aria-labelledby]="'dashboard-cat-' + i"
       [ngClass]="'dashboard__section--' + category.tone"
     >
-      <h2 class="dashboard__section-title" [id]="'dashboard-cat-' + i">{{ category.title }}</h2>
+      <h2 class="dashboard__section-title" [id]="'dashboard-cat-' + i">
+        <button
+          class="dashboard__section-toggle"
+          type="button"
+          (click)="toggleSection(category.title)"
+          [attr.aria-expanded]="!isCollapsed(category.title)"
+          [attr.aria-controls]="'dashboard-cat-body-' + i"
+        >
+          {{ category.title }}
+          <span class="dashboard__section-chevron material-icons" aria-hidden="true">expand_more</span>
+        </button>
+      </h2>
 
+      <div class="dashboard__section-body" [id]="'dashboard-cat-body-' + i" [hidden]="isCollapsed(category.title)">
       <div
         class="dashboard__grid"
         *ngIf="category.items.length > 0; else emptyCategory"
@@ -142,6 +181,7 @@
       <ng-template #emptyCategory>
         <div class="dashboard__empty" aria-hidden="true"></div>
       </ng-template>
+      </div>
     </section>
   </main>
 

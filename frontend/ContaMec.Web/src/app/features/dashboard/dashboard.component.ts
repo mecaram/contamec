@@ -61,6 +61,17 @@ export class DashboardComponent implements OnInit {
     this.menuOpen = false;
   }
 
+  /** Grupos de tarjetas contraídos. Al abrir el dashboard están todos expandidos. */
+  private readonly collapsedSections = new Set<string>();
+
+  isCollapsed(section: string): boolean {
+    return this.collapsedSections.has(section);
+  }
+
+  toggleSection(section: string): void {
+    if (!this.collapsedSections.delete(section)) this.collapsedSections.add(section);
+  }
+
   logout(): void {
     this.auth.logout();
     void this.router.navigateByUrl('/login');

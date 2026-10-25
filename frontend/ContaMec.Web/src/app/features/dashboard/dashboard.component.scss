@@ -115,6 +115,40 @@
   text-transform: uppercase;
 }
 
+// El título del grupo es un botón que lo expande o contrae; hereda el color y el estilo del título.
+.dashboard__section-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.dashboard__section-chevron {
+  font-size: 1.35rem;
+  transition: transform 0.15s ease;
+
+  [aria-expanded='false'] > & {
+    transform: rotate(-90deg);
+  }
+}
+
+.dashboard__section-body[hidden] {
+  display: none;
+}
+
 .dashboard__section {
   .dashboard__section-title {
     position: relative;
