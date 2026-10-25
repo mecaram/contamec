@@ -60,6 +60,12 @@ const routes: Routes = [
       import('./features/applications/applications.module').then((m) => m.ApplicationsModule)
   },
   {
+    path: 'planes',
+    canActivate: [AuthGuard],
+    loadChildren: () =>
+      import('./features/plans/plans.module').then((m) => m.PlansModule)
+  },
+  {
     path: 'plantillas-correo',
     canActivate: [AuthGuard],
     loadChildren: () =>

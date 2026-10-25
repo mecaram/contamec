@@ -99,6 +99,7 @@ export class DashboardComponent implements OnInit {
         { name: 'Cuentas de pago', icon: 'credit_card', route: '/cuentas-pago' },
         { name: 'Usuarios', icon: 'people', route: '/usuarios' },
         { name: 'Aplicaciones', icon: 'business', route: '/aplicaciones', superAdminOnly: true },
+        { name: 'Planes', icon: 'card_membership', route: '/planes', superAdminOnly: true },
         { name: 'Plantillas de correo', icon: 'mail', route: '/plantillas-correo', superAdminOnly: true }
       ]
     },

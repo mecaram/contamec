@@ -1,0 +1,217 @@
+.plan-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.plan-list__loading,
+.plan-list__empty {
+  padding: 1rem;
+  border-radius: 10px;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+th,
+td {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+th {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.75);
+  background: #f8fafc;
+}
+
+.plan-list__sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.plan-list__sortable span {
+  display: inline-block;
+  width: 1rem;
+  text-align: center;
+  color: #475569;
+}
+
+.plan-list__whatsapp {
+  color: #15803d;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.plan-list__whatsapp:hover {
+  text-decoration: underline;
+}
+
+.plan-list__actions {
+  white-space: nowrap;
+}
+
+// En el celular no aplica: cada dato va alineado a la derecha de su etiqueta (.plan-list__table td).
+.plan-list__center {
+  text-align: center;
+}
+
+.plan-list__footer td {
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.plan-list__pagination {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.plan-list__pagination-label {
+  min-width: 7.5rem;
+  text-align: center;
+  color: #334155;
+  font-weight: 600;
+}
+
+.plan-list__mobile-sort {
+  display: none;
+}
+
+// En el celular cada fila se muestra como una tarjeta, con el nombre de la columna junto a cada dato.
+// Con 8 columnas la tabla tampoco entra en una tablet, por eso el corte es más ancho que en las demás listas.
+@media (max-width: 60rem) {
+  .plan-list__mobile-sort {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .plan-list__mobile-sort-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .plan-list__mobile-sort-select {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.4rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.95rem;
+    background: #fff;
+    color: #0f172a;
+  }
+
+  .plan-list__table,
+  .plan-list__table tbody,
+  .plan-list__table tfoot,
+  .plan-list__table tr,
+  .plan-list__table td {
+    display: block;
+  }
+
+  .plan-list__table {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .plan-list__table thead {
+    display: none;
+  }
+
+  .plan-list__table tr {
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0.9rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  }
+
+  .plan-list__table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .plan-list__table td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-weight: 600;
+    color: #475569;
+    text-align: left;
+  }
+
+  .plan-list__table td:last-child {
+    border-bottom: 0;
+  }
+
+  .plan-list__table td:empty {
+    display: none;
+  }
+
+  .plan-list__actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .plan-list__footer td {
+    background: transparent;
+  }
+
+  .plan-list__pagination {
+    justify-content: center;
+  }
+}
+
+// Plan y vencimiento: verde vigente, ámbar si vence en los próximos 7 días, rojo vencido.
+.plan-list__badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.plan-list__badge--demo {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.plan-list__badge--pro {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.plan-list__days {
+  display: block;
+  font-size: 0.8rem;
+  color: #15803d;
+}
+
+.plan-list__days--soon {
+  color: #b45309;
+}
+
+.plan-list__days--expired {
+  color: #b91c1c;
+  font-weight: 600;
+}

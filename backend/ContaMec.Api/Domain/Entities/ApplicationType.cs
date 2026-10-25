@@ -13,3 +13,14 @@ public enum ApplicationType
     [PgName("Pro+")]
     ProPlus
 }
+
+public static class ApplicationTypeNames
+{
+    /// <summary>Nombre del plan como figura en el enum ApplicationTypes de la base; null si la empresa no tiene plan.</summary>
+    public static string? Display(ApplicationType? type) => type switch
+    {
+        ApplicationType.Demo => "Demo",
+        ApplicationType.ProPlus => "Pro+",
+        _ => null
+    };
+}

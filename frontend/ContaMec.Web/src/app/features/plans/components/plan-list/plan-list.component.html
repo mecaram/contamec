@@ -1,0 +1,84 @@
+<div class="plan-list">
+  <div class="plan-list__loading" *ngIf="loading">Cargando planes...</div>
+
+  <div class="plan-list__empty" *ngIf="!loading && plans.length === 0">No hay empresas para los filtros seleccionados.</div>
+
+  <div class="plan-list__mobile-sort" *ngIf="!loading && plans.length > 0">
+    <label class="plan-list__mobile-sort-label" for="plan-mobile-sort">Ordenar por</label>
+    <select id="plan-mobile-sort" class="plan-list__mobile-sort-select" (change)="sortBy($any($event.target).value)">
+      <option *ngFor="let option of sortOptions" [value]="option.column" [selected]="option.column === sortColumn">
+        {{ option.label }}
+      </option>
+    </select>
+    <button
+      mat-icon-button
+      type="button"
+      (click)="toggleSortDirection()"
+      [attr.aria-label]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+      [title]="sortDirection === 'asc' ? 'Orden ascendente' : 'Orden descendente'"
+    >
+      <mat-icon>{{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+    </button>
+  </div>
+
+  <table class="plan-list__table mat-elevation-z1" *ngIf="!loading && plans.length > 0">
+    <thead>
+      <tr>
+        <th class="plan-list__sortable" (click)="setSort('applicationId')">ID <span>{{ sortIndicator('applicationId') }}</span></th>
+        <th class="plan-list__sortable" (click)="setSort('applicationName')">Empresa <span>{{ sortIndicator('applicationName') }}</span></th>
+        <th>Dirección</th>
+        <th>Localidad</th>
+        <th>WhatsApp</th>
+        <th class="plan-list__sortable plan-list__center" (click)="setSort('plan')">Plan <span>{{ sortIndicator('plan') }}</span></th>
+        <th class="plan-list__sortable plan-list__center" (click)="setSort('startDate')">Inicio del plan <span>{{ sortIndicator('startDate') }}</span></th>
+        <th class="plan-list__sortable plan-list__center" (click)="setSort('expirationDate')">Vence <span>{{ sortIndicator('expirationDate') }}</span></th>
+        <th class="plan-list__sortable plan-list__center" (click)="setSort('active')">Activa <span>{{ sortIndicator('active') }}</span></th>
+        <th class="plan-list__center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of pagedPlans">
+        <td data-label="ID">{{ row.applicationId }}</td>
+        <td data-label="Empresa">{{ row.applicationName || '-' }}</td>
+        <td data-label="Dirección">{{ row.address || '-' }}</td>
+        <td data-label="Localidad">{{ row.locality || '-' }}</td>
+        <td data-label="WhatsApp">
+          <a
+            *ngIf="row.whatsApp; else noWhatsApp"
+            class="plan-list__whatsapp"
+            [href]="'https://wa.me/' + row.whatsApp"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Abrir chat de WhatsApp"
+          >{{ formatWhatsApp(row.whatsApp) }}</a>
+          <ng-template #noWhatsApp>-</ng-template>
+        </td>
+        <td class="plan-list__center" data-label="Plan">
+          <span class="plan-list__badge" [ngClass]="planClass(row)">{{ row.plan || 'Sin plan' }}</span>
+        </td>
+        <td class="plan-list__center" data-label="Inicio del plan">{{ row.startDate ? (row.startDate | date: 'dd/MM/yyyy') : '-' }}</td>
+        <td class="plan-list__center" data-label="Vence">
+          <ng-container *ngIf="row.expirationDate && row.daysLeft !== null && row.daysLeft !== undefined; else noExpiration">
+            {{ row.expirationDate | date: 'dd/MM/yyyy' }}
+            <span class="plan-list__days" [ngClass]="daysClass(row.daysLeft)">{{ daysLabel(row.daysLeft) }}</span>
+          </ng-container>
+          <ng-template #noExpiration>Sin vencimiento</ng-template>
+        </td>
+        <td class="plan-list__center" data-label="Activa">{{ row.active ? 'Sí' : 'No' }}</td>
+        <!-- Acciones a definir. -->
+        <td class="plan-list__actions plan-list__center"></td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="plan-list__footer">
+        <td colspan="10">Total registros: {{ totalRecords }}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="plan-list__pagination" *ngIf="!loading && plans.length > pageSize">
+    <button mat-stroked-button type="button" (click)="goToPreviousPage()" [disabled]="!canGoPrevious">Anterior</button>
+    <span class="plan-list__pagination-label">{{ pageLabel }}</span>
+    <button mat-stroked-button type="button" (click)="goToNextPage()" [disabled]="!canGoNext">Siguiente</button>
+  </div>
+</div>

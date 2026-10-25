@@ -65,7 +65,7 @@ public class AuthService(
             Username = name,
             ApplicationId = application.Id,
             ApplicationName = application.Name,
-            PlanName = PlanName(application.Type),
+            PlanName = Domain.Entities.ApplicationTypeNames.Display(application.Type),
             PlanExpirationDate = application.ApplicationExpirationDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
             Role = roleName,
             PreviousLoginAt = previousLoginAt
@@ -127,14 +127,6 @@ public class AuthService(
         roleName != UserRoleNames.SuperAdministrator
         && application.ApplicationExpirationDate is { } expiresAt
         && ArgentinaClock.Now.Date > expiresAt.Date;
-
-    /// <summary>Nombre del plan como figura en el enum ApplicationTypes de la base.</summary>
-    private static string? PlanName(Domain.Entities.ApplicationType? type) => type switch
-    {
-        Domain.Entities.ApplicationType.Demo => "Demo",
-        Domain.Entities.ApplicationType.ProPlus => "Pro+",
-        _ => null
-    };
 
     private bool VerifyPassword(string password, string storedHash)
     {

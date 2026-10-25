@@ -1,0 +1,69 @@
+<div class="plans-page">
+  <header class="plans-page__header">
+    <div>
+      <h1 class="plans-page__title">Planes</h1>
+      <p class="plans-page__subtitle">Consulte el plan y el vencimiento de todas las empresas.</p>
+    </div>
+    <div class="plans-page__header-actions">
+      <button mat-stroked-button color="primary" type="button" routerLink="/dashboard">
+        <mat-icon>arrow_back</mat-icon>
+        Volver al menú principal
+      </button>
+    </div>
+  </header>
+
+  <section class="plans-filters mat-elevation-z1">
+    <form [formGroup]="filterForm" class="plans-filters__form">
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-id">ID</label>
+        <input id="filter-id" class="plans-field__control" type="number" formControlName="applicationId" (change)="search()" />
+      </div>
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-name">Empresa</label>
+        <input id="filter-name" class="plans-field__control" formControlName="applicationName" (change)="search()" />
+      </div>
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-locality">Localidad</label>
+        <select id="filter-locality" class="plans-field__control" formControlName="locality" (change)="search()">
+          <option value="">Todas</option>
+          <option *ngFor="let locality of localities" [value]="locality">{{ locality }}</option>
+        </select>
+      </div>
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-plan">Plan</label>
+        <select id="filter-plan" class="plans-field__control" formControlName="plan" (change)="search()">
+          <option value="">Todos</option>
+          <option value="Demo">Demo</option>
+          <option value="ProPlus">Pro+</option>
+          <option value="none">Sin plan</option>
+        </select>
+      </div>
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-active">Estado</label>
+        <select id="filter-active" class="plans-field__control" formControlName="active" (change)="search()">
+          <option value="">Todas</option>
+          <option value="true">Activas</option>
+          <option value="false">Inactivas</option>
+        </select>
+      </div>
+      <div class="plans-field">
+        <label class="plans-field__label" for="filter-expiration">Vencimiento</label>
+        <select id="filter-expiration" class="plans-field__control" formControlName="expiration" (change)="search()">
+          <option value="">Todos</option>
+          <option value="current">Vigentes</option>
+          <option value="expired">Vencidos</option>
+          <option value="none">Sin vencimiento</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="plans-filters__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="search()">Buscar</button>
+      <button mat-button type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </section>
+
+  <div class="plans-page__error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <app-plan-list [plans]="plans" [sortResetToken]="sortResetToken" [loading]="loading"></app-plan-list>
+</div>
