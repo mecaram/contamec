@@ -15,6 +15,12 @@
   color: #64748b;
 }
 
+.closures-chart__note {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+}
+
 // Chart.js toma el tamaño del contenedor (maintainAspectRatio: false).
 .closures-chart__canvas {
   position: relative;
@@ -22,6 +28,50 @@
 
   @media (max-width: 600px) {
     height: 16rem;
+  }
+}
+
+.closures-chart__references {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.closures-chart__reference {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8rem;
+  color: #475569;
+  cursor: pointer;
+
+  input {
+    margin: 0;
+    accent-color: #115e59;
+    cursor: pointer;
+  }
+}
+
+// Muestra de la serie: barra, línea continua (flujo neto) o punteada (promedios). Toma el color de `color`.
+.closures-chart__swatch {
+  display: inline-block;
+  width: 1.25rem;
+
+  &--bar {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 2px;
+    background-color: currentColor;
+  }
+
+  &--line {
+    border-top: 2px solid currentColor;
+  }
+
+  &--dashed {
+    border-top: 2px dashed currentColor;
   }
 }
 

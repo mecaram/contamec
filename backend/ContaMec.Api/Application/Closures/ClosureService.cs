@@ -49,7 +49,8 @@ SELECT c.""Id"",
            WHEN c.""isClosed"" THEN c.""Result""
            ELSE COALESCE(p.""PreviousBalance"", 0) + COALESCE(i.""Incomes"", 0) - COALESCE(e.""Expenses"", 0)
        END AS ""Result"",
-       c.""ClosureNumber""
+       c.""ClosureNumber"",
+       pm.""PredominantMonth""
 FROM ""{closureTableName}"" c
 LEFT JOIN LATERAL (
     SELECT prev.""Result"" AS ""PreviousBalance""
@@ -74,6 +75,24 @@ LEFT JOIN LATERAL (
     FROM ""{closureBalancesTableName}"" x
     WHERE x.""ClosureId"" = c.""Id""
 ) b ON TRUE
+LEFT JOIN LATERAL (
+    -- Mes (yyyy-MM, por fecha de emisión) con más ingresos y egresos del cierre; ante empate, el más reciente. Las fechas se guardan
+    -- como hora de Argentina marcada como UTC, por eso se toman en UTC para no correr el mes.
+    SELECT m.""Month"" AS ""PredominantMonth""
+    FROM (
+        SELECT to_char(x.""EmissionDate"" AT TIME ZONE 'UTC', 'YYYY-MM') AS ""Month""
+        FROM ""{incomesTableName}"" x
+        WHERE x.""ClosureId"" = c.""Id""
+        UNION ALL
+        SELECT to_char(x.""EmissionDate"" AT TIME ZONE 'UTC', 'YYYY-MM')
+        FROM ""{expensesTableName}"" x
+        WHERE x.""ClosureId"" = c.""Id""
+    ) m
+    WHERE m.""Month"" IS NOT NULL
+    GROUP BY m.""Month""
+    ORDER BY COUNT(*) DESC, m.""Month"" DESC
+    LIMIT 1
+) pm ON TRUE
 WHERE c.""ApplicationId"" = @applicationId
   AND (@id IS NULL OR c.""Id"" = @id)
   AND (@closureNumber IS NULL OR c.""ClosureNumber"" = @closureNumber)
@@ -103,7 +122,8 @@ ORDER BY c.""Id"" DESC";
                     CloseDate = reader.IsDBNull(6) ? null : DbDateTime.FromDb(reader.GetDateTime(6)),
                     IsClosed = reader.IsDBNull(7) ? null : reader.GetBoolean(7),
                     Result = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-                    ClosureNumber = reader.IsDBNull(9) ? null : Convert.ToInt32(reader.GetValue(9))
+                    ClosureNumber = reader.IsDBNull(9) ? null : Convert.ToInt32(reader.GetValue(9)),
+                    PredominantMonth = reader.IsDBNull(10) ? null : reader.GetString(10)
                 });
             }
         }

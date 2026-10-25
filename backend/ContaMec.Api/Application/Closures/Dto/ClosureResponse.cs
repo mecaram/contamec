@@ -14,4 +14,6 @@ public class ClosureResponse
     public DateTime? CloseDate { get; set; }
     public bool? IsClosed { get; set; }
     public decimal? Result { get; set; }
+    /// <summary>Mes (yyyy-MM) en que el cierre tuvo más ingresos y egresos; null si no tiene movimientos.</summary>
+    public string? PredominantMonth { get; set; }
 }

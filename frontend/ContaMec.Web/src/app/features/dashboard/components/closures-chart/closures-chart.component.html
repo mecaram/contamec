@@ -1,5 +1,10 @@
 <h3 class="closures-chart__title">Ingresos vs. Egresos</h3>
-<p class="closures-chart__subtitle">Ultimos {{ shown.length }} cierres, con el flujo neto de cada uno.</p>
+<p class="closures-chart__subtitle">
+  Ultimos {{ shown.length }} cierres, con el flujo neto de cada uno.
+  <span class="closures-chart__note" *ngIf="hasReferences && hasActive">
+    Los promedios no incluyen el cierre activo.
+  </span>
+</p>
 
 <div class="closures-chart__canvas" *ngIf="shown.length > 0; else noClosures">
   <canvas
@@ -12,6 +17,18 @@
     role="img"
     aria-label="Gráfico de ingresos, egresos y flujo neto de los últimos cierres"
   ></canvas>
+</div>
+
+<div class="closures-chart__references" *ngIf="shown.length > 0">
+  <label class="closures-chart__reference" *ngFor="let item of toggles">
+    <input type="checkbox" [checked]="item.visible" (change)="toggleSeries(item)" />
+    <span
+      class="closures-chart__swatch closures-chart__swatch--{{ item.swatch }}"
+      [style.color]="item.color"
+      aria-hidden="true"
+    ></span>
+    {{ item.label }}
+  </label>
 </div>
 
 <ng-template #noClosures>

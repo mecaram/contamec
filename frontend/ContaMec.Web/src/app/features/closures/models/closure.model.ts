@@ -10,4 +10,6 @@ export interface Closure {
   closeDate?: string | null;
   isClosed?: boolean | null;
   result?: number | null;
+  /** Mes (yyyy-MM) en que el cierre tuvo más ingresos y egresos; null si no tiene movimientos. */
+  predominantMonth?: string | null;
 }
