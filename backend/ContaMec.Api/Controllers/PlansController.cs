@@ -39,4 +39,14 @@ public class PlansController(IPlanService planService) : ControllerBase
     [HttpGet("localities")]
     [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetLocalities() => Ok(await planService.GetLocalitiesAsync());
+
+    /// <summary>Activa la empresa y sus usuarios y le asigna el plan Demo por 7 días más.</summary>
+    [HttpPost("{applicationId:int}/demo")]
+    [ProducesResponseType(typeof(PlanResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ActivateDemo(int applicationId)
+    {
+        var result = await planService.ActivateDemoAsync(applicationId);
+        return result is null ? NotFound() : Ok(result);
+    }
 }

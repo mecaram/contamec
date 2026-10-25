@@ -99,3 +99,90 @@ app-plan-list {
   background: #fef2f2;
   color: #b91c1c;
 }
+
+.plans-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(2, 6, 23, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.plans-modal {
+  width: min(30rem, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.3);
+}
+
+.plans-modal__header {
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.plans-modal__title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #1e293b;
+}
+
+.plans-modal__meta {
+  padding: 0.75rem 1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.plans-modal__meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+}
+
+.plans-modal__meta-label {
+  width: 110px;
+  min-width: 110px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.plans-modal__meta-value {
+  font-weight: 600;
+  color: #1e293b;
+  overflow-wrap: anywhere;
+}
+
+.plans-modal__hint,
+.plans-modal__error {
+  margin: 0 1rem 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+}
+
+.plans-modal__hint {
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.plans-modal__error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.plans-modal__actions {
+  padding: 0 1rem 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

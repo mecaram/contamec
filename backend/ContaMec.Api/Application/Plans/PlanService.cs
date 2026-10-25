@@ -55,23 +55,59 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
         var rows = await query
             .OrderBy(a => a.Name)
             .ThenBy(a => a.Id)
-            .Select(a => new { a.Id, a.Name, a.Address, a.Locality, a.WhatsApp, a.Active, a.Type, a.ApplicationTypeDate, a.ApplicationExpirationDate })
             .ToListAsync();
 
-        return rows.Select(a => new PlanResponse
-        {
-            ApplicationId = a.Id,
-            ApplicationName = a.Name,
-            Address = a.Address,
-            Locality = a.Locality,
-            WhatsApp = a.WhatsApp,
-            Active = a.Active,
-            Plan = ApplicationTypeNames.Display(a.Type),
-            StartDate = a.ApplicationTypeDate,
-            ExpirationDate = a.ApplicationExpirationDate,
-            DaysLeft = a.ApplicationExpirationDate.HasValue ? (a.ApplicationExpirationDate.Value.Date - today).Days : null
-        }).ToList();
+        return rows.Select(a => ToResponse(a, today)).ToList();
     }
+
+    private const int DemoDays = 7;
+
+    /// <summary>
+    /// Activa la empresa y sus usuarios y le asigna el plan Demo por <see cref="DemoDays"/> días más:
+    /// sin vencimiento o vencido, desde hoy; vigente (vence hoy o después), desde su vencimiento actual.
+    /// </summary>
+    public async Task<PlanResponse?> ActivateDemoAsync(int applicationId)
+    {
+        var application = await dbContext.Applications
+            .Include(a => a.Users)
+            .FirstOrDefaultAsync(a => a.Id == applicationId);
+        if (application is null)
+            return null;
+
+        var now = ArgentinaClock.Now;
+        var expiresAt = application.ApplicationExpirationDate;
+        var isCurrent = expiresAt.HasValue && expiresAt.Value.Date >= now.Date;
+
+        // El inicio del plan solo cambia si empieza uno nuevo; al extender una Demo vigente se conserva.
+        if (application.Type != ApplicationType.Demo || !isCurrent)
+            application.ApplicationTypeDate = now;
+
+        application.Type = ApplicationType.Demo;
+        application.ApplicationExpirationDate = isCurrent ? expiresAt!.Value.AddDays(DemoDays) : now.AddDays(DemoDays);
+        application.Active = true;
+        application.Guid ??= System.Guid.NewGuid().ToString();
+        foreach (var user in application.Users)
+            user.IsActive = true;
+
+        // Un único SaveChanges: empresa, usuarios y plan se guardan juntos o no se guarda nada.
+        await dbContext.SaveChangesAsync();
+
+        return ToResponse(application, now.Date);
+    }
+
+    private static PlanResponse ToResponse(Domain.Entities.Application a, DateTime today) => new()
+    {
+        ApplicationId = a.Id,
+        ApplicationName = a.Name,
+        Address = a.Address,
+        Locality = a.Locality,
+        WhatsApp = a.WhatsApp,
+        Active = a.Active,
+        Plan = ApplicationTypeNames.Display(a.Type),
+        StartDate = a.ApplicationTypeDate,
+        ExpirationDate = a.ApplicationExpirationDate,
+        DaysLeft = a.ApplicationExpirationDate.HasValue ? (a.ApplicationExpirationDate.Value.Date - today).Days : null
+    };
 
     /// <summary>Localidades distintas de las empresas (sin espacios sobrantes ni vacías), en orden alfabético.</summary>
     public async Task<List<string>> GetLocalitiesAsync()

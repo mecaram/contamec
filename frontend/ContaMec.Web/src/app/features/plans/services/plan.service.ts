@@ -21,6 +21,10 @@ export class PlanService {
     return this.http.get<string[]>(`${this.plansUrl}/localities`, { headers: this.getAuthHeaders() });
   }
 
+  activateDemo(applicationId: number): Observable<Plan> {
+    return this.http.post<Plan>(`${this.plansUrl}/${applicationId}/demo`, null, { headers: this.getAuthHeaders() });
+  }
+
   private buildSearchParams(filters: PlanSearch): HttpParams {
     let params = new HttpParams();
     if (filters.applicationId !== null && filters.applicationId !== undefined) params = params.set('applicationId', String(filters.applicationId));

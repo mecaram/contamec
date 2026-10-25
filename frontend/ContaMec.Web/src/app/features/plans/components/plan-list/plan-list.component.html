@@ -65,8 +65,11 @@
           <ng-template #noExpiration>Sin vencimiento</ng-template>
         </td>
         <td class="plan-list__center" data-label="Activa">{{ row.active ? 'Sí' : 'No' }}</td>
-        <!-- Acciones a definir. -->
-        <td class="plan-list__actions plan-list__center"></td>
+        <td class="plan-list__actions plan-list__center" data-label="Acciones">
+          <button mat-icon-button type="button" title="Activar Plan Demo" aria-label="Activar Plan Demo" (click)="activateDemo.emit(row)">
+            <mat-icon>rocket_launch</mat-icon>
+          </button>
+        </td>
       </tr>
     </tbody>
     <tfoot>

@@ -6,4 +6,5 @@ public interface IPlanService
 {
     Task<List<PlanResponse>> SearchAsync(PlanSearchRequest request);
     Task<List<string>> GetLocalitiesAsync();
+    Task<PlanResponse?> ActivateDemoAsync(int applicationId);
 }
