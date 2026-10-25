@@ -112,6 +112,39 @@ public class PlanService(ContaMecDbContext dbContext) : IPlanService
         return ToResponse(application, now.Date);
     }
 
+    /// <summary>
+    /// Elimina el último plan registrado de la empresa y le vuelve a asignar el anterior (plan, inicio y vencimiento);
+    /// si no queda ninguno, la empresa queda sin plan. No cambia si la empresa o sus usuarios están activos.
+    /// </summary>
+    /// <exception cref="ArgumentException">La empresa no tiene planes registrados.</exception>
+    public async Task<PlanResponse?> DeleteLastAsync(int applicationId)
+    {
+        var application = await dbContext.Applications.FirstOrDefaultAsync(a => a.Id == applicationId);
+        if (application is null)
+            return null;
+
+        // El último y el anterior, con el mismo orden que el historial.
+        var lastTwo = await dbContext.Plans
+            .Where(p => p.ApplicationId == applicationId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id)
+            .Take(2)
+            .ToListAsync();
+        if (lastTwo.Count == 0)
+            throw new ArgumentException("La empresa no tiene planes registrados para eliminar.");
+
+        var previous = lastTwo.ElementAtOrDefault(1);
+        application.Plan = previous?.Type;
+        application.PlanStartDate = previous?.StartDate;
+        application.PlanExpirationDate = previous?.ExpirationDate;
+        dbContext.Plans.Remove(lastTwo[0]);
+
+        // Un único SaveChanges: el registro se elimina y la empresa vuelve al plan anterior, o no cambia nada.
+        await dbContext.SaveChangesAsync();
+
+        return ToResponse(application, ArgentinaClock.Now.Date);
+    }
+
     /// <summary>Planes activados para la empresa, del más reciente al más antiguo.</summary>
     public async Task<List<PlanHistoryResponse>> GetHistoryAsync(int applicationId)
     {

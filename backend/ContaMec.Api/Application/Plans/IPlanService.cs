@@ -9,4 +9,5 @@ public interface IPlanService
     Task<PlanResponse?> ActivateDemoAsync(int applicationId);
     Task<PlanResponse?> ActivateProPlusAsync(int applicationId);
     Task<List<PlanHistoryResponse>> GetHistoryAsync(int applicationId);
+    Task<PlanResponse?> DeleteLastAsync(int applicationId);
 }

@@ -45,6 +45,24 @@ public class PlansController(IPlanService planService) : ControllerBase
     [ProducesResponseType(typeof(List<PlanHistoryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetHistory(int applicationId) => Ok(await planService.GetHistoryAsync(applicationId));
 
+    /// <summary>Elimina el último plan de la empresa y le vuelve a asignar el anterior, o la deja sin plan si no hay.</summary>
+    [HttpDelete("{applicationId:int}/last")]
+    [ProducesResponseType(typeof(PlanResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteLast(int applicationId)
+    {
+        try
+        {
+            var result = await planService.DeleteLastAsync(applicationId);
+            return result is null ? NotFound() : Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     /// <summary>Activa la empresa y sus usuarios y le asigna el plan Demo por 7 días más.</summary>
     [HttpPost("{applicationId:int}/demo")]
     [ProducesResponseType(typeof(PlanResponse), StatusCodes.Status200OK)]

@@ -26,6 +26,10 @@ export class PlanService {
     return this.http.get<PlanHistory[]>(`${this.plansUrl}/${applicationId}/history`, { headers: this.getAuthHeaders() });
   }
 
+  deleteLastPlan(applicationId: number): Observable<Plan> {
+    return this.http.delete<Plan>(`${this.plansUrl}/${applicationId}/last`, { headers: this.getAuthHeaders() });
+  }
+
   activatePlan(applicationId: number, kind: PlanActivationKind): Observable<Plan> {
     const segment = kind === 'proPlus' ? 'pro-plus' : 'demo';
     return this.http.post<Plan>(`${this.plansUrl}/${applicationId}/${segment}`, null, { headers: this.getAuthHeaders() });

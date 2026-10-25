@@ -70,8 +70,48 @@
     [sortResetToken]="sortResetToken"
     [loading]="loading"
     (activatePlan)="openActivationModal($event)"
+    (deleteLastPlan)="openDeleteModal($event)"
     (viewHistory)="openHistory($event)"
   ></app-plan-list>
+
+  <div class="plans-modal-backdrop" *ngIf="deleteTarget">
+    <section class="plans-modal" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+      <header class="plans-modal__header">
+        <h3 id="delete-modal-title" class="plans-modal__title">Eliminar último plan</h3>
+        <button mat-icon-button type="button" aria-label="Cerrar" (click)="closeDeleteModal()" [disabled]="deleteSaving">
+          <mat-icon>close</mat-icon>
+        </button>
+      </header>
+
+      <div class="plans-modal__meta">
+        <div class="plans-modal__meta-row">
+          <span class="plans-modal__meta-label">Empresa:</span>
+          <span class="plans-modal__meta-value">{{ deleteTarget.applicationName || ('#' + deleteTarget.applicationId) }}</span>
+        </div>
+        <div class="plans-modal__meta-row">
+          <span class="plans-modal__meta-label">Plan actual:</span>
+          <span class="plans-modal__meta-value">{{ deleteTarget.plan || 'Sin plan' }}</span>
+        </div>
+        <div class="plans-modal__meta-row">
+          <span class="plans-modal__meta-label">Vence:</span>
+          <span class="plans-modal__meta-value">{{ deleteTarget.expirationDate ? (deleteTarget.expirationDate | date: 'dd/MM/yyyy') : 'Sin vencimiento' }}</span>
+        </div>
+      </div>
+
+      <div class="plans-modal__hint plans-modal__hint--warning">
+        ¿Confirma que desea eliminar el último plan registrado? La empresa volverá al plan anterior, o quedará sin plan si no hay otro.
+      </div>
+
+      <div class="plans-modal__error" *ngIf="deleteError">{{ deleteError }}</div>
+
+      <div class="plans-modal__actions">
+        <button mat-flat-button color="warn" type="button" (click)="confirmDeleteLastPlan()" [disabled]="deleteSaving">
+          {{ deleteSaving ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+        <button mat-button type="button" (click)="closeDeleteModal()" [disabled]="deleteSaving">Cancelar</button>
+      </div>
+    </section>
+  </div>
 
   <div class="plans-modal-backdrop" *ngIf="historyTarget">
     <section class="plans-modal plans-modal--wide" role="dialog" aria-modal="true" aria-labelledby="history-modal-title">

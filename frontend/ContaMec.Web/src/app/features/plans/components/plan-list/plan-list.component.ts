@@ -29,6 +29,7 @@ export class PlanListComponent implements OnChanges {
   @Input() loading = false;
 
   @Output() activatePlan = new EventEmitter<{ plan: Plan; kind: PlanActivationKind }>();
+  @Output() deleteLastPlan = new EventEmitter<Plan>();
   @Output() viewHistory = new EventEmitter<Plan>();
 
   ngOnChanges(changes: SimpleChanges): void {

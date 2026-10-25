@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -32,6 +33,11 @@ export class PlansComponent implements OnInit {
   activationKind: PlanActivationKind = 'demo';
   activationSaving = false;
   activationError: string | null = null;
+
+  /** Empresa del modal Eliminar último plan; null si está cerrado. */
+  deleteTarget: Plan | null = null;
+  deleteSaving = false;
+  deleteError: string | null = null;
 
   /** Empresa del modal Historial de planes; null si está cerrado. */
   historyTarget: Plan | null = null;
@@ -140,6 +146,36 @@ export class PlansComponent implements OnInit {
         },
         error: () => {
           this.activationError = `No se pudo activar el plan ${this.activationLabel}.`;
+        }
+      });
+  }
+
+  openDeleteModal(plan: Plan): void {
+    this.deleteTarget = plan;
+    this.deleteError = null;
+  }
+
+  closeDeleteModal(): void {
+    if (this.deleteSaving) return;
+    this.deleteTarget = null;
+    this.deleteError = null;
+  }
+
+  confirmDeleteLastPlan(): void {
+    if (!this.deleteTarget || this.deleteSaving) return;
+    this.deleteSaving = true;
+    this.deleteError = null;
+    this.planService
+      .deleteLastPlan(this.deleteTarget.applicationId)
+      .pipe(finalize(() => (this.deleteSaving = false)))
+      .subscribe({
+        next: () => {
+          this.deleteTarget = null;
+          this.search();
+        },
+        error: (err: HttpErrorResponse) => {
+          // Las reglas las valida el backend: se muestra su mensaje (por ejemplo, que no hay planes registrados).
+          this.deleteError = err?.error?.message || 'No se pudo eliminar el último plan.';
         }
       });
   }

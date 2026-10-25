@@ -72,6 +72,9 @@
           <button mat-icon-button type="button" title="Activar Plan Pro+" aria-label="Activar Plan Pro+" (click)="activatePlan.emit({ plan: row, kind: 'proPlus' })">
             <mat-icon>workspace_premium</mat-icon>
           </button>
+          <button mat-icon-button type="button" title="Eliminar último plan" aria-label="Eliminar último plan" (click)="deleteLastPlan.emit(row)">
+            <mat-icon>delete</mat-icon>
+          </button>
           <button mat-icon-button type="button" title="Historial de planes" aria-label="Historial de planes" (click)="viewHistory.emit(row)">
             <mat-icon>history</mat-icon>
           </button>
