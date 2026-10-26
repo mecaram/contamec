@@ -85,6 +85,18 @@
             <mat-spinner *ngIf="isDownloading(row); else pdfIcon" class="expense-list__spinner" diameter="20"></mat-spinner>
             <ng-template #pdfIcon><mat-icon>picture_as_pdf</mat-icon></ng-template>
           </button>
+          <!-- El comprobante se puede ver también con el cierre cerrado. -->
+          <button
+            mat-icon-button
+            color="primary"
+            type="button"
+            (click)="onViewVoucher(row)"
+            [disabled]="!row.hasVoucher"
+            [attr.aria-label]="row.hasVoucher ? 'Ver comprobante' : 'Sin comprobante'"
+            [matTooltip]="row.hasVoucher ? 'Ver comprobante' : 'Sin comprobante'"
+          >
+            <mat-icon>receipt_long</mat-icon>
+          </button>
         </td>
       </tr>
     </tbody>

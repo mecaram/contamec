@@ -35,6 +35,7 @@ export class IncomeListComponent implements OnChanges {
   @Output() remove = new EventEmitter<Income>();
   @Output() copy = new EventEmitter<Income>();
   @Output() downloadOrder = new EventEmitter<Income>();
+  @Output() viewVoucher = new EventEmitter<Income>();
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.sortResetToken && !changes.sortResetToken.firstChange) {
@@ -103,6 +104,10 @@ export class IncomeListComponent implements OnChanges {
 
   onDownloadOrder(income: Income): void {
     this.downloadOrder.emit(income);
+  }
+
+  onViewVoucher(income: Income): void {
+    if (income.hasVoucher) this.viewVoucher.emit(income);
   }
 
   isDownloading(income: Income): boolean {

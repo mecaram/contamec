@@ -44,6 +44,8 @@ export class IncomesComponent implements OnInit {
     /** Subida o borrado del comprobante en curso: no se cierra la ventana hasta que termine. */
     voucherBusy: boolean;
   } | null = null;
+  /** Comprobante que se muestra en la ventana modal desde el listado. */
+  voucherViewer: { id: number; api: VoucherApi; subtitle: string | null } | null = null;
   /** Alta o edición en curso: hasta que responde el backend no se puede volver a guardar. */
   saving = false;
   /** Ingresos cuya Orden de Ingreso se está descargando desde el listado. */
@@ -359,6 +361,15 @@ export class IncomesComponent implements OnInit {
   closeSavedDialog(): void {
     if (this.savedDialog?.voucherBusy) return;
     this.savedDialog = null;
+  }
+
+  openVoucherViewer(income: Income): void {
+    const parts = [income.detail, income.accountName].filter((part): part is string => !!part);
+    this.voucherViewer = {
+      id: income.id,
+      api: this.incomesService.voucherApi(income.id),
+      subtitle: parts.length ? parts.join(' · ') : null
+    };
   }
 
   /** Descarga directa desde el listado: sin confirmación y sin tocar el ingreso. */

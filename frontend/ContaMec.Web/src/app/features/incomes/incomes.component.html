@@ -171,6 +171,7 @@
     (remove)="deleteIncome($event)"
     (copy)="openCopy($event)"
     (downloadOrder)="downloadOrder($event)"
+    (viewVoucher)="openVoucherViewer($event)"
   ></app-income-list>
 
   <div class="incomes-toast" *ngIf="notification" [ngClass]="'incomes-toast--' + notification.type">
@@ -225,4 +226,13 @@
       </div>
     </section>
   </div>
+
+  <app-voucher-viewer
+    *ngIf="voucherViewer"
+    [api]="voucherViewer.api"
+    [title]="'Comprobante del ingreso N.º ' + formatOrderNumber(voucherViewer.id)"
+    [subtitle]="voucherViewer.subtitle"
+    [downloadName]="'Comprobante_Ingreso_' + formatOrderNumber(voucherViewer.id)"
+    (closed)="voucherViewer = null"
+  ></app-voucher-viewer>
 </div>

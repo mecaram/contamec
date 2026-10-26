@@ -165,6 +165,7 @@
     (remove)="deleteExpense($event)"
     (copy)="openCopy($event)"
     (downloadOrder)="downloadOrder($event)"
+    (viewVoucher)="openVoucherViewer($event)"
   ></app-expense-list>
 
   <div class="expenses-toast" *ngIf="notification" [ngClass]="'expenses-toast--' + notification.type">
@@ -217,4 +218,13 @@
       </div>
     </section>
   </div>
+
+  <app-voucher-viewer
+    *ngIf="voucherViewer"
+    [api]="voucherViewer.api"
+    [title]="'Comprobante del egreso N.º ' + formatOrderNumber(voucherViewer.id)"
+    [subtitle]="voucherViewer.subtitle"
+    [downloadName]="'Comprobante_Egreso_' + formatOrderNumber(voucherViewer.id)"
+    (closed)="voucherViewer = null"
+  ></app-voucher-viewer>
 </div>

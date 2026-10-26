@@ -1,0 +1,48 @@
+<div class="voucher-viewer-backdrop" (click)="close()">
+  <section
+    class="voucher-viewer"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="voucher-viewer-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="voucher-viewer__header">
+      <div>
+        <h3 class="voucher-viewer__title" id="voucher-viewer-title">{{ title }}</h3>
+        <p class="voucher-viewer__subtitle" *ngIf="subtitle">{{ subtitle }}</p>
+      </div>
+      <button mat-icon-button type="button" (click)="close()" aria-label="Cerrar" matTooltip="Cerrar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <div class="voucher-viewer__body">
+      <div class="voucher-viewer__status" *ngIf="loading">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Cargando comprobante...</span>
+      </div>
+      <div class="voucher-viewer__error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
+
+      <ng-container *ngIf="!loading && !errorMessage && safeFileUrl">
+        <img *ngIf="isImage; else pdfView" class="voucher-viewer__image" [src]="safeFileUrl" alt="Comprobante" />
+        <ng-template #pdfView>
+          <iframe class="voucher-viewer__pdf" [src]="safeFileUrl" title="Comprobante en PDF"></iframe>
+          <!-- En algunos celulares el navegador no muestra PDF dentro de la página. -->
+          <p class="voucher-viewer__hint">Si el PDF no se ve, use Abrir en pestaña nueva o Descargar.</p>
+        </ng-template>
+      </ng-container>
+    </div>
+
+    <div class="voucher-viewer__actions">
+      <button mat-stroked-button color="primary" type="button" (click)="openInNewTab()" [disabled]="!fileUrl">
+        <mat-icon>open_in_new</mat-icon>
+        Abrir en pestaña nueva
+      </button>
+      <button mat-stroked-button color="primary" type="button" (click)="download()" [disabled]="!fileUrl">
+        <mat-icon>download</mat-icon>
+        Descargar
+      </button>
+      <button mat-button type="button" (click)="close()">Cerrar</button>
+    </div>
+  </section>
+</div>
