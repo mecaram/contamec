@@ -13,4 +13,6 @@ export interface Income {
   occurrenceType?: string | null;
   createdByUserId?: number | null;
   createdAt?: string | null;
+  /** Tiene comprobante adjunto; la URL se pide aparte porque vence. */
+  hasVoucher?: boolean;
 }

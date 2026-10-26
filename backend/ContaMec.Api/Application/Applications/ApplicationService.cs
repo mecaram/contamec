@@ -186,11 +186,15 @@ public class ApplicationService(
                 response.Deleted.Add(new ApplicationDeletedTable { Table = table, Label = label, Count = count });
         }
 
-        // Los comprobantes de los egresos se borran de Storage recién cuando la base confirmó el borrado.
-        var voucherPaths = await _dbContext.Expenses
+        // Los comprobantes de ingresos y egresos se borran de Storage recién cuando la base confirmó el borrado.
+        var voucherPaths = await _dbContext.Incomes
             .Where(x => x.ApplicationId == id && x.Voucher != null)
             .Select(x => x.Voucher)
             .ToListAsync();
+        voucherPaths.AddRange(await _dbContext.Expenses
+            .Where(x => x.ApplicationId == id && x.Voucher != null)
+            .Select(x => x.Voucher)
+            .ToListAsync());
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync();
         try

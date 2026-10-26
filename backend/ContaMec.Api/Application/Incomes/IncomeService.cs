@@ -1,6 +1,8 @@
 using ContaMec.Api.Application.ClosureBalances;
 using ContaMec.Api.Application.Incomes.Dto;
 using ContaMec.Api.Application.Orders;
+using ContaMec.Api.Application.Vouchers;
+using ContaMec.Api.Application.Vouchers.Dto;
 using ContaMec.Api.Domain.Entities;
 using ContaMec.Api.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -9,8 +11,11 @@ using System.Linq.Expressions;
 
 namespace ContaMec.Api.Application.Incomes;
 
-public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
+public class IncomeService(ContaMecDbContext dbContext, IVoucherService voucherService) : IIncomeService
 {
+    /// <summary>Carpeta de los comprobantes de ingresos dentro del bucket.</summary>
+    private const string VoucherFolder = "incomes";
+
     private readonly ContaMecDbContext _dbContext = dbContext;
 
     public async Task<List<IncomeResponse>> SearchAsync(IncomeSearchRequest request, int applicationId)
@@ -192,7 +197,43 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
         await _dbContext.SaveChangesAsync();
         await ClosureBalanceAdjuster.AdjustAsync(_dbContext, income.ClosureId, income.PaymentAccountId, -(income.Amount ?? 0m), applicationId);
         await transaction.CommitAsync();
+        // El ingreso ya no existe: su comprobante quedaría huérfano en Storage.
+        await voucherService.DeleteFilesAsync([income.Voucher]);
         return true;
+    }
+
+    // Adjunta o reemplaza el comprobante. Igual que la edición, solo con el cierre abierto.
+    public async Task<VoucherResponse?> SaveVoucherAsync(int id, int applicationId, VoucherFile file)
+    {
+        var income = await GetModifiableForVoucherAsync(id, applicationId);
+        return income is null ? null : await voucherService.SaveAsync(income, VoucherFolder, file);
+    }
+
+    public async Task<bool?> RemoveVoucherAsync(int id, int applicationId)
+    {
+        var income = await GetModifiableForVoucherAsync(id, applicationId);
+        return income is null ? null : await voucherService.RemoveAsync(income);
+    }
+
+    // Solo lectura: se puede ver el comprobante aunque el cierre esté cerrado.
+    public async Task<VoucherUrlResponse?> GetVoucherUrlAsync(int id, int applicationId)
+    {
+        var path = await _dbContext.Incomes
+            .AsNoTracking()
+            .Where(i => i.Id == id && i.ApplicationId == applicationId)
+            .Select(i => i.Voucher)
+            .FirstOrDefaultAsync();
+        return path is null ? null : await voucherService.GetUrlAsync(path);
+    }
+
+    private async Task<Income?> GetModifiableForVoucherAsync(int id, int applicationId)
+    {
+        var income = await _dbContext.Incomes.FirstOrDefaultAsync(i => i.Id == id && i.ApplicationId == applicationId);
+        if (income is null)
+            return null;
+        if (!await CanModifyIncomeAsync(income.ClosureId))
+            throw new ArgumentException("Solo se puede cambiar el comprobante de un ingreso con cierre abierto.");
+        return income;
     }
 
     // Solo lectura: la orden se arma con los datos actuales de la base y no modifica el ingreso.
@@ -385,7 +426,8 @@ public class IncomeService(ContaMecDbContext dbContext) : IIncomeService
                 : income.OccurrenceType == OccurrenceType.Extraordinaria ? nameof(OccurrenceType.Extraordinaria)
                 : null,
             CreatedByUserId = income.CreatedByUserId,
-            CreatedAt = income.CreatedAt
+            CreatedAt = income.CreatedAt,
+            HasVoucher = income.Voucher != null
         };
     }
 

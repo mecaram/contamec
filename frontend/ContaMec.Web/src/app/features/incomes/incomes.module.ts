@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { AmountCalculatorModule } from '../../shared/amount-calculator/amount-calculator.module';
+import { VoucherModule } from '../../shared/voucher/voucher.module';
 import { IncomeFormComponent } from './components/income-form/income-form.component';
 import { IncomeListComponent } from './components/income-list/income-list.component';
 import { IncomesRoutingModule } from './incomes-routing.module';
@@ -27,6 +28,7 @@ import { SubAccountService } from '../sub-accounts/services/sub-account.service'
     MatSelectModule,
     MatTooltipModule,
     AmountCalculatorModule,
+    VoucherModule,
     IncomesRoutingModule
   ],
   providers: [IncomeService, PaymentAccountService, SubAccountService]

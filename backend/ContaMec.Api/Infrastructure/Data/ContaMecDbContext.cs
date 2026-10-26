@@ -317,6 +317,7 @@ public class ContaMecDbContext(DbContextOptions<ContaMecDbContext> options) : Db
             entity.Property(e => e.SubAccountId).HasColumnName("SubAccountId");
             entity.Property(e => e.OccurrenceType).HasColumnName("OccurrenceType");
             entity.Property(e => e.ExchangeRateId).HasColumnName("ExchangeRateId");
+            entity.Property(e => e.Voucher).HasColumnName("Voucher");
 
             entity.HasOne(e => e.SubAccount)
                 .WithMany(s => s.Incomes)

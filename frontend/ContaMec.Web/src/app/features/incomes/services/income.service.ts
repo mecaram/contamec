@@ -2,6 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { VoucherApi, VoucherInfo, VoucherUrl } from '../../../shared/voucher/voucher-api';
 import { Income } from '../models/income.model';
 import { IncomeSearch } from '../models/income-search.model';
 
@@ -116,6 +117,20 @@ export class IncomeService {
   /** Orden de Ingreso en PDF, armada por el backend con los datos actuales del ingreso. */
   downloadOrderPdf(id: number): Observable<Blob> {
     return this.http.get(`${this.incomesUrl}/${id}/pdf`, { headers: this.getAuthHeaders(), responseType: 'blob' });
+  }
+
+  /** Comprobante del ingreso: lo sube, lo borra y firma la URL el backend (bucket privado de Supabase Storage). */
+  voucherApi(id: number): VoucherApi {
+    const url = `${this.incomesUrl}/${id}/voucher`;
+    return {
+      upload: (file: File) => {
+        const form = new FormData();
+        form.append('file', file, file.name);
+        return this.http.post<VoucherInfo>(url, form, { headers: this.getAuthHeaders() });
+      },
+      remove: () => this.http.delete<void>(url, { headers: this.getAuthHeaders() }),
+      getUrl: () => this.http.get<VoucherUrl>(url, { headers: this.getAuthHeaders() })
+    };
   }
 
   private getAuthHeaders(): HttpHeaders {

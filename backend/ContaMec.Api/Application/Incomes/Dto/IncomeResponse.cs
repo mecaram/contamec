@@ -16,4 +16,6 @@ public class IncomeResponse
     public string? OccurrenceType { get; set; }
     public int? CreatedByUserId { get; set; }
     public DateTime? CreatedAt { get; set; }
+    /// <summary>Tiene comprobante adjunto; la URL se pide aparte (GET api/incomes/{id}/voucher) porque vence.</summary>
+    public bool HasVoucher { get; set; }
 }

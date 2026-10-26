@@ -6,6 +6,7 @@ import { IncomeSearch } from './models/income-search.model';
 import { ClosureLookup, IncomeAccountOption, IncomeService } from './services/income.service';
 import { PaymentAccountService } from '../payment-accounts/services/payment-account.service';
 import { SubAccountService } from '../sub-accounts/services/sub-account.service';
+import { VoucherApi } from '../../shared/voucher/voucher-api';
 
 @Component({
   selector: 'app-incomes',
@@ -32,8 +33,17 @@ export class IncomesComponent implements OnInit {
   copySource: Income | null = null;
   notification: { message: string; type: 'success' | 'error' } | null = null;
   deleteTarget: Income | null = null;
-  /** Ventana posterior al guardado que ofrece descargar la Orden de Ingreso. */
-  savedDialog: { id: number; mode: 'create' | 'edit'; downloading: boolean; error: boolean } | null = null;
+  /** Ventana posterior al guardado: ofrece descargar la Orden de Ingreso y adjuntar el comprobante. */
+  savedDialog: {
+    id: number;
+    mode: 'create' | 'edit';
+    downloading: boolean;
+    error: boolean;
+    hasVoucher: boolean;
+    voucherApi: VoucherApi;
+    /** Subida o borrado del comprobante en curso: no se cierra la ventana hasta que termine. */
+    voucherBusy: boolean;
+  } | null = null;
   /** Alta o edición en curso: hasta que responde el backend no se puede volver a guardar. */
   saving = false;
   /** Ingresos cuya Orden de Ingreso se está descargando desde el listado. */
@@ -254,7 +264,7 @@ export class IncomesComponent implements OnInit {
           this.copySource = null;
           this.search();
           if (created?.id) {
-            this.savedDialog = { id: created.id, mode: 'create', downloading: false, error: false };
+            this.openSavedDialog(created.id, 'create', false);
           } else {
             this.notify('Ingreso creado correctamente.');
           }
@@ -270,13 +280,14 @@ export class IncomesComponent implements OnInit {
       return;
     }
 
+    const hasVoucher = !!this.editingIncome?.hasVoucher;
     this.saving = true;
     this.incomesService.update(id, payload).pipe(finalize(() => (this.saving = false))).subscribe({
       next: () => {
         this.formVisible = false;
         this.editingIncome = null;
         this.search();
-        this.savedDialog = { id, mode: 'edit', downloading: false, error: false };
+        this.openSavedDialog(id, 'edit', hasVoucher);
       },
       error: () => this.notify('Solo se puede modificar un ingreso con cierre abierto.', 'error')
     });
@@ -307,10 +318,29 @@ export class IncomesComponent implements OnInit {
     this.deleteTarget = null;
   }
 
+  private openSavedDialog(id: number, mode: 'create' | 'edit', hasVoucher: boolean): void {
+    this.savedDialog = {
+      id,
+      mode,
+      downloading: false,
+      error: false,
+      hasVoucher,
+      voucherApi: this.incomesService.voucherApi(id),
+      voucherBusy: false
+    };
+  }
+
+  /** Al adjuntar o quitar el comprobante se actualiza el listado (la marca de comprobante de cada ingreso). */
+  onSavedDialogVoucherChange(hasVoucher: boolean): void {
+    if (!this.savedDialog) return;
+    this.savedDialog.hasVoucher = hasVoucher;
+    this.search();
+  }
+
   /** El ingreso ya quedó guardado: si falla el PDF se puede reintentar sin volver a guardar. */
   downloadFromSavedDialog(): void {
     const dialog = this.savedDialog;
-    if (!dialog || dialog.downloading) return;
+    if (!dialog || dialog.downloading || dialog.voucherBusy) return;
 
     dialog.downloading = true;
     dialog.error = false;
@@ -327,6 +357,7 @@ export class IncomesComponent implements OnInit {
   }
 
   closeSavedDialog(): void {
+    if (this.savedDialog?.voucherBusy) return;
     this.savedDialog = null;
   }
 
