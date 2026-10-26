@@ -176,7 +176,9 @@ export class AuthService {
   watchSessionExpiry(): void {
     this.clearExpiryTimer();
     const expiresAt = this.getTokenExpiration();
-    if (expiresAt === null) return;
+    // Ya vencido (p. ej. al volver a abrir la app después de 30 minutos): lo resuelven el AuthGuard o el Login,
+    // que avisan que la sesión expiró. Un temporizador acá competiría con ellos y el aviso podría perderse.
+    if (expiresAt === null || expiresAt <= Date.now()) return;
     this.expiryTimer = setTimeout(() => {
       // Si mientras tanto otra pestaña renovó el token, la sesión sigue: se reprograma con el vencimiento nuevo.
       if (this.isSessionValid()) this.watchSessionExpiry();

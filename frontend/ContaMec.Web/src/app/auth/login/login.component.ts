@@ -25,9 +25,11 @@ export class LoginComponent implements OnInit {
       void this.router.navigateByUrl('/dashboard');
       return;
     }
-    // Un token vencido que quedó guardado no debe mandar al Dashboard.
+    // Un token vencido que quedó guardado no debe mandar al Dashboard, pero sí avisar que la sesión expiró
+    // (la app instalada abre directo en el Login, sin pasar por el AuthGuard).
+    const hadSession = this.auth.getToken() !== null;
     this.auth.logout();
-    if (this.route.snapshot.queryParamMap.get('sesion') === 'expirada') {
+    if (hadSession || this.route.snapshot.queryParamMap.get('sesion') === 'expirada') {
       this.errorMessage = 'Su sesión expiró. Ingrese nuevamente.';
     }
     this.auth.warmUp();
