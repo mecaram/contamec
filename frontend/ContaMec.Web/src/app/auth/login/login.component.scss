@@ -62,7 +62,6 @@ $primary-hover: #1d4ed8;
 
 @media (min-width: 40rem) {
   .login-card__brand {
-    text-align: left;
     padding: 2.5rem 2rem;
   }
 }
@@ -75,20 +74,13 @@ $primary-hover: #1d4ed8;
   pointer-events: none;
 }
 
-// Logo de 4x, igual al de https://4x.com.ar/ (favicon.svg): "4x" blanco sobre azul marino.
+// Logo de ContaMec: el mismo favicon.svg. El borde y la sombra lo separan del fondo, que es del mismo azul.
 .login-card__logo {
+  display: block;
   width: 3rem;
   height: 3rem;
   border-radius: 0.65rem;
-  background: #0f1d44;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: Inter, system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 1.55rem;
-  letter-spacing: -0.02em;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 4px 12px rgba(0, 0, 0, 0.25);
   margin: 0 auto 1rem;
   position: relative;
   z-index: 1;
@@ -96,7 +88,7 @@ $primary-hover: #1d4ed8;
 
 @media (min-width: 40rem) {
   .login-card__logo {
-    margin: 0 0 1.25rem;
+    margin: 0 auto 1.25rem;
   }
 }
 
@@ -123,12 +115,10 @@ $primary-hover: #1d4ed8;
 
 @media (min-width: 40rem) {
   .login-card__tagline {
-    margin-left: 0;
     max-width: 28ch;
   }
 }
 
-// Centrado también en pantallas anchas, donde el resto del panel se alinea a la izquierda.
 .login-card__credit {
   margin: 1.25rem 0 0;
   font-size: 0.85rem;
