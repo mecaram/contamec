@@ -1,0 +1,46 @@
+<div class="pwa-update" *ngIf="pwa.updateAvailable" role="status">
+  <span>Hay una nueva versión de ContaMEC</span>
+  <button class="pwa-button pwa-button--primary" type="button" (click)="pwa.applyUpdate()">Actualizar</button>
+</div>
+
+<aside class="pwa-install" *ngIf="guide as guide" aria-label="Instalar ContaMEC">
+  <img class="pwa-install__logo" src="favicon.svg" alt="" aria-hidden="true">
+  <p class="pwa-install__text" [ngSwitch]="guide">
+    <ng-container *ngSwitchCase="'prompt'">Instalá ContaMEC en este dispositivo para abrirla como una app.</ng-container>
+    <ng-container *ngSwitchCase="'ios-safari'">
+      Para instalar ContaMEC, tocá Compartir
+      <span class="material-icons pwa-install__icon" aria-hidden="true">ios_share</span>
+      y luego «Agregar a pantalla de inicio».
+    </ng-container>
+    <ng-container *ngSwitchCase="'ios-other'">
+      Para instalar ContaMEC, tocá Compartir
+      <span class="material-icons pwa-install__icon" aria-hidden="true">ios_share</span>
+      en el navegador y luego «Agregar a pantalla de inicio». Si no aparece, abrí ContaMEC en Safari.
+    </ng-container>
+    <ng-container *ngSwitchCase="'mac-safari'">Para instalar ContaMEC, elegí Archivo › Agregar al Dock.</ng-container>
+    <ng-container *ngSwitchCase="'firefox-android'">
+      Para instalar ContaMEC, abrí el menú
+      <span class="material-icons pwa-install__icon" aria-hidden="true">more_vert</span>
+      y elegí «Instalar» o «Agregar a pantalla de inicio».
+    </ng-container>
+    <ng-container *ngSwitchDefault>
+      ContaMEC funciona igual desde este navegador. Para instalarla como app, abrila en Chrome, Edge o Safari.
+    </ng-container>
+  </p>
+  <div class="pwa-install__actions">
+    <button class="pwa-button pwa-button--primary" type="button" *ngIf="guide === 'prompt'" (click)="pwa.install()">
+      Instalar ContaMEC
+    </button>
+    <button class="pwa-button" type="button" (click)="pwa.dismiss()">{{ guide === 'prompt' ? 'Ahora no' : 'Entendido' }}</button>
+  </div>
+</aside>
+
+<div class="pwa-offline" *ngIf="pwa.offline" role="alert">
+  <img class="pwa-offline__logo" src="favicon.svg" alt="" aria-hidden="true">
+  <h1 class="pwa-offline__title">Sin conexión</h1>
+  <p class="pwa-offline__text">
+    ContaMEC necesita internet para mostrar los datos contables actualizados.
+    Cuando vuelva la conexión, la pantalla sigue donde estaba.
+  </p>
+  <button class="pwa-button pwa-button--primary" type="button" (click)="retry()">Reintentar</button>
+</div>

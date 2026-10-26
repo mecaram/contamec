@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { isPhone } from '../../shared/amount-calculator/device';
+import { PwaService } from '../../shared/pwa/pwa.service';
 import { Closure } from '../closures/models/closure.model';
 import { ClosureService } from '../closures/services/closure.service';
 import { DashboardCategory } from './dashboard.models';
@@ -35,7 +36,8 @@ export class DashboardComponent implements OnInit {
   constructor(
     private readonly auth: AuthService,
     private readonly router: Router,
-    private readonly closureService: ClosureService
+    private readonly closureService: ClosureService,
+    readonly pwa: PwaService
   ) {}
 
   ngOnInit(): void {

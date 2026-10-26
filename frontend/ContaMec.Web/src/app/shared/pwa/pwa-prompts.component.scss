@@ -1,0 +1,120 @@
+$brand: #0c4a6e;
+$ink: #0f172a;
+
+.pwa-button {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: $ink;
+  font: inherit;
+  font-weight: 500;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &--primary {
+    border-color: $brand;
+    background: $brand;
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0369a1;
+    outline-offset: 2px;
+  }
+}
+
+.pwa-update {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.6rem 0.75rem 0.6rem 1rem;
+  border-radius: 0.75rem;
+  background: $ink;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3);
+}
+
+.pwa-install {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  background: #fff;
+  color: $ink;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+}
+
+.pwa-install__logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+}
+
+.pwa-install__text {
+  flex: 1 1 14rem;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.pwa-install__icon {
+  font-size: 1.1rem;
+  vertical-align: -0.2rem;
+}
+
+.pwa-install__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.pwa-offline {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  background: linear-gradient(160deg, $brand 0%, $ink 100%);
+  color: #fff;
+}
+
+.pwa-offline__logo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.9rem;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.pwa-offline__title {
+  margin: 0.5rem 0 0;
+  font-size: 1.5rem;
+}
+
+.pwa-offline__text {
+  max-width: 28rem;
+  margin: 0 0 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}

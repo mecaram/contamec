@@ -124,15 +124,15 @@ export class AuthService {
   }
 
   saveSession(response: LoginResponse): void {
-    sessionStorage.setItem(this.tokenKey, response.token);
-    sessionStorage.setItem(this.usernameKey, response.username);
-    sessionStorage.setItem(this.applicationIdKey, String(response.applicationId));
-    sessionStorage.setItem(this.applicationNameKey, response.applicationName);
-    sessionStorage.setItem(this.planNameKey, response.planName ?? '');
-    sessionStorage.setItem(this.planExpirationDateKey, response.planExpirationDate ?? '');
-    sessionStorage.setItem(this.roleKey, response.role ?? '');
+    localStorage.setItem(this.tokenKey, response.token);
+    localStorage.setItem(this.usernameKey, response.username);
+    localStorage.setItem(this.applicationIdKey, String(response.applicationId));
+    localStorage.setItem(this.applicationNameKey, response.applicationName);
+    localStorage.setItem(this.planNameKey, response.planName ?? '');
+    localStorage.setItem(this.planExpirationDateKey, response.planExpirationDate ?? '');
+    localStorage.setItem(this.roleKey, response.role ?? '');
     // Vacío significa "primer acceso"; la clave ausente, una sesión iniciada antes de existir este dato.
-    sessionStorage.setItem(this.previousLoginAtKey, response.previousLoginAt ?? '');
+    localStorage.setItem(this.previousLoginAtKey, response.previousLoginAt ?? '');
     this.tokenObtainedAt = Date.now();
     this.watchSessionExpiry();
   }
@@ -149,6 +149,17 @@ export class AuthService {
       for (const eventName of ['click', 'keydown', 'mousemove', 'touchstart', 'wheel']) {
         document.addEventListener(eventName, () => this.onUserActivity(), { passive: true, capture: true });
       }
+      // La sesión está en localStorage, compartida por todas las pestañas (y la app instalada): lo que pasa
+      // en otra se refleja acá. Un token renovado allá reprograma el vencimiento; sin token, se volvió al Login.
+      window.addEventListener('storage', (event) => {
+        if (event.key !== this.tokenKey && event.key !== null) return;
+        if (this.getToken() !== null) {
+          this.watchSessionExpiry();
+        } else if (this.expiryTimer !== null) {
+          this.clearExpiryTimer();
+          this.zone.run(() => void this.router.navigate(['/login']));
+        }
+      });
     });
   }
 
@@ -166,7 +177,11 @@ export class AuthService {
     this.clearExpiryTimer();
     const expiresAt = this.getTokenExpiration();
     if (expiresAt === null) return;
-    this.expiryTimer = setTimeout(() => this.expireSession(), Math.max(0, expiresAt - Date.now()));
+    this.expiryTimer = setTimeout(() => {
+      // Si mientras tanto otra pestaña renovó el token, la sesión sigue: se reprograma con el vencimiento nuevo.
+      if (this.isSessionValid()) this.watchSessionExpiry();
+      else this.expireSession();
+    }, Math.max(0, expiresAt - Date.now()));
   }
 
   /** Cierra la sesión vencida y vuelve al Login avisando el motivo. */
@@ -199,7 +214,7 @@ export class AuthService {
       if (!res.ok) return;
       const data = (await res.json()) as { token?: string };
       if (!data.token) return;
-      sessionStorage.setItem(this.tokenKey, data.token);
+      localStorage.setItem(this.tokenKey, data.token);
       this.tokenObtainedAt = Date.now();
       this.watchSessionExpiry();
     } catch {
@@ -229,11 +244,11 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return sessionStorage.getItem(this.tokenKey);
+    return localStorage.getItem(this.tokenKey);
   }
 
   getUsername(): string | null {
-    return sessionStorage.getItem(this.usernameKey);
+    return localStorage.getItem(this.usernameKey);
   }
 
   /**
@@ -241,44 +256,44 @@ export class AuthService {
    * Solo para uso en la interfaz: el backend toma el ApplicationId del JWT, no de este valor.
    */
   getApplicationId(): number | null {
-    const value = Number(sessionStorage.getItem(this.applicationIdKey));
+    const value = Number(localStorage.getItem(this.applicationIdKey));
     return Number.isInteger(value) && value > 0 ? value : null;
   }
 
   getApplicationName(): string | null {
-    return sessionStorage.getItem(this.applicationNameKey);
+    return localStorage.getItem(this.applicationNameKey);
   }
 
   /** Plan de la empresa ("Demo" o "Pro+"); null si no tiene o la sesión se inició antes de existir este dato. */
   getPlanName(): string | null {
-    return sessionStorage.getItem(this.planNameKey) || null;
+    return localStorage.getItem(this.planNameKey) || null;
   }
 
   /** Último día del plan (inclusive), "yyyy-MM-dd"; null si no vence o la sesión se inició antes de existir este dato. */
   getPlanExpirationDate(): string | null {
-    return sessionStorage.getItem(this.planExpirationDateKey) || null;
+    return localStorage.getItem(this.planExpirationDateKey) || null;
   }
 
   /** Fecha ISO del inicio de sesión anterior: '' si es el primero, null si no se conoce. */
   getPreviousLoginAt(): string | null {
-    return sessionStorage.getItem(this.previousLoginAtKey);
+    return localStorage.getItem(this.previousLoginAtKey);
   }
 
   /** Solo para la interfaz: el backend autoriza por el rol del JWT. */
   isSuperAdministrator(): boolean {
-    return sessionStorage.getItem(this.roleKey) === this.superAdministratorRole;
+    return localStorage.getItem(this.roleKey) === this.superAdministratorRole;
   }
 
   logout(): void {
     this.clearExpiryTimer();
     this.tokenObtainedAt = 0;
-    sessionStorage.removeItem(this.tokenKey);
-    sessionStorage.removeItem(this.usernameKey);
-    sessionStorage.removeItem(this.applicationIdKey);
-    sessionStorage.removeItem(this.applicationNameKey);
-    sessionStorage.removeItem(this.planNameKey);
-    sessionStorage.removeItem(this.planExpirationDateKey);
-    sessionStorage.removeItem(this.roleKey);
-    sessionStorage.removeItem(this.previousLoginAtKey);
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.usernameKey);
+    localStorage.removeItem(this.applicationIdKey);
+    localStorage.removeItem(this.applicationNameKey);
+    localStorage.removeItem(this.planNameKey);
+    localStorage.removeItem(this.planExpirationDateKey);
+    localStorage.removeItem(this.roleKey);
+    localStorage.removeItem(this.previousLoginAtKey);
   }
 }

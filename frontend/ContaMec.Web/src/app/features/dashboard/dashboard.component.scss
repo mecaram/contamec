@@ -88,6 +88,16 @@
   }
 }
 
+// Botón con el mismo aspecto que el enlace Cambiar contraseña.
+.dashboard__install {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
 .dashboard__last-login {
   margin-top: 0.2rem;
   font-size: 0.85rem;

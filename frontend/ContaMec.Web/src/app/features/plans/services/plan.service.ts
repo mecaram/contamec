@@ -49,7 +49,7 @@ export class PlanService {
   }
 
   private getAuthHeaders(): HttpHeaders {
-    const token = sessionStorage.getItem(this.tokenKey);
+    const token = localStorage.getItem(this.tokenKey);
     if (!token) return new HttpHeaders();
     return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }

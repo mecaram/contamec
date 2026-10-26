@@ -43,6 +43,10 @@
       <span class="dashboard-menu__icon material-icons" aria-hidden="true">lock</span>
       Cambiar contraseña
     </a>
+    <button class="dashboard-menu__item" type="button" *ngIf="pwa.guide" (click)="close(); pwa.install()">
+      <span class="dashboard-menu__icon material-icons" aria-hidden="true">install_mobile</span>
+      Instalar ContaMEC
+    </button>
     <button class="dashboard-menu__item" type="button" (click)="close(); logout.emit()">
       <span class="dashboard-menu__icon material-icons" aria-hidden="true">logout</span>
       Cerrar sesión

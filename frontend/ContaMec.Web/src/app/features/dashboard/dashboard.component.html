@@ -18,6 +18,9 @@
       <div class="dashboard__user">
         <p class="dashboard__company" *ngIf="username">Usuario: <span class="dashboard__company-name">{{ username }}</span></p>
         <a class="dashboard__change-password" routerLink="/cambiar-clave">Cambiar contraseña</a>
+        <button class="dashboard__change-password dashboard__install" type="button" *ngIf="pwa.guide" (click)="pwa.install()">
+          Instalar ContaMEC
+        </button>
         <span class="dashboard__last-login" *ngIf="previousLoginAt !== null">
           {{ previousLoginAt ? 'Último acceso: ' + (previousLoginAt | date: 'dd/MM/yyyy HH:mm') : 'Primer acceso' }}
         </span>

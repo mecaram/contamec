@@ -13,7 +13,7 @@ export class AppComponent {
   title = 'contamec-web';
 
   constructor(auth: AuthService, router: Router) {
-    // Al recargar la página la sesión sigue en sessionStorage: se vuelve a programar su vencimiento.
+    // Al recargar o volver a abrir la app la sesión sigue en localStorage: se vuelve a programar su vencimiento.
     auth.watchSessionExpiry();
     auth.startActivityTracking();
 
